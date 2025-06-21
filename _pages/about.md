@@ -30,7 +30,7 @@ My research interests include differentiable robot representations, manipulation
 
 # 📝 Publications 
 
-<div class='paper-box'><div class='paper-box-image'><div><img src='images/FSDP.png' alt="sym" width="60%"></div></div>
+<div class='paper-box'><div class='paper-box-image'><div><img src='images/chess_robot.png' alt="sym" width="60%"></div></div>
 <div class='paper-box-text' markdown="1">
 
 [Efficient and Real-Time Motion Planning for Robotics Using
@@ -81,16 +81,6 @@ Jihao Huang, Jun Zeng, **Xuemin Chi**, Koushil Sreenath, Zhitao Liu, Hongye Su
 IEEE Transactions on Control Systems Technology
 </div>
 </div>
-
-
-
-
-
-
-
-
-
-
 
 
 # 🎖 Honors and Awards
