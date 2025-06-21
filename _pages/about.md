@@ -35,22 +35,23 @@ My research interests include differentiable robot representations, manipulation
 
 [FSDP: Fast and Safe Data-Driven Overtaking Trajectory Planning for Head-to-Head Autonomous Racing Competitions](https://arxiv.org/pdf/2503.00606)
 
-Cheng Hu1∗, Jihao Huang1∗, Wule Mao1∗, Yonghao Fu1∗, **Xuemin Chi1**, Haotong Qin2†,
-Nicolas Baumann2, Zhitao Liu1, Michele Magno2, and Lei Xie2†
+Cheng Hu∗, Jihao Huang∗, Wule Mao∗, Yonghao Fu∗, **Xuemin Chi**, Haotong Qin,
+Nicolas Baumann, Zhitao Liu, Michele Magno, and Lei Xie
 
 <!-- [**Project**](https://scholar.google.com/citations?view_op=view_citation&hl=zh-CN&user=DhtAFkwAAAAJ&citation_for_view=DhtAFkwAAAAJ:ALROH1vI_8AC) <strong><span class='show_paper_citations' data='DhtAFkwAAAAJ:ALROH1vI_8AC'></span></strong>
 - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus ornare aliquet ipsum, ac tempus justo dapibus sit amet.  -->
+IEEE/RSJ International Conference on Intelligent Robots and Systems 2025 (IROS 2025)
 </div>
 </div>
 
 <div class='paper-box'><div class='paper-box-image'><div><div class="badge">IROS 2025</div><img src='images/FSDPovertake.png' alt="sym" width="100%"></div></div>
 <div class='paper-box-text' markdown="1">
 
-[FSDP: Fast and Safe Data-Driven Overtaking Trajectory Planning for Head-to-Head Autonomous Racing Competitions](https://arxiv.org/pdf/2503.00606)
+[Dynamic collision avoidance using velocity obstacle-based control barrier functions](https://arxiv.org/pdf/2503.00606)
 
-Cheng Hu1∗, Jihao Huang1∗, Wule Mao1∗, Yonghao Fu1∗, **Xuemin Chi1**, Haotong Qin2†,
-Nicolas Baumann2, Zhitao Liu1, Michele Magno2, and Lei Xie2†
+Jihao Huang, Jun Zeng, **Xuemin Chi**, Koushil Sreenath, Zhitao Liu, Hongye Su
 
+IEEE Transactions on Control Systems Technology
 </div>
 </div>
 
