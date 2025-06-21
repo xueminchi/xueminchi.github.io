@@ -30,7 +30,21 @@ My research interests include differentiable robot representations, manipulation
 
 # 📝 Publications 
 
-<div class='paper-box'><div class='paper-box-image'><div><div class="badge">IROS 2025</div><img src='images/FSDPovertake.png' alt="sym" width="100%"></div></div>
+<div class='paper-box'><div class='paper-box-image'><div><div class="badge">IROS 2025</div><img src='images/FSDP.png' alt="sym" width="100%"></div></div>
+<div class='paper-box-text' markdown="1">
+
+[Safe Dynamic Motion Generation in Configuration Space Using Differentiable Distance Fields](https://arxiv.org/pdf/2412.16456)
+
+
+**Xuemin Chi**, Yiming Li, Jihao Huang, Bolun Dai, Zhitao Liu, Sylvain Calinon
+
+arXiv
+</div>
+</div>
+
+
+
+<div class='paper-box'><div class='paper-box-image'><div><div class="badge">IROS 2025</div><img src='images/FSDP.png' alt="sym" width="100%"></div></div>
 <div class='paper-box-text' markdown="1">
 
 [FSDP: Fast and Safe Data-Driven Overtaking Trajectory Planning for Head-to-Head Autonomous Racing Competitions](https://arxiv.org/pdf/2503.00606)
@@ -44,7 +58,7 @@ IEEE/RSJ International Conference on Intelligent Robots and Systems 2025 (IROS 2
 </div>
 </div>
 
-<div class='paper-box'><div class='paper-box-image'><div><div class="badge">IROS 2025</div><img src='images/FSDPovertake.png' alt="sym" width="100%"></div></div>
+<div class='paper-box'><div class='paper-box-image'><div><div class="badge">IROS 2025</div><img src='images/FSDP.png' alt="sym" width="100%"></div></div>
 <div class='paper-box-text' markdown="1">
 
 [Dynamic collision avoidance using velocity obstacle-based control barrier functions](https://arxiv.org/pdf/2503.00606)
@@ -54,6 +68,27 @@ Jihao Huang, Jun Zeng, **Xuemin Chi**, Koushil Sreenath, Zhitao Liu, Hongye Su
 IEEE Transactions on Control Systems Technology
 </div>
 </div>
+
+<div class='paper-box'><div class='paper-box-image'><div><div class="badge">IROS 2025</div><img src='images/FSDP.png' alt="sym" width="100%"></div></div>
+<div class='paper-box-text' markdown="1">
+
+[Safe Dynamic Motion Generation in Configuration Space Using Differentiable Distance Fields](https://arxiv.org/pdf/2412.16456)
+
+
+**Xuemin Chi**, Yiming Li, Jihao Huang, Bolun Dai, Zhitao Liu, Sylvain Calinon
+
+arXiv
+</div>
+</div>
+
+
+
+
+
+
+
+
+
 
 # 🎖 Honors and Awards
 - *2021.10* Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus ornare aliquet ipsum, ac tempus justo dapibus sit amet. 
