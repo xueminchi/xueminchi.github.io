@@ -30,7 +30,22 @@ My research interests include differentiable robot representations, manipulation
 
 # 📝 Publications 
 
-<div class='paper-box'><div class='paper-box-image'><div><div class="badge">IROS 2025</div><img src='images/CDF_CBF_CLF.png' alt="sym" width="100%"></div></div>
+<div class='paper-box'><div class='paper-box-image'><div><div class="badge">IROS 2025</div><img src='images/FSDP.png' alt="sym" width="60%"></div></div>
+<div class='paper-box-text' markdown="1">
+
+[Efficient and Real-Time Motion Planning for Robotics Using
+Projection-Based Optimization](https://arxiv.org/pdf/2412.16456)
+
+
+**Xuemin Chi1**, **Hakan Girgin**, Tobias L¨ow, Yangyang Xie, Teng Xue, Jihao Huang,
+Cheng Hu, Zhitao Liu, and Sylvain Calinon
+
+IEEE/RSJ International Conf. on Intelligent Robots and Systems 2025 (IROS 2025)
+</div>
+</div>
+
+
+<div class='paper-box'><div class='paper-box-image'><div><div class="badge">IROS 2025</div><img src='images/CDF_CBF_CLF.png' alt="sym" width="60%"></div></div>
 <div class='paper-box-text' markdown="1">
 
 [Safe Dynamic Motion Generation in Configuration Space Using Differentiable Distance Fields](https://arxiv.org/pdf/2412.16456)
@@ -42,7 +57,8 @@ arXiv
 </div>
 </div>
 
-<div class='paper-box'><div class='paper-box-image'><div><div class="badge">IROS 2025</div><img src='images/FSDP.png' alt="sym" width="100%"></div></div>
+
+<div class='paper-box'><div class='paper-box-image'><div><div class="badge">IROS 2025</div><img src='images/FSDP.png' alt="sym" width="60%"></div></div>
 <div class='paper-box-text' markdown="1">
 
 [FSDP: Fast and Safe Data-Driven Overtaking Trajectory Planning for Head-to-Head Autonomous Racing Competitions](https://arxiv.org/pdf/2503.00606)
@@ -50,11 +66,12 @@ arXiv
 Cheng Hu∗, Jihao Huang∗, Wule Mao∗, Yonghao Fu∗, **Xuemin Chi**, Haotong Qin,
 Nicolas Baumann, Zhitao Liu, Michele Magno, and Lei Xie
 
-IEEE/RSJ International Conference on Intelligent Robots and Systems 2025 (IROS 2025)
+IEEE/RSJ International Conf. on Intelligent Robots and Systems 2025 (IROS 2025)
 </div>
 </div>
 
-<div class='paper-box'><div class='paper-box-image'><div><div class="badge">IROS 2025</div><img src='images/Decision_net.png' alt="sym" width="100%"></div></div>
+
+<div class='paper-box'><div class='paper-box-image'><div><div class="badge">IROS 2025</div><img src='images/Decision_net.png' alt="sym" width="60%"></div></div>
 <div class='paper-box-text' markdown="1">
 
 [Dynamic collision avoidance using velocity obstacle-based control barrier functions](https://arxiv.org/pdf/2503.00606)
@@ -65,17 +82,7 @@ IEEE Transactions on Control Systems Technology
 </div>
 </div>
 
-<div class='paper-box'><div class='paper-box-image'><div><div class="badge">IROS 2025</div><img src='images/FSDP.png' alt="sym" width="100%"></div></div>
-<div class='paper-box-text' markdown="1">
 
-[Safe Dynamic Motion Generation in Configuration Space Using Differentiable Distance Fields](https://arxiv.org/pdf/2412.16456)
-
-
-**Xuemin Chi**, Yiming Li, Jihao Huang, Bolun Dai, Zhitao Liu, Sylvain Calinon
-
-arXiv
-</div>
-</div>
 
 
 
