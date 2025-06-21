@@ -33,16 +33,30 @@ My research interests include differentiable robot representations, manipulation
 <div class='paper-box'><div class='paper-box-image'><div><div class="badge">IROS 2025</div><img src='images/FSDPovertake.png' alt="sym" width="100%"></div></div>
 <div class='paper-box-text' markdown="1">
 
+[FSDP: Fast and Safe Data-Driven Overtaking Trajectory Planning for Head-to-Head Autonomous Racing Competitions](https://arxiv.org/pdf/2503.06075)
+Cheng Hu, Jihao Huang, Wule Mao, Yonghao Fu, **Xuemin Chi**, Haotong Qin, Nicolas Baumann, Zhitao Liu, Michele Magno, Lei Xie
+
+<div class='paper-box'><div class='paper-box-image'><div><div class="badge">IROS 2025</div><img src='images/decision_net' alt="sym" width="100%"></div></div>
+<div class='paper-box-text' markdown="1">
+
 [Dynamic collision avoidance using velocity obstacle-based control barrier functions](https://arxiv.org/pdf/2503.00606)
 
 Jihao Huang, Jun Zeng, **Xuemin Chi**, Koushil Sreenath, Zhitao Liu, Hongye Su
 
-[**Project**](https://scholar.google.com/citations?view_op=view_citation&hl=zh-CN&user=DhtAFkwAAAAJ&citation_for_view=DhtAFkwAAAAJ:ALROH1vI_8AC) <strong><span class='show_paper_citations' data='DhtAFkwAAAAJ:ALROH1vI_8AC'></span></strong>
-- Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus ornare aliquet ipsum, ac tempus justo dapibus sit amet. 
+
+<div class='paper-box'><div class='paper-box-image'><div><div class="badge">IROS 2025</div><img src='images/decision_net' alt="sym" width="100%"></div></div>
+<div class='paper-box-text' markdown="1">
+
+[Safe Dynamic Motion Generation in Configuration Space Using Differentiable Distance Fields](https://arxiv.org/pdf/2503.00606)
+
+**Xuemin Chi**, Yiming Li, Jihao Huang, Bolun Dai, Zhitao Liu, Sylvain Calinon
+
+<!-- [**Project**](https://scholar.google.com/citations?view_op=view_citation&hl=zh-CN&user=DhtAFkwAAAAJ&citation_for_view=DhtAFkwAAAAJ:ALROH1vI_8AC) <strong><span class='show_paper_citations' data='DhtAFkwAAAAJ:ALROH1vI_8AC'></span></strong>
+- Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus ornare aliquet ipsum, ac tempus justo dapibus sit amet.  -->
 </div>
 </div>
 
-- [Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus ornare aliquet ipsum, ac tempus justo dapibus sit amet](https://github.com), A, B, C, **CVPR 2020**
+<!-- - [Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus ornare aliquet ipsum, ac tempus justo dapibus sit amet](https://github.com), A, B, C, **CVPR 2020** -->
 
 # 🎖 Honors and Awards
 - *2021.10* Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus ornare aliquet ipsum, ac tempus justo dapibus sit amet. 
