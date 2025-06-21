@@ -30,7 +30,7 @@ My research interests include differentiable robot representations, manipulation
 
 # 📝 Publications 
 
-<div class='paper-box'><div class='paper-box-image'><div><div class="badge">IROS 2025</div><img src='images/FSDP.png' alt="sym" width="100%"></div></div>
+<div class='paper-box'><div class='paper-box-image'><div><div class="badge">IROS 2025</div><img src='images/CDF_CBF_CLF.png' alt="sym" width="100%"></div></div>
 <div class='paper-box-text' markdown="1">
 
 [Safe Dynamic Motion Generation in Configuration Space Using Differentiable Distance Fields](https://arxiv.org/pdf/2412.16456)
@@ -41,8 +41,6 @@ My research interests include differentiable robot representations, manipulation
 arXiv
 </div>
 </div>
-
-
 
 <div class='paper-box'><div class='paper-box-image'><div><div class="badge">IROS 2025</div><img src='images/FSDP.png' alt="sym" width="100%"></div></div>
 <div class='paper-box-text' markdown="1">
@@ -56,7 +54,7 @@ IEEE/RSJ International Conference on Intelligent Robots and Systems 2025 (IROS 2
 </div>
 </div>
 
-<div class='paper-box'><div class='paper-box-image'><div><div class="badge">IROS 2025</div><img src='images/FSDP.png' alt="sym" width="100%"></div></div>
+<div class='paper-box'><div class='paper-box-image'><div><div class="badge">IROS 2025</div><img src='images/Decision_net.png' alt="sym" width="100%"></div></div>
 <div class='paper-box-text' markdown="1">
 
 [Dynamic collision avoidance using velocity obstacle-based control barrier functions](https://arxiv.org/pdf/2503.00606)
