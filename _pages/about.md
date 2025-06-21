@@ -30,7 +30,7 @@ My research interests include differentiable robot representations, manipulation
 
 # 📝 Publications 
 
-<div class='paper-box'><div class='paper-box-image'><div><div class="badge">IROS 2025</div><img src='images/FSDP.png' alt="sym" width="60%"></div></div>
+<div class='paper-box'><div class='paper-box-image'><div><img src='images/FSDP.png' alt="sym" width="60%"></div></div>
 <div class='paper-box-text' markdown="1">
 
 [Efficient and Real-Time Motion Planning for Robotics Using
