@@ -45,7 +45,7 @@ IEEE/RSJ International Conf. on Intelligent Robots and Systems 2025 (IROS 2025)
 </div>
 
 
-<div class='paper-box'><div class='paper-box-image'><div><div class="badge">IROS 2025</div><img src='images/CDF_CBF_CLF.png' alt="sym" width="60%"></div></div>
+<div class='paper-box'><div class='paper-box-image'><div><img src='images/CDF_CBF_CLF.png' alt="sym" width="60%"></div></div>
 <div class='paper-box-text' markdown="1">
 
 [Safe Dynamic Motion Generation in Configuration Space Using Differentiable Distance Fields](https://arxiv.org/pdf/2412.16456)
@@ -58,7 +58,7 @@ arXiv
 </div>
 
 
-<div class='paper-box'><div class='paper-box-image'><div><div class="badge">IROS 2025</div><img src='images/FSDP.png' alt="sym" width="60%"></div></div>
+<div class='paper-box'><div class='paper-box-image'><div><img src='images/FSDP.png' alt="sym" width="60%"></div></div>
 <div class='paper-box-text' markdown="1">
 
 [FSDP: Fast and Safe Data-Driven Overtaking Trajectory Planning for Head-to-Head Autonomous Racing Competitions](https://arxiv.org/pdf/2503.00606)
@@ -71,7 +71,7 @@ IEEE/RSJ International Conf. on Intelligent Robots and Systems 2025 (IROS 2025)
 </div>
 
 
-<div class='paper-box'><div class='paper-box-image'><div><div class="badge">IROS 2025</div><img src='images/Decision_net.png' alt="sym" width="60%"></div></div>
+<div class='paper-box'><div class='paper-box-image'><div><img src='images/Decision_net.png' alt="sym" width="60%"></div></div>
 <div class='paper-box-text' markdown="1">
 
 [Dynamic collision avoidance using velocity obstacle-based control barrier functions](https://arxiv.org/pdf/2503.00606)
