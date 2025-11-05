@@ -74,39 +74,18 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Quick Links Section */}
+      {/* Quick Links Section - Text Only */}
       <section style={{ borderTop: '1px solid rgb(200 200 200)', paddingTop: '32px' }}>
-        <h3 style={{ fontSize: '18px', fontWeight: '400', marginBottom: '24px' }}>Explore</h3>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+        <div style={{ display: 'flex', gap: '32px', flexWrap: 'wrap' }}>
           <Link href="/research">
-            <a style={{ padding: '24px', border: '2px solid rgb(59 130 246)', backgroundColor: 'rgba(59 130 246 / 0.05)', borderRadius: '2px', textDecoration: 'none', color: 'rgb(0 0 0)', transition: 'all 0.2s' }}
-               onMouseEnter={(e) => {
-                 e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
-               }}
-               onMouseLeave={(e) => {
-                 e.currentTarget.style.boxShadow = 'none';
-               }}
-            >
-              <h4 style={{ fontSize: '16px', fontWeight: '400', marginBottom: '8px' }}>Research</h4>
-              <p style={{ fontSize: '12px', color: 'rgb(100 100 100)' }}>
-                Publications, papers, and research projects
-              </p>
-            </a>
+            <span style={{ fontSize: '14px', color: 'rgb(59 130 246)', cursor: 'pointer', textDecoration: 'none' }}>
+              Research
+            </span>
           </Link>
           <Link href="/blog">
-            <a style={{ padding: '24px', border: '2px solid rgb(168 85 247)', backgroundColor: 'rgba(168 85 247 / 0.05)', borderRadius: '2px', textDecoration: 'none', color: 'rgb(0 0 0)', transition: 'all 0.2s' }}
-               onMouseEnter={(e) => {
-                 e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
-               }}
-               onMouseLeave={(e) => {
-                 e.currentTarget.style.boxShadow = 'none';
-               }}
-            >
-              <h4 style={{ fontSize: '16px', fontWeight: '400', marginBottom: '8px' }}>Blog</h4>
-              <p style={{ fontSize: '12px', color: 'rgb(100 100 100)' }}>
-                Thoughts, tutorials, and technical articles
-              </p>
-            </a>
+            <span style={{ fontSize: '14px', color: 'rgb(59 130 246)', cursor: 'pointer', textDecoration: 'none' }}>
+              Blog
+            </span>
           </Link>
         </div>
       </section>
