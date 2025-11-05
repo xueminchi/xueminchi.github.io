@@ -16,9 +16,9 @@ function App() {
       <ThemeProvider defaultTheme="light">
         <TooltipProvider>
           <Toaster />
-          <div className="min-h-screen flex flex-col bg-white text-black">
+          <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'rgb(245 245 245)', color: 'rgb(0 0 0)' }}>
             <Navigation />
-            <main className="flex-1">
+            <main style={{ flex: 1 }}>
               <Switch>
                 <Route path="/" component={Home} />
                 <Route path="/research" component={Research} />

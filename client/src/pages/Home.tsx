@@ -2,48 +2,70 @@ import { Link } from 'wouter';
 
 export default function Home() {
   return (
-    <div className="container py-16 md:py-24">
+    <div className="container" style={{ paddingTop: '64px', paddingBottom: '64px' }}>
       {/* Hero Section */}
-      <section className="mb-16">
-        <div className="flex flex-col md:flex-row gap-12 items-start">
+      <section style={{ marginBottom: '64px' }}>
+        <div style={{ display: 'flex', flexDirection: 'row', gap: '48px', alignItems: 'flex-start' }}>
           {/* Left: Avatar Placeholder */}
-          <div className="flex-shrink-0">
-            <div className="w-32 h-32 md:w-40 md:h-40 rounded-lg bg-gray-200 border-2 border-gray-300 flex items-center justify-center">
-              <span className="text-gray-400 text-sm">Avatar</span>
+          <div style={{ flexShrink: 0 }}>
+            <div style={{ width: '160px', height: '160px', borderRadius: '8px', backgroundColor: 'rgb(200 200 200)', border: '2px solid rgb(200 200 200)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <span style={{ color: 'rgb(150 150 150)', fontSize: '12px' }}>Avatar</span>
             </div>
           </div>
 
           {/* Right: Introduction */}
-          <div className="flex-1">
-            <h1 className="text-4xl md:text-5xl font-bold mb-4">
+          <div style={{ flex: 1 }}>
+            <h1 style={{ fontSize: '32px', fontWeight: '400', marginBottom: '16px' }}>
               Xuemin Chi
             </h1>
-            <h2 className="text-xl md:text-2xl text-gray-500 mb-6">
+            <h2 style={{ fontSize: '18px', fontWeight: '400', color: 'rgb(100 100 100)', marginBottom: '24px' }}>
               PhD Candidate
             </h2>
-            <p className="text-base md:text-lg leading-relaxed mb-6 max-w-2xl">
+            <p style={{ fontSize: '14px', lineHeight: '1.6', marginBottom: '24px', maxWidth: '600px' }}>
               Work on robotics manipulation planning, generative model.
             </p>
 
             {/* Contact Links */}
-            <div className="flex flex-wrap gap-4 mb-8">
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', marginBottom: '32px' }}>
               <a 
                 href="mailto:xueminchisnow@gmail.com"
-                className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-100 transition-colors"
+                style={{ padding: '8px 16px', border: '1px solid rgb(0 0 0)', borderRadius: '2px', textDecoration: 'none', color: 'rgb(0 0 0)', fontSize: '12px', transition: 'all 0.2s' }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = 'rgb(0 0 0)';
+                  e.currentTarget.style.color = 'rgb(255 255 255)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                  e.currentTarget.style.color = 'rgb(0 0 0)';
+                }}
               >
                 Email
               </a>
               <a 
                 href="#"
-                className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-100 transition-colors"
-                title="GitHub link - placeholder"
+                style={{ padding: '8px 16px', border: '1px solid rgb(0 0 0)', borderRadius: '2px', textDecoration: 'none', color: 'rgb(0 0 0)', fontSize: '12px', transition: 'all 0.2s' }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = 'rgb(0 0 0)';
+                  e.currentTarget.style.color = 'rgb(255 255 255)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                  e.currentTarget.style.color = 'rgb(0 0 0)';
+                }}
               >
                 GitHub
               </a>
               <a 
                 href="#"
-                className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-100 transition-colors"
-                title="LinkedIn link - placeholder"
+                style={{ padding: '8px 16px', border: '1px solid rgb(0 0 0)', borderRadius: '2px', textDecoration: 'none', color: 'rgb(0 0 0)', fontSize: '12px', transition: 'all 0.2s' }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = 'rgb(0 0 0)';
+                  e.currentTarget.style.color = 'rgb(255 255 255)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                  e.currentTarget.style.color = 'rgb(0 0 0)';
+                }}
               >
                 LinkedIn
               </a>
@@ -53,21 +75,35 @@ export default function Home() {
       </section>
 
       {/* Quick Links Section */}
-      <section className="section-divider pt-8">
-        <h3 className="text-xl font-bold mb-6">Explore</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <section style={{ borderTop: '1px solid rgb(200 200 200)', paddingTop: '32px' }}>
+        <h3 style={{ fontSize: '18px', fontWeight: '400', marginBottom: '24px' }}>Explore</h3>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
           <Link href="/research">
-            <a className="p-6 border-2 border-blue-400 bg-blue-50 rounded hover:shadow-md transition-all">
-              <h4 className="text-lg font-bold mb-2">Research</h4>
-              <p className="text-sm text-gray-500">
+            <a style={{ padding: '24px', border: '2px solid rgb(59 130 246)', backgroundColor: 'rgba(59 130 246 / 0.05)', borderRadius: '2px', textDecoration: 'none', color: 'rgb(0 0 0)', transition: 'all 0.2s' }}
+               onMouseEnter={(e) => {
+                 e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
+               }}
+               onMouseLeave={(e) => {
+                 e.currentTarget.style.boxShadow = 'none';
+               }}
+            >
+              <h4 style={{ fontSize: '16px', fontWeight: '400', marginBottom: '8px' }}>Research</h4>
+              <p style={{ fontSize: '12px', color: 'rgb(100 100 100)' }}>
                 Publications, papers, and research projects
               </p>
             </a>
           </Link>
           <Link href="/blog">
-            <a className="p-6 border-2 border-purple-400 bg-purple-50 rounded hover:shadow-md transition-all">
-              <h4 className="text-lg font-bold mb-2">Blog</h4>
-              <p className="text-sm text-gray-500">
+            <a style={{ padding: '24px', border: '2px solid rgb(168 85 247)', backgroundColor: 'rgba(168 85 247 / 0.05)', borderRadius: '2px', textDecoration: 'none', color: 'rgb(0 0 0)', transition: 'all 0.2s' }}
+               onMouseEnter={(e) => {
+                 e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
+               }}
+               onMouseLeave={(e) => {
+                 e.currentTarget.style.boxShadow = 'none';
+               }}
+            >
+              <h4 style={{ fontSize: '16px', fontWeight: '400', marginBottom: '8px' }}>Blog</h4>
+              <p style={{ fontSize: '12px', color: 'rgb(100 100 100)' }}>
                 Thoughts, tutorials, and technical articles
               </p>
             </a>

@@ -31,34 +31,34 @@ const blogPosts = [
 
 export default function Blog() {
   return (
-    <div className="container py-16 md:py-24">
-      <div className="mb-12">
-        <h1 className="text-4xl md:text-5xl font-bold mb-4">Blog</h1>
-        <p className="text-lg text-gray-500 max-w-2xl">
+    <div className="container" style={{ paddingTop: '64px', paddingBottom: '64px' }}>
+      <div style={{ marginBottom: '48px' }}>
+        <h1 style={{ fontSize: '32px', fontWeight: '400', marginBottom: '16px' }}>Blog</h1>
+        <p style={{ fontSize: '14px', color: 'rgb(100 100 100)', maxWidth: '600px' }}>
           Thoughts, tutorials, and technical articles about robotics, machine learning, and more.
         </p>
       </div>
 
       {/* Blog Posts List */}
-      <div className="max-w-3xl">
+      <div style={{ maxWidth: '800px' }}>
         {blogPosts.map((post) => (
-          <article key={post.id} className="blog-post">
-            <a href={post.link} className="hover:no-underline">
-              <h2 className="text-2xl font-bold mb-2 hover:text-blue-500 transition-colors">
+          <article key={post.id} style={{ borderBottom: '1px solid rgb(200 200 200)', paddingBottom: '24px', marginBottom: '24px' }}>
+            <a href={post.link} style={{ textDecoration: 'none', color: 'rgb(0 0 0)' }}>
+              <h2 style={{ fontSize: '20px', fontWeight: '400', marginBottom: '8px', color: 'rgb(0 0 0)' }}>
                 {post.title}
               </h2>
             </a>
-            <p className="blog-date mb-3">
+            <p style={{ fontSize: '12px', color: 'rgb(100 100 100)', marginBottom: '8px' }}>
               {new Date(post.date).toLocaleDateString('en-US', {
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric'
               })}
             </p>
-            <p className="text-base leading-relaxed">
+            <p style={{ fontSize: '14px', lineHeight: '1.6', marginBottom: '12px' }}>
               {post.excerpt}
             </p>
-            <a href={post.link} className="inline-block mt-4 text-blue-500 hover:underline">
+            <a href={post.link} style={{ display: 'inline-block', marginTop: '8px', fontSize: '12px', color: 'rgb(59 130 246)', textDecoration: 'none' }}>
               Read more →
             </a>
           </article>
@@ -66,8 +66,8 @@ export default function Blog() {
       </div>
 
       {/* Placeholder Notice */}
-      <div className="mt-12 p-6 bg-gray-50 border border-gray-300 rounded max-w-3xl">
-        <p className="text-sm text-gray-500">
+      <div style={{ marginTop: '48px', padding: '24px', backgroundColor: 'rgb(245 245 245)', border: '1px solid rgb(200 200 200)', borderRadius: '2px', maxWidth: '800px' }}>
+        <p style={{ fontSize: '12px', color: 'rgb(100 100 100)', margin: 0 }}>
           💡 <strong>Placeholder content:</strong> Replace the blog posts above with your actual articles. You can either link to external blog platforms or create static markdown files for each post.
         </p>
       </div>

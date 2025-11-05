@@ -2,20 +2,20 @@ export default function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="border-t border-gray-300 bg-gray-50">
+    <footer style={{ borderTop: '1px solid rgb(200 200 200)', backgroundColor: 'rgb(245 245 245)' }}>
       <div className="container py-8">
-        <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-sm text-gray-500">
+        <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+          <p style={{ fontSize: '12px', color: 'rgb(100 100 100)', margin: 0 }}>
             © {currentYear} Xuemin Chi. All rights reserved.
           </p>
-          <div className="flex gap-6 text-sm">
-            <a href="mailto:xueminchisnow@gmail.com" className="text-blue-500 hover:underline">
+          <div style={{ display: 'flex', gap: '24px', fontSize: '12px' }}>
+            <a href="mailto:xueminchisnow@gmail.com" style={{ color: 'rgb(59 130 246)', textDecoration: 'none' }}>
               Email
             </a>
-            <a href="#" className="text-blue-500 hover:underline">
+            <a href="#" style={{ color: 'rgb(59 130 246)', textDecoration: 'none' }}>
               GitHub
             </a>
-            <a href="#" className="text-blue-500 hover:underline">
+            <a href="#" style={{ color: 'rgb(59 130 246)', textDecoration: 'none' }}>
               LinkedIn
             </a>
           </div>
@@ -24,4 +24,3 @@ export default function Footer() {
     </footer>
   );
 }
-
