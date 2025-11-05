@@ -3,50 +3,30 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Navigation from './components/Navigation';
-import Hero from './components/Hero';
-import Introduction from './components/Introduction';
-import Services from './components/Services';
-import Portfolio from './components/Portfolio';
-import Testimonials from './components/Testimonials';
-import About from './components/About';
-import Contact from './components/Contact';
 import Footer from './components/Footer';
-import BackToTop from './components/BackToTop';
-import useDynamicTheme from './hooks/use-dynamic-theme';
+import Home from './pages/Home';
+import Research from './pages/Research';
+import Blog from './pages/Blog';
+import NotFound from './pages/NotFound';
+import { Route, Switch } from 'wouter';
 
 function App() {
-  const { navRef, mainRef } = useDynamicTheme();
-
   return (
     <ErrorBoundary>
       <ThemeProvider defaultTheme="light">
         <TooltipProvider>
           <Toaster />
-          <div ref={mainRef} className="min-h-screen overflow-x-hidden">
-            <Navigation ref={navRef} />
-            <div data-section="hero" className="section-hero">
-              <Hero />
-            </div>
-            <div data-section="introduction" className="section-dark">
-              <Introduction />
-            </div>
-            <div data-section="services" className="section-dark">
-              <Services />
-            </div>
-            <div data-section="portfolio" className="section-dark">
-              <Portfolio />
-            </div>
-            <div data-section="testimonials" className="section-dark">
-              <Testimonials />
-            </div>
-            <div data-section="about" className="section-dark">
-              <About />
-            </div>
-            <div data-section="contact" className="section-light">
-              <Contact />
-            </div>
+          <div className="min-h-screen flex flex-col bg-white text-black">
+            <Navigation />
+            <main className="flex-1">
+              <Switch>
+                <Route path="/" component={Home} />
+                <Route path="/research" component={Research} />
+                <Route path="/blog" component={Blog} />
+                <Route component={NotFound} />
+              </Switch>
+            </main>
             <Footer />
-            <BackToTop />
           </div>
         </TooltipProvider>
       </ThemeProvider>
@@ -55,4 +35,3 @@ function App() {
 }
 
 export default App;
-
