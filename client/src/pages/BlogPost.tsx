@@ -6,6 +6,7 @@ const blogPostsData: Record<string, any> = {
     title: "Blog Post Title 1",
     date: "2024-11-05",
     excerpt: "A brief excerpt or summary of your blog post. This gives readers a preview of what to expect.",
+    paperLink: "https://arxiv.org",
     content: `
 # Blog Post Title 1
 
@@ -42,6 +43,7 @@ You can add references or links to related resources here.
     title: "Blog Post Title 2",
     date: "2024-10-28",
     excerpt: "Another interesting blog post about robotics, machine learning, or technical topics.",
+    paperLink: "https://arxiv.org",
     content: `
 # Blog Post Title 2
 
@@ -75,6 +77,7 @@ Wrap up your blog post with a conclusion that summarizes the key points.
     title: "Blog Post Title 3",
     date: "2024-10-15",
     excerpt: "Share your thoughts and experiences on research, development, or any topic you're passionate about.",
+    paperLink: "https://arxiv.org",
     content: `
 # Blog Post Title 3
 
@@ -103,6 +106,7 @@ Conclude your thoughts here.
     title: "Blog Post Title 4",
     date: "2024-09-30",
     excerpt: "Technical tutorial or deep dive into a specific topic related to your research.",
+    paperLink: "https://arxiv.org",
     content: `
 # Blog Post Title 4
 
@@ -165,13 +169,48 @@ export default function BlogPost() {
         <h1 style={{ fontSize: '32px', fontWeight: '400', marginBottom: '12px' }}>
           {post.title}
         </h1>
-        <p style={{ fontSize: '12px', color: 'rgb(100 100 100)', marginBottom: '32px' }}>
+        <p style={{ fontSize: '12px', color: 'rgb(100 100 100)', marginBottom: '16px' }}>
           {new Date(post.date).toLocaleDateString('en-US', {
             year: 'numeric',
             month: 'long',
             day: 'numeric'
           })}
         </p>
+
+        {/* Paper Button */}
+        <a 
+          href={post.paperLink}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ 
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            padding: '6px 12px',
+            border: '1px solid rgb(0 0 0)',
+            borderRadius: '2px',
+            backgroundColor: 'transparent',
+            color: 'rgb(0 0 0)',
+            textDecoration: 'none',
+            fontSize: '12px',
+            fontWeight: '400',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+            marginBottom: '32px'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = 'rgb(0 0 0)';
+            e.currentTarget.style.color = 'rgb(255 255 255)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = 'transparent';
+            e.currentTarget.style.color = 'rgb(0 0 0)';
+          }}
+        >
+          {/* Paper icon (📄) */}
+          <span>📄</span>
+          Paper
+        </a>
 
         {/* Post Content */}
         <div style={{ fontSize: '14px', lineHeight: '1.8', color: 'rgb(0 0 0)' }}>
