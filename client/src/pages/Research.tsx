@@ -5,8 +5,7 @@ const researchItems = [
     conference: "Conference Name",
     date: "2024",
     description: "Brief description of your research work and findings.",
-    link: "#",
-    color: "cyan"
+    link: "#"
   },
   {
     id: 2,
@@ -14,8 +13,7 @@ const researchItems = [
     conference: "Journal Name",
     date: "2024",
     description: "Brief description of your research work and findings.",
-    link: "#",
-    color: "purple"
+    link: "#"
   },
   {
     id: 3,
@@ -23,8 +21,7 @@ const researchItems = [
     conference: "Conference Name",
     date: "2023",
     description: "Brief description of your research work and findings.",
-    link: "#",
-    color: "green"
+    link: "#"
   },
   {
     id: 4,
@@ -32,28 +29,9 @@ const researchItems = [
     conference: "Journal Name",
     date: "2023",
     description: "Brief description of your research work and findings.",
-    link: "#",
-    color: "yellow"
+    link: "#"
   },
 ];
-
-const colorMap = {
-  cyan: { border: 'rgb(34 211 238)', bg: 'rgba(34 211 238 / 0.05)' },
-  purple: { border: 'rgb(168 85 247)', bg: 'rgba(168 85 247 / 0.05)' },
-  green: { border: 'rgb(34 197 94)', bg: 'rgba(34 197 94 / 0.05)' },
-  yellow: { border: 'rgb(250 204 21)', bg: 'rgba(250 204 21 / 0.05)' },
-  pink: { border: 'rgb(236 72 153)', bg: 'rgba(236 72 153 / 0.05)' },
-  blue: { border: 'rgb(59 130 246)', bg: 'rgba(59 130 246 / 0.05)' },
-};
-
-const markerMap = {
-  cyan: 'rgb(34 211 238)',
-  purple: 'rgb(168 85 247)',
-  green: 'rgb(34 197 94)',
-  yellow: 'rgb(250 204 21)',
-  pink: 'rgb(236 72 153)',
-  blue: 'rgb(59 130 246)',
-};
 
 export default function Research() {
   return (
@@ -65,48 +43,34 @@ export default function Research() {
         </p>
       </div>
 
-      {/* Research Timeline */}
+      {/* Research List - Simplified */}
       <div>
-        {researchItems.map((item) => {
-          const colors = colorMap[item.color as keyof typeof colorMap];
-          const markerColor = markerMap[item.color as keyof typeof markerMap];
-          
-          return (
-            <div key={item.id} style={{ display: 'flex', gap: '16px', marginBottom: '24px' }}>
-              {/* Timeline marker */}
-              <div style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: markerColor, marginTop: '4px', flexShrink: 0 }}></div>
-              
-              {/* Content */}
-              <a 
-                href={item.link}
-                style={{ 
-                  flex: 1,
-                  border: `2px solid ${colors.border}`,
-                  backgroundColor: colors.bg,
-                  padding: '16px',
-                  borderRadius: '2px',
-                  textDecoration: 'none',
-                  color: 'rgb(0 0 0)',
-                  transition: 'all 0.2s',
-                  display: 'block'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.boxShadow = 'none';
-                }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
-                  <h3 style={{ fontSize: '14px', fontWeight: '400', margin: 0, flex: 1 }}>{item.title}</h3>
-                  <span style={{ fontSize: '12px', color: 'rgb(100 100 100)', marginLeft: '16px', flexShrink: 0 }}>{item.date}</span>
-                </div>
-                <p style={{ fontSize: '12px', color: 'rgb(100 100 100)', margin: '4px 0' }}>{item.conference}</p>
-                <p style={{ fontSize: '12px', margin: '4px 0' }}>{item.description}</p>
-              </a>
-            </div>
-          );
-        })}
+        {researchItems.map((item, index) => (
+          <div key={item.id} style={{ marginBottom: '32px', paddingBottom: '32px', borderBottom: index < researchItems.length - 1 ? '1px solid rgb(200 200 200)' : 'none' }}>
+            <a 
+              href={item.link}
+              style={{ 
+                textDecoration: 'none',
+                color: 'rgb(0 0 0)',
+                display: 'block',
+                transition: 'all 0.2s'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = 'rgb(59 130 246)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = 'rgb(0 0 0)';
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+                <h3 style={{ fontSize: '14px', fontWeight: '400', margin: 0, flex: 1 }}>{item.title}</h3>
+                <span style={{ fontSize: '12px', color: 'rgb(100 100 100)', marginLeft: '16px', flexShrink: 0 }}>{item.date}</span>
+              </div>
+              <p style={{ fontSize: '12px', color: 'rgb(100 100 100)', margin: '4px 0' }}>{item.conference}</p>
+              <p style={{ fontSize: '12px', margin: '4px 0', lineHeight: '1.6' }}>{item.description}</p>
+            </a>
+          </div>
+        ))}
       </div>
 
       {/* Placeholder Notice */}
