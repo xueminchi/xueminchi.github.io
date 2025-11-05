@@ -6,12 +6,17 @@ export default function Home() {
       {/* Hero Section */}
       <section style={{ marginBottom: '64px' }}>
         <div style={{ display: 'flex', flexDirection: 'row', gap: '48px', alignItems: 'flex-start' }}>
-          {/* Left: Avatar Placeholder */}
-          <div style={{ flexShrink: 0 }}>
-            <div style={{ width: '160px', height: '160px', borderRadius: '8px', backgroundColor: 'rgb(200 200 200)', border: '2px solid rgb(200 200 200)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <span style={{ color: 'rgb(150 150 150)', fontSize: '12px' }}>Avatar</span>
-            </div>
-          </div>
+        {/* Avatar */}
+        <img 
+          src="/avatar.jpg" 
+          alt="Xuemin Chi" 
+          style={{ 
+            width: '160px', 
+            height: '160px', 
+            borderRadius: '2px',
+            objectFit: 'cover'
+          }} 
+        />
 
           {/* Right: Introduction */}
           <div style={{ flex: 1 }}>
@@ -21,9 +26,20 @@ export default function Home() {
             <h2 style={{ fontSize: '18px', fontWeight: '400', color: 'rgb(100 100 100)', marginBottom: '24px' }}>
               PhD Candidate
             </h2>
-            <p style={{ fontSize: '14px', lineHeight: '1.6', marginBottom: '24px', maxWidth: '600px' }}>
-              Work on robotics manipulation planning, generative model.
-            </p>
+            <div style={{ fontSize: '14px', lineHeight: '1.8', maxWidth: '600px', textAlign: 'justify' }}>
+              <p>
+                I am currently a PhD candidate in Control Science and Engineering at Zhejiang University, advised by Prof. Zhitao Liu and Sylvain Calinon.
+              </p>
+              <p>
+                My research focuses on imitation learning, reinforcement learning and its applications in robotics and autonomous systems.
+              </p>
+              <p>
+                I am also interested in building next-generation robot foundation models.
+              </p>
+              <p>
+                Welcome to my personal website where I share my research, projects, and thoughts on robotics and AI. Feel free to explore and connect!
+              </p>
+            </div>
 
             {/* Contact Links */}
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', marginBottom: '32px' }}>
@@ -42,7 +58,7 @@ export default function Home() {
                 Email
               </a>
               <a 
-                href="#"
+                href="https://github.com/xueminchi"
                 style={{ padding: '8px 16px', border: '1px solid rgb(0 0 0)', borderRadius: '2px', textDecoration: 'none', color: 'rgb(0 0 0)', fontSize: '12px', transition: 'all 0.2s' }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.backgroundColor = 'rgb(0 0 0)';
@@ -56,7 +72,7 @@ export default function Home() {
                 GitHub
               </a>
               <a 
-                href="#"
+                href="https://www.linkedin.com/in/xuemin-chi-610b59250/"
                 style={{ padding: '8px 16px', border: '1px solid rgb(0 0 0)', borderRadius: '2px', textDecoration: 'none', color: 'rgb(0 0 0)', fontSize: '12px', transition: 'all 0.2s' }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.backgroundColor = 'rgb(0 0 0)';
@@ -70,7 +86,7 @@ export default function Home() {
                 LinkedIn
               </a>
               <a 
-                href="#"
+                href="https://scholar.google.com/citations?user=pKMTM_4AAAAJ&hl=en"
                 style={{ padding: '8px 16px', border: '1px solid rgb(0 0 0)', borderRadius: '2px', textDecoration: 'none', color: 'rgb(0 0 0)', fontSize: '12px', transition: 'all 0.2s' }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.backgroundColor = 'rgb(0 0 0)';

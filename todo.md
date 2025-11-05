@@ -56,3 +56,7 @@
 
 ## 新功能 - Blog模板增强
 - [x] 在Blog文章详情页面添加Paper按钮，用于链接到论文网站（arxiv等）
+
+
+## Bug修复 - GitHub Pages路由
+- [x] 修复GitHub Pages的SPA路由问题，使Blog详情页面能够正常访问
