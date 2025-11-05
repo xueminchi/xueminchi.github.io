@@ -58,7 +58,7 @@ export default function Blog() {
             <p style={{ fontSize: '14px', lineHeight: '1.6', marginBottom: '12px' }}>
               {post.excerpt}
             </p>
-            <a href={post.link} style={{ display: 'inline-block', marginTop: '8px', fontSize: '12px', color: 'rgb(59 130 246)', textDecoration: 'none' }}>
+            <a href={`/blog/${post.id}`} style={{ display: 'inline-block', marginTop: '8px', fontSize: '12px', color: 'rgb(59 130 246)', textDecoration: 'none' }}>
               Read more →
             </a>
           </article>

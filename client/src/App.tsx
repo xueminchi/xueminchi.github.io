@@ -7,6 +7,7 @@ import Footer from './components/Footer';
 import Home from './pages/Home';
 import Research from './pages/Research';
 import Blog from './pages/Blog';
+import BlogPost from './pages/BlogPost';
 import NotFound from './pages/NotFound';
 import { Route, Switch } from 'wouter';
 
@@ -22,6 +23,7 @@ function App() {
               <Switch>
                 <Route path="/" component={Home} />
                 <Route path="/research" component={Research} />
+                <Route path="/blog/:id" component={BlogPost} />
                 <Route path="/blog" component={Blog} />
                 <Route component={NotFound} />
               </Switch>

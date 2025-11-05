@@ -69,6 +69,20 @@ export default function Home() {
               >
                 LinkedIn
               </a>
+              <a 
+                href="#"
+                style={{ padding: '8px 16px', border: '1px solid rgb(0 0 0)', borderRadius: '2px', textDecoration: 'none', color: 'rgb(0 0 0)', fontSize: '12px', transition: 'all 0.2s' }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = 'rgb(0 0 0)';
+                  e.currentTarget.style.color = 'rgb(255 255 255)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                  e.currentTarget.style.color = 'rgb(0 0 0)';
+                }}
+              >
+                Scholar
+              </a>
             </div>
           </div>
         </div>
