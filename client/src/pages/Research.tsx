@@ -4,39 +4,39 @@ const HIGHLIGHT_AUTHOR = "Xuemin Chi";
 const researchItems = [
   {
     id: 1,
-    title: "Research Paper Title 1",
-    authors: ["Xuemin Chi", "Author 2", "Author 3"],  // 添加你的作者列表
-    conference: "Conference Name",
-    date: "2024",
-    description: "Brief description of your research work and findings.",
-    link: "#"
+    title: "Efficient and Real-Time Manipulation Planning for Robotics Using Projection-Based Optimization",
+    authors: ["Xuemin Chi", "Author 2", "Author 3"],  // TODO: 添加真实的作者列表
+    conference: "IROS",
+    date: "2025",
+    description: "Bridge learning and optimization through projections for efficient manipulation planning.",
+    link: "https://arxiv.org/pdf/2506.14865"
   },
   {
     id: 2,
-    title: "Research Paper Title 2",
-    authors: ["Author 1", "Xuemin Chi", "Author 3", "Author 4"],  // 你的名字可以在任何位置
-    conference: "Journal Name",
-    date: "2024",
-    description: "Brief description of your research work and findings.",
-    link: "#"
+    title: "FSDP: Fast and Safe Data-Driven Overtaking Trajectory Planning for Head-to-Head Autonomous Racing Competitions",
+    authors: ["Xuemin Chi", "Co-author 1", "Co-author 2"],  // TODO: 添加真实的作者列表
+    conference: "IROS",
+    date: "2025",
+    description: "Learn opponent behavior and plan overtaking trajectories in real-time for autonomous racing.",
+    link: "https://arxiv.org/pdf/2503.06075"
   },
   {
     id: 3,
-    title: "Research Paper Title 3",
-    authors: ["Xuemin Chi", "Collaborator"],
-    conference: "Conference Name",
-    date: "2023",
-    description: "Brief description of your research work and findings.",
-    link: "#"
+    title: "Dynamic collision avoidance using velocity obstacle-based control barrier functions",
+    authors: ["Xuemin Chi", "Collaborator"],  // TODO: 添加真实的作者列表
+    conference: "IEEE Transactions on Control Systems Technology",
+    date: "2025",
+    description: "Dynamic collision avoidance using velocity obstacle-based control barrier functions.",
+    link: "https://arxiv.org/pdf/2503.00606"
   },
   {
     id: 4,
-    title: "Research Paper Title 4",
-    authors: ["Xuemin Chi"],  // 单独作者
-    conference: "Journal Name",
-    date: "2023",
-    description: "Brief description of your research work and findings.",
-    link: "#"
+    title: "Safe dynamic motion generation in configuration space using differentiable distance fields",
+    authors: ["Xuemin Chi"],  // TODO: 添加真实的作者列表
+    conference: "arXiv",
+    date: "2025",
+    description: "Learning-based differentiable distance fields for safe dynamic motion generation in configuration space.",
+    link: "https://arxiv.org/pdf/2412.16456"
   },
 ];
 
@@ -112,10 +112,10 @@ export default function Research() {
       {/* Placeholder Notice */}
       <div style={{ marginTop: '48px', padding: '24px', backgroundColor: 'rgb(245 245 245)', border: '1px solid rgb(200 200 200)', borderRadius: '2px' }}>
         <p style={{ fontSize: '12px', color: 'rgb(100 100 100)', margin: 0, lineHeight: '1.6' }}>
-          💡 <strong>How to customize:</strong><br/>
-          1. Edit the <code>authors</code> array for each research item (line 5-40)<br/>
-          2. Change <code>HIGHLIGHT_AUTHOR</code> at the top to your name (line 2)<br/>
-          3. Your name will be <strong>bold and darker</strong> in the author list
+          💡 <strong>How to add authors:</strong><br/>
+          1. For each paper, replace the <code>authors</code> array with the real author list<br/>
+          2. Your name (set in <code>HIGHLIGHT_AUTHOR</code> at line 2) will be automatically <strong>bold and darker</strong><br/>
+          3. Example: <code>authors: ["Xuemin Chi", "John Doe", "Jane Smith"]</code>
         </p>
       </div>
     </div>
