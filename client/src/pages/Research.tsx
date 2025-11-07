@@ -10,7 +10,7 @@ const CONFERENCE_COLORS: Record<string, string> = {
   "NeurIPS": "rgb(236 72 153)", // 粉色
   "CVPR": "rgb(234 179 8)",   // 黄色
   "arXiv": "rgb(100 100 100)", // 灰色
-  "IEEE Transactions on Control Systems Technology": "rgb(20 184 166)", // 青色
+  "IEEE Transactions on Control Systems Technology": "rgb(59 130 246)", // 蓝色
   // 添加更多会议/期刊及其颜色
   // 格式: "会议名称": "rgb(R G B)"
 };
@@ -60,6 +60,16 @@ const researchItems = [
     date: "2025",
     description: "Learning-based differentiable distance fields for safe dynamic motion generation in configuration space.",
     pdfUrl: "https://arxiv.org/pdf/2412.16456"
+  },
+  {
+    id: 5,
+    title: "Configuration space distance fields for manipulation planning",
+    authors: ["Yiming Li", "Xuemin Chi", "Amirreza Razmjoo", "Sylvain Calinon"],
+    conference: "RSS Outstanding Paper Award Finalists",
+    conferenceUrl: "https://sites.google.com/view/cdfmp/home",  // TODO: 添加arXiv链接
+    date: "2024",
+    description: "Learning-based robot representation in configuration space for manipulation planning.",
+    pdfUrl: "https://arxiv.org/pdf/2406.01137"
   },
 ];
 
