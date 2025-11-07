@@ -26,7 +26,7 @@ const researchItems = [
     title: "Efficient and Real-Time Manipulation Planning for Robotics Using Projection-Based Optimization",
     authors: ["Xuemin Chi", "Hakan Girgin", "Tobias Löw", "Yiming Li", "Teng Xue", "Jihao Huang", "Cheng Hu", "Zhitao Liu", "Sylvain Calinon"],
     conference: "IROS",
-    conferenceUrl: "https://iros2025.org/",  // TODO: 添加会议官网链接
+    conferenceUrl: "https://sites.google.com/view/alspg-oc",  // TODO: 添加会议官网链接
     date: "2025",
     description: "Bridge learning and optimization through projections for efficient manipulation planning.",
     pdfUrl: "https://arxiv.org/pdf/2506.14865"  // PDF下载链接
@@ -141,7 +141,7 @@ export default function Research() {
                   e.currentTarget.style.color = 'rgb(0 0 0)';
                 }}
               >
-                Conference
+                Website
               </a>
               <a 
                 href={item.pdfUrl}
