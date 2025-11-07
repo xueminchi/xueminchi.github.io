@@ -1,6 +1,25 @@
 // 设置你想要高亮的作者名字（通常是你自己的名字）
 const HIGHLIGHT_AUTHOR = "Xuemin Chi";
 
+// 会议/期刊颜色映射 - 可以自定义每个会议的颜色
+const CONFERENCE_COLORS: Record<string, string> = {
+  "IROS": "rgb(59 130 246)",  // 蓝色
+  "ICRA": "rgb(16 185 129)",  // 绿色
+  "RSS": "rgb(249 115 22)",   // 橙色
+  "CoRL": "rgb(168 85 247)",  // 紫色
+  "NeurIPS": "rgb(236 72 153)", // 粉色
+  "CVPR": "rgb(234 179 8)",   // 黄色
+  "arXiv": "rgb(100 100 100)", // 灰色
+  "IEEE Transactions on Control Systems Technology": "rgb(20 184 166)", // 青色
+  // 添加更多会议/期刊及其颜色
+  // 格式: "会议名称": "rgb(R G B)"
+};
+
+// 获取会议颜色，如果未定义则返回默认灰色
+function getConferenceColor(conference: string): string {
+  return CONFERENCE_COLORS[conference] || "rgb(100 100 100)";
+}
+
 const researchItems = [
   {
     id: 1,
@@ -87,7 +106,12 @@ export default function Research() {
             </div>
             
             {/* Conference */}
-            <p style={{ fontSize: '12px', color: 'rgb(100 100 100)', margin: '4px 0' }}>{item.conference}</p>
+            <p style={{ 
+              fontSize: '12px', 
+              color: getConferenceColor(item.conference), 
+              margin: '4px 0',
+              fontWeight: '500'
+            }}>{item.conference}</p>
             
             {/* Description */}
             <p style={{ fontSize: '12px', margin: '8px 0 12px 0', lineHeight: '1.6' }}>{item.description}</p>
