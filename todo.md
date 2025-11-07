@@ -60,3 +60,8 @@
 
 ## Bug修复 - GitHub Pages路由
 - [x] 修复GitHub Pages的SPA路由问题，使Blog详情页面能够正常访问
+
+
+## 新功能 - Research页面增强
+- [x] 添加作者信息到Research列表
+- [x] 实现作者名字高亮功能（用于突出显示自己的名字）
