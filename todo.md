@@ -70,3 +70,7 @@
 ## 新功能 - Research页面按钮增强
 - [x] 添加Conference按钮，链接到会议官网
 - [x] 添加PDF按钮，直接下载论文
+
+## 内容更新 - 从 Google Scholar获取真实作者信息
+- [x] 访问Google Scholar页面获取论文作者信息
+- [x] 更新Research.tsx中的作者列表

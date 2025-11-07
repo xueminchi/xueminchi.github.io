@@ -5,7 +5,7 @@ const researchItems = [
   {
     id: 1,
     title: "Efficient and Real-Time Manipulation Planning for Robotics Using Projection-Based Optimization",
-    authors: ["Xuemin Chi", "Author 2", "Author 3"],  // TODO: 添加真实的作者列表
+    authors: ["Xuemin Chi", "Hakan Girgin", "Tobias Löw", "Yiming Li", "Teng Xue", "Jihao Huang", "Cheng Hu", "Zhitao Liu", "Sylvain Calinon"],
     conference: "IROS",
     conferenceUrl: "https://iros2025.org/",  // TODO: 添加会议官网链接
     date: "2025",
@@ -15,7 +15,7 @@ const researchItems = [
   {
     id: 2,
     title: "FSDP: Fast and Safe Data-Driven Overtaking Trajectory Planning for Head-to-Head Autonomous Racing Competitions",
-    authors: ["Xuemin Chi", "Co-author 1", "Co-author 2"],  // TODO: 添加真实的作者列表
+    authors: ["Cheng Hu", "Jihao Huang", "Weiye Mao", "Yiming Fu", "Xuemin Chi", "Haotong Qin", "Nicolas Baumann", "Zhitao Liu", "Michele Magno"],
     conference: "IROS",
     conferenceUrl: "https://iros2025.org/",  // TODO: 添加会议官网链接
     date: "2025",
@@ -25,7 +25,7 @@ const researchItems = [
   {
     id: 3,
     title: "Dynamic collision avoidance using velocity obstacle-based control barrier functions",
-    authors: ["Xuemin Chi", "Collaborator"],  // TODO: 添加真实的作者列表
+    authors: ["Jihao Huang", "Jun Zeng", "Xuemin Chi", "Koushil Sreenath", "Zhitao Liu", "Hongye Su"],
     conference: "IEEE Transactions on Control Systems Technology",
     conferenceUrl: "https://ieeexplore.ieee.org/xpl/RecentIssue.jsp?punumber=87",  // TODO: 添加期刊链接
     date: "2025",
@@ -35,7 +35,7 @@ const researchItems = [
   {
     id: 4,
     title: "Safe dynamic motion generation in configuration space using differentiable distance fields",
-    authors: ["Xuemin Chi"],  // TODO: 添加真实的作者列表
+    authors: ["Xuemin Chi", "Yiming Li", "Jihao Huang", "Bolun Dai", "Zhitao Liu", "Sylvain Calinon"],
     conference: "arXiv",
     conferenceUrl: "https://arxiv.org/",  // TODO: 添加arXiv链接
     date: "2025",
