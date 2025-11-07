@@ -7,6 +7,9 @@ const blogPostsData: Record<string, any> = {
     date: "2024-11-05",
     excerpt: "A brief excerpt or summary of your blog post. This gives readers a preview of what to expect.",
     paperLink: "https://arxiv.org",
+    // 可以在content中使用特殊标记来插入媒体文件
+    // [GIF:/path/to/image.gif] - 插入GIF动图
+    // [VIDEO:/path/to/video.mp4] - 插入MP4视频
     content: `
 # Blog Post Title 1
 
@@ -19,6 +22,22 @@ This is a sample blog post. You can replace this with your actual content. The b
 ## Main Content
 
 This section contains the main body of your blog post. You can write about your research, technical insights, tutorials, or any topic you're passionate about.
+
+### How to Insert Media Files
+
+**Example 1: Insert a GIF**
+
+[GIF:/example.gif]
+
+**Example 2: Insert an MP4 Video**
+
+[VIDEO:/example.mp4]
+
+**Instructions:**
+1. Place your media files (GIF/MP4) in the client/public/ folder
+2. Use [GIF:/filename.gif] to insert a GIF image
+3. Use [VIDEO:/filename.mp4] to insert an MP4 video
+4. Replace /filename with your actual file path (e.g., /my-animation.gif)
 
 ### Subsection
 
@@ -132,6 +151,72 @@ Conclude your technical discussion here.
   }
 };
 
+// 渲染单行内容，支持GIF和VIDEO标记
+function renderLine(line: string, index: number) {
+  // 检查是否是GIF标记: [GIF:/path/to/image.gif]
+  const gifMatch = line.match(/^\[GIF:(.+)\]$/);
+  if (gifMatch) {
+    const gifPath = gifMatch[1];
+    return (
+      <div key={index} style={{ margin: '20px 0', textAlign: 'center' }}>
+        <img 
+          src={gifPath} 
+          alt="GIF Animation" 
+          style={{ maxWidth: '100%', height: 'auto', border: '1px solid rgb(200 200 200)' }}
+        />
+      </div>
+    );
+  }
+
+  // 检查是否是VIDEO标记: [VIDEO:/path/to/video.mp4]
+  const videoMatch = line.match(/^\[VIDEO:(.+)\]$/);
+  if (videoMatch) {
+    const videoPath = videoMatch[1];
+    return (
+      <div key={index} style={{ margin: '20px 0' }}>
+        <video 
+          controls 
+          style={{ width: '100%', maxWidth: '800px', height: 'auto', border: '1px solid rgb(200 200 200)' }}
+        >
+          <source src={videoPath} type="video/mp4" />
+          Your browser does not support the video tag.
+        </video>
+      </div>
+    );
+  }
+
+  // 普通文本渲染
+  if (line.startsWith('# ')) {
+    return (
+      <h2 key={index} style={{ fontSize: '24px', fontWeight: '400', marginTop: '24px', marginBottom: '12px' }}>
+        {line.replace('# ', '')}
+      </h2>
+    );
+  } else if (line.startsWith('## ')) {
+    return (
+      <h3 key={index} style={{ fontSize: '18px', fontWeight: '400', marginTop: '20px', marginBottom: '12px' }}>
+        {line.replace('## ', '')}
+      </h3>
+    );
+  } else if (line.startsWith('### ')) {
+    return (
+      <h4 key={index} style={{ fontSize: '14px', fontWeight: '400', marginTop: '16px', marginBottom: '8px' }}>
+        {line.replace('### ', '')}
+      </h4>
+    );
+  } else if (line === '---') {
+    return <hr key={index} style={{ borderTop: '1px solid rgb(200 200 200)', margin: '24px 0' }} />;
+  } else if (line.trim() === '') {
+    return <p key={index} style={{ marginBottom: '12px' }}>&nbsp;</p>;
+  } else {
+    return (
+      <p key={index} style={{ marginBottom: '12px' }}>
+        {line}
+      </p>
+    );
+  }
+}
+
 export default function BlogPost() {
   const [match, params] = useRoute('/blog/:id');
 
@@ -214,37 +299,7 @@ export default function BlogPost() {
 
         {/* Post Content */}
         <div style={{ fontSize: '14px', lineHeight: '1.8', color: 'rgb(0 0 0)' }}>
-          {post.content.split('\n').map((line: string, index: number) => {
-            if (line.startsWith('# ')) {
-              return (
-                <h2 key={index} style={{ fontSize: '24px', fontWeight: '400', marginTop: '24px', marginBottom: '12px' }}>
-                  {line.replace('# ', '')}
-                </h2>
-              );
-            } else if (line.startsWith('## ')) {
-              return (
-                <h3 key={index} style={{ fontSize: '18px', fontWeight: '400', marginTop: '20px', marginBottom: '12px' }}>
-                  {line.replace('## ', '')}
-                </h3>
-              );
-            } else if (line.startsWith('### ')) {
-              return (
-                <h4 key={index} style={{ fontSize: '14px', fontWeight: '400', marginTop: '16px', marginBottom: '8px' }}>
-                  {line.replace('### ', '')}
-                </h4>
-              );
-            } else if (line === '---') {
-              return <hr key={index} style={{ borderTop: '1px solid rgb(200 200 200)', margin: '24px 0' }} />;
-            } else if (line.trim() === '') {
-              return <p key={index} style={{ marginBottom: '12px' }}>&nbsp;</p>;
-            } else {
-              return (
-                <p key={index} style={{ marginBottom: '12px' }}>
-                  {line}
-                </p>
-              );
-            }
-          })}
+          {post.content.split('\n').map((line: string, index: number) => renderLine(line, index))}
         </div>
       </article>
     </div>

@@ -74,3 +74,8 @@
 ## 内容更新 - 从 Google Scholar获取真实作者信息
 - [x] 访问Google Scholar页面获取论文作者信息
 - [x] 更新Research.tsx中的作者列表
+
+
+## 新功能 - Blog文章媒体支持
+- [x] 在BlogPost模板中添加MP4视频和GIF动图的示例代码
+- [x] 更新使用说明，指导用户如何插入媒体文件
