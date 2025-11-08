@@ -92,7 +92,7 @@ const researchItems = [
     conference: "CCDC",
     conferenceUrl: "https://sites.google.com/view/cdfmp/home",  // TODO: 添加arXiv链接
     date: "2024",
-    description: "Learning-based robot representation in configuration space for manipulation planning.",
+    description: "Distance field-based time-varying control barrier functions for whole-body dynamic collision avoidance.",
     pdfUrl: "https://arxiv.org/pdf/2406.01137"
   },
   {
@@ -108,11 +108,11 @@ const researchItems = [
   {
     id: 9,
     title: "Fast Path Planning for Autonomous Vehicle Parking with Safety-Guarantee using Hamilton-Jacobi Reachability",
-    authors: ["Xuemin Chi", "Jun Zeng*", "Jihao Huang", "Zhitao Liu", "Hongye Su"],
-    conference: "IEEE Transactions on Intelligent Vehicles",
+    authors: ["Xuemin Chi", "Jun Zeng", "Jihao Huang", "Zhitao Liu", "Hongye Su"],
+    conference: "IEEE Transactions on Vehicle Technology",
     conferenceUrl: "https://www.youtube.com/watch?v=lafie7BW9oE",  // TODO: 添加arXiv链接
     date: "2024",
-    description: "Learning-based robot representation in configuration space for manipulation planning.",
+    description: "A hierarchical path planning framework for autonomous vehicle parking with safety guarantee.",
     pdfUrl: "https://arxiv.org/pdf/2310.15190"
   },
 ];
