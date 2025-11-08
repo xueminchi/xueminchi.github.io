@@ -132,17 +132,17 @@ const researchItems = [
     title: "Obstacle avoidance for unicycle-modelled mobile robots with time-varying control barrier functions",
     authors: ["Jihao Huang", "Zhitao Liu", "Jun Zeng", "Xuemin Chi", "Hongye Su"],
     conference: "IECON",
-    conferenceUrl: "https://github.com/HybridRobotics/vo-polytope",  // TODO: 添加arXiv链接
+    conferenceUrl: "https://xueminchi.github.io/research",  // TODO: 添加arXiv链接
     date: "2023",
     description: "First time use of velocity obstacle for polytopic collision avoidance in multi-robot systems.",
-    pdfUrl: "https://xueminchi.github.io/research"
+    pdfUrl: "https://arxiv.org/pdf/2307.08227"
   },
   {
     id: 12,
     title: "Optimization-based Motion Planning for Autonomous Parking Considering Dynamic Obstacle: A Hierarchical Framework",
     authors: ["Xuemin Chi", "Zhitao Liu", "Jihao Huang", "Feng Hong", "Hongye Su"],
     conference: "CCDC",
-    conferenceUrl: "https://arxiv.org/pdf/2210.13112",  // TODO: 添加arXiv链接
+    conferenceUrl: "https://xueminchi.github.io/research",  // TODO: 添加arXiv链接
     date: "2022",
     description: "First time use of velocity obstacle for polytopic collision avoidance in multi-robot systems.",
     pdfUrl: "https://arxiv.org/pdf/2210.13112"
