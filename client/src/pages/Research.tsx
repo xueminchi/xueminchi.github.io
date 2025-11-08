@@ -111,7 +111,7 @@ const researchItems = [
     id: 9,
     title: "Velocity obstacle for polytopic collision avoidance for distributed multi-robot systems",
     authors: ["Jihao Huang", "Jun Zeng", "Xuemin Chi", "Koushil Sreenath", "Zhitao Liu", "Hongye Su"],
-    conference: "RSS Best Paper Finalist",
+    conference: "RAL",
     conferenceUrl: "https://github.com/HybridRobotics/vo-polytope",  // TODO: 添加arXiv链接
     date: "2024",
     description: "First time use of velocity obstacle for polytopic collision avoidance in multi-robot systems.",
@@ -144,7 +144,7 @@ const researchItems = [
     conference: "CCDC",
     conferenceUrl: "https://xueminchi.github.io/research",  // TODO: 添加arXiv链接
     date: "2022",
-    description: "First time use of velocity obstacle for polytopic collision avoidance in multi-robot systems.",
+    description: "Hierarchical optimization-based motion planning for autonomous parking with dynamic obstacle avoidance.",
     pdfUrl: "https://arxiv.org/pdf/2210.13112"
   },
 ];
