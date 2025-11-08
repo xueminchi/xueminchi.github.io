@@ -6,27 +6,6 @@ const blogPosts = [
     excerpt: "A brief excerpt or summary of your blog post. This gives readers a preview of what to expect.",
     link: "#",
   },
-  {
-    id: 2,
-    title: "Blog Post Title 2",
-    date: "2024-10-28",
-    excerpt: "Another interesting blog post about robotics, machine learning, or technical topics.",
-    link: "#",
-  },
-  {
-    id: 3,
-    title: "Blog Post Title 3",
-    date: "2024-10-15",
-    excerpt: "Share your thoughts and experiences on research, development, or any topic you're passionate about.",
-    link: "#",
-  },
-  {
-    id: 4,
-    title: "Blog Post Title 4",
-    date: "2024-09-30",
-    excerpt: "Technical tutorial or deep dive into a specific topic related to your research.",
-    link: "#",
-  },
 ];
 
 export default function Blog() {
@@ -66,11 +45,11 @@ export default function Blog() {
       </div>
 
       {/* Placeholder Notice */}
-      <div style={{ marginTop: '48px', padding: '24px', backgroundColor: 'rgb(245 245 245)', border: '1px solid rgb(200 200 200)', borderRadius: '2px', maxWidth: '800px' }}>
+      {/* <div style={{ marginTop: '48px', padding: '24px', backgroundColor: 'rgb(245 245 245)', border: '1px solid rgb(200 200 200)', borderRadius: '2px', maxWidth: '800px' }}>
         <p style={{ fontSize: '12px', color: 'rgb(100 100 100)', margin: 0 }}>
           💡 <strong>Placeholder content:</strong> Replace the blog posts above with your actual articles. You can either link to external blog platforms or create static markdown files for each post.
         </p>
-      </div>
+      </div> */}
     </div>
   );
 }
