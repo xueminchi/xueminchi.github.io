@@ -1,10 +1,13 @@
 // 设置你想要高亮的作者名字（通常是你自己的名字）
-const HIGHLIGHT_AUTHOR = "Xuemin Chi";
+const HIGHLIGHT_AUTHORS = ["Xuemin Chi", "Xuemin Chi*", "Jihao Huang*"];
+
 
 // 会议/期刊颜色映射 - 可以自定义每个会议的颜色
 const CONFERENCE_COLORS: Record<string, string> = {
   "IROS": "rgb(59 130 246)",  // 蓝色
-  "ICRA": "rgb(16 185 129)",  // 绿色
+  "CCDC": "rgb(59 130 246)",  // 蓝色
+  "ICRA": "rgb(59 130 246)",  // 蓝色
+  // "ICRA": "rgb(16 185 129)",  // 绿色
   "RSS": "rgb(249 115 22)",   // 橙色
   "CoRL": "rgb(168 85 247)",  // 紫色
   "NeurIPS": "rgb(236 72 153)", // 粉色
@@ -25,7 +28,7 @@ const researchItems = [
   {
     id: 1,
     title: "Efficient and Real-Time Manipulation Planning for Robotics Using Projection-Based Optimization",
-    authors: ["Xuemin Chi", "Hakan Girgin", "Tobias Löw", "Yiming Li", "Teng Xue", "Jihao Huang", "Cheng Hu", "Zhitao Liu", "Sylvain Calinon"],
+    authors: ["Xuemin Chi*", "Hakan Girgin*", "Tobias Löw", "Yiming Li", "Teng Xue", "Jihao Huang", "Cheng Hu", "Zhitao Liu", "Sylvain Calinon"],
     conference: "IROS",
     conferenceUrl: "https://sites.google.com/view/alspg-oc",  // TODO: 添加会议官网链接
     date: "2025",
@@ -55,15 +58,25 @@ const researchItems = [
   {
     id: 4,
     title: "Safe dynamic motion generation in configuration space using differentiable distance fields",
-    authors: ["Xuemin Chi", "Yiming Li", "Jihao Huang", "Bolun Dai", "Zhitao Liu", "Sylvain Calinon"],
+    authors: ["Xuemin Chi*", "Jihao Huang*", "Yiming Li", "Bolun Dai", "Zhitao Liu", "Sylvain Calinon"],
     conference: "ICRA",
     conferenceUrl: "https://sites.google.com/view/sdfcdf-tvcbfs-qp",  // TODO: 添加arXiv链接
     date: "2025",
     description: "Learning-based differentiable distance fields for safe dynamic motion generation in configuration space.",
     pdfUrl: "https://arxiv.org/pdf/2412.16456"
   },
-  {
+    {
     id: 5,
+    title: "Projection-Based Optimization for Dynamic Obstacle Avoidance Using Velocity Obstacle",
+    authors: ["Xuemin Chi*", "Jihao Huang*", "Jun Zeng", "Zhitao Liu", "Hongye Su"],
+    conference: "ICRA",
+    conferenceUrl: "https://sites.google.com/view/geopro-vo",  // TODO: 添加arXiv链接
+    date: "2025",
+    description: "Velocity Obstacle-based projections for multi-robot dynamic obstacle avoidance.",
+    pdfUrl: "https://xueminchi.github.io/research"
+  },
+  {
+    id: 6,
     title: "Configuration space distance fields for manipulation planning",
     authors: ["Yiming Li", "Xuemin Chi", "Amirreza Razmjoo", "Sylvain Calinon"],
     conference: "RSS Best Paper Finalist",
@@ -72,22 +85,55 @@ const researchItems = [
     description: "Learning-based robot representation in configuration space for manipulation planning.",
     pdfUrl: "https://arxiv.org/pdf/2406.01137"
   },
+  {
+    id: 7,
+    title: "Whole-body Dynamic Collision Avoidance with Time-varying Control Barrier Functions",
+    authors: ["Jihao Huang", "Xuemin Chi", "Zhitao Liu", "Hongye Su"],
+    conference: "CCDC",
+    conferenceUrl: "https://sites.google.com/view/cdfmp/home",  // TODO: 添加arXiv链接
+    date: "2024",
+    description: "Learning-based robot representation in configuration space for manipulation planning.",
+    pdfUrl: "https://arxiv.org/pdf/2406.01137"
+  },
+  {
+    id: 8,
+    title: "Configuration space distance fields for manipulation planning",
+    authors: ["Yiming Li", "Xuemin Chi", "Amirreza Razmjoo", "Sylvain Calinon"],
+    conference: "RSS Best Paper Finalist",
+    conferenceUrl: "https://sites.google.com/view/cdfmp/home",  // TODO: 添加arXiv链接
+    date: "2024",
+    description: "Learning-based robot representation in configuration space for manipulation planning.",
+    pdfUrl: "https://arxiv.org/pdf/2406.01137"
+  },
+  {
+    id: 9,
+    title: "Fast Path Planning for Autonomous Vehicle Parking with Safety-Guarantee using Hamilton-Jacobi Reachability",
+    authors: ["Xuemin Chi", "Jun Zeng*", "Jihao Huang", "Zhitao Liu", "Hongye Su"],
+    conference: "IEEE Transactions on Intelligent Vehicles",
+    conferenceUrl: "https://www.youtube.com/watch?v=lafie7BW9oE",  // TODO: 添加arXiv链接
+    date: "2024",
+    description: "Learning-based robot representation in configuration space for manipulation planning.",
+    pdfUrl: "https://arxiv.org/pdf/2310.15190"
+  },
 ];
 
 // 作者列表渲染组件 - 高亮指定作者
 function AuthorList({ authors }: { authors: string[] }) {
   return (
     <span style={{ fontSize: '12px', color: 'rgb(100 100 100)' }}>
-      {authors.map((author, index) => (
-        <span key={index}>
-          {author === HIGHLIGHT_AUTHOR ? (
-            <strong style={{ fontWeight: '600', color: 'rgb(0 0 0)' }}>{author}</strong>
-          ) : (
-            <span>{author}</span>
-          )}
-          {index < authors.length - 1 && ', '}
-        </span>
-      ))}
+      {authors.map((author, index) => {
+        const isHighlighted = HIGHLIGHT_AUTHORS.includes(author);
+        return (
+          <span key={index}>
+            {isHighlighted ? (
+              <strong style={{ fontWeight: 600, color: 'rgb(0 0 0)' }}>{author}</strong>
+            ) : (
+              <span>{author}</span>
+            )}
+            {index < authors.length - 1 && ', '}
+          </span>
+        );
+      })}
     </span>
   );
 }
@@ -185,7 +231,7 @@ export default function Research() {
       </div>
 
       {/* Placeholder Notice */}
-      <div style={{ marginTop: '48px', padding: '24px', backgroundColor: 'rgb(245 245 245)', border: '1px solid rgb(200 200 200)', borderRadius: '2px' }}>
+      {/* <div style={{ marginTop: '48px', padding: '24px', backgroundColor: 'rgb(245 245 245)', border: '1px solid rgb(200 200 200)', borderRadius: '2px' }}>
         <p style={{ fontSize: '12px', color: 'rgb(100 100 100)', margin: 0, lineHeight: '1.6' }}>
           💡 <strong>How to customize:</strong><br/>
           1. Replace <code>authors</code> array with real author list for each paper<br/>
@@ -193,7 +239,7 @@ export default function Research() {
           3. Update <code>pdfUrl</code> with the direct PDF download link<br/>
           4. Your name (set in <code>HIGHLIGHT_AUTHOR</code>) will be automatically <strong>bold and darker</strong>
         </p>
-      </div>
+      </div> */}
     </div>
   );
 }
