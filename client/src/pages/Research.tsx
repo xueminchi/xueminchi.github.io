@@ -11,6 +11,7 @@ const CONFERENCE_COLORS: Record<string, string> = {
   "CVPR": "rgb(234 179 8)",   // 黄色
   "arXiv": "rgb(100 100 100)", // 灰色
   "IEEE Transactions on Control Systems Technology": "rgb(59 130 246)", // 蓝色
+  "RSS Best Paper Finalist": "rgb(156, 35, 31)", // 红色
   // 添加更多会议/期刊及其颜色
   // 格式: "会议名称": "rgb(R G B)"
 };
@@ -36,7 +37,7 @@ const researchItems = [
     title: "FSDP: Fast and Safe Data-Driven Overtaking Trajectory Planning for Head-to-Head Autonomous Racing Competitions",
     authors: ["Cheng Hu", "Jihao Huang", "Weiye Mao", "Yiming Fu", "Xuemin Chi", "Haotong Qin", "Nicolas Baumann", "Zhitao Liu", "Michele Magno"],
     conference: "IROS",
-    conferenceUrl: "https://iros2025.org/",  // TODO: 添加会议官网链接
+    conferenceUrl: "https://github.com/ZJU-DDRX/FSDP",  // TODO: 添加会议官网链接
     date: "2025",
     description: "Learn opponent behavior and plan overtaking trajectories in real-time for autonomous racing.",
     pdfUrl: "https://arxiv.org/pdf/2503.06075"
@@ -46,7 +47,7 @@ const researchItems = [
     title: "Dynamic collision avoidance using velocity obstacle-based control barrier functions",
     authors: ["Jihao Huang", "Jun Zeng", "Xuemin Chi", "Koushil Sreenath", "Zhitao Liu", "Hongye Su"],
     conference: "IEEE Transactions on Control Systems Technology",
-    conferenceUrl: "https://ieeexplore.ieee.org/xpl/RecentIssue.jsp?punumber=87",  // TODO: 添加期刊链接
+    conferenceUrl: "https://ieeexplore.ieee.org/document/10916817",  // TODO: 添加期刊链接
     date: "2025",
     description: "Dynamic collision avoidance using velocity obstacle-based control barrier functions.",
     pdfUrl: "https://arxiv.org/pdf/2503.00606"
@@ -55,8 +56,8 @@ const researchItems = [
     id: 4,
     title: "Safe dynamic motion generation in configuration space using differentiable distance fields",
     authors: ["Xuemin Chi", "Yiming Li", "Jihao Huang", "Bolun Dai", "Zhitao Liu", "Sylvain Calinon"],
-    conference: "arXiv",
-    conferenceUrl: "https://arxiv.org/",  // TODO: 添加arXiv链接
+    conference: "ICRA",
+    conferenceUrl: "https://sites.google.com/view/sdfcdf-tvcbfs-qp",  // TODO: 添加arXiv链接
     date: "2025",
     description: "Learning-based differentiable distance fields for safe dynamic motion generation in configuration space.",
     pdfUrl: "https://arxiv.org/pdf/2412.16456"
@@ -65,7 +66,7 @@ const researchItems = [
     id: 5,
     title: "Configuration space distance fields for manipulation planning",
     authors: ["Yiming Li", "Xuemin Chi", "Amirreza Razmjoo", "Sylvain Calinon"],
-    conference: "RSS Outstanding Paper Award Finalists",
+    conference: "RSS Best Paper Finalist",
     conferenceUrl: "https://sites.google.com/view/cdfmp/home",  // TODO: 添加arXiv链接
     date: "2024",
     description: "Learning-based robot representation in configuration space for manipulation planning.",
