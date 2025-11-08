@@ -7,6 +7,8 @@ const CONFERENCE_COLORS: Record<string, string> = {
   "IROS": "rgb(59 130 246)",  // 蓝色
   "CCDC": "rgb(59 130 246)",  // 蓝色
   "ICRA": "rgb(59 130 246)",  // 蓝色
+  "RAL": "rgb(59 130 246)",  // 蓝色
+  "IECON": "rgb(59 130 246)",  // 蓝色
   // "ICRA": "rgb(16 185 129)",  // 绿色
   "RSS": "rgb(249 115 22)",   // 橙色
   "CoRL": "rgb(168 85 247)",  // 紫色
@@ -97,16 +99,6 @@ const researchItems = [
   },
   {
     id: 8,
-    title: "Configuration space distance fields for manipulation planning",
-    authors: ["Yiming Li", "Xuemin Chi", "Amirreza Razmjoo", "Sylvain Calinon"],
-    conference: "RSS Best Paper Finalist",
-    conferenceUrl: "https://sites.google.com/view/cdfmp/home",  // TODO: 添加arXiv链接
-    date: "2024",
-    description: "Learning-based robot representation in configuration space for manipulation planning.",
-    pdfUrl: "https://arxiv.org/pdf/2406.01137"
-  },
-  {
-    id: 9,
     title: "Fast Path Planning for Autonomous Vehicle Parking with Safety-Guarantee using Hamilton-Jacobi Reachability",
     authors: ["Xuemin Chi", "Jun Zeng", "Jihao Huang", "Zhitao Liu", "Hongye Su"],
     conference: "IEEE Transactions on Vehicle Technology",
@@ -114,6 +106,46 @@ const researchItems = [
     date: "2024",
     description: "A hierarchical path planning framework for autonomous vehicle parking with safety guarantee.",
     pdfUrl: "https://arxiv.org/pdf/2310.15190"
+  },
+  {
+    id: 9,
+    title: "Velocity obstacle for polytopic collision avoidance for distributed multi-robot systems",
+    authors: ["Jihao Huang", "Jun Zeng", "Xuemin Chi", "Koushil Sreenath", "Zhitao Liu", "Hongye Su"],
+    conference: "RSS Best Paper Finalist",
+    conferenceUrl: "https://github.com/HybridRobotics/vo-polytope",  // TODO: 添加arXiv链接
+    date: "2024",
+    description: "First time use of velocity obstacle for polytopic collision avoidance in multi-robot systems.",
+    pdfUrl: "https://arxiv.org/pdf/2304.07954"
+  },
+  {
+    id: 10,
+    title: "Geometric Projectors: Geometric Constraints based Optimization for Robot Behaviors",
+    authors: ["Xuemin Chi", "Tobias Löw", "Yiming Li", "Zhitao Liu", "Sylvain Calinon"],
+    conference: "arXiv",
+    conferenceUrl: "https://sites.google.com/view/geopro-oc/geopro",  // TODO: 添加arXiv链接
+    date: "2023",
+    description: "First time use of geometric projectors for planning robot behaviors.",
+    pdfUrl: "https://arxiv.org/pdf/2309.08802"
+  },
+  {
+    id: 11,
+    title: "Obstacle avoidance for unicycle-modelled mobile robots with time-varying control barrier functions",
+    authors: ["Jihao Huang", "Zhitao Liu", "Jun Zeng", "Xuemin Chi", "Hongye Su"],
+    conference: "IECON",
+    conferenceUrl: "https://github.com/HybridRobotics/vo-polytope",  // TODO: 添加arXiv链接
+    date: "2023",
+    description: "First time use of velocity obstacle for polytopic collision avoidance in multi-robot systems.",
+    pdfUrl: "https://xueminchi.github.io/research"
+  },
+  {
+    id: 12,
+    title: "Optimization-based Motion Planning for Autonomous Parking Considering Dynamic Obstacle: A Hierarchical Framework",
+    authors: ["Xuemin Chi", "Zhitao Liu", "Jihao Huang", "Feng Hong", "Hongye Su"],
+    conference: "CCDC",
+    conferenceUrl: "https://arxiv.org/pdf/2210.13112",  // TODO: 添加arXiv链接
+    date: "2022",
+    description: "First time use of velocity obstacle for polytopic collision avoidance in multi-robot systems.",
+    pdfUrl: "https://arxiv.org/pdf/2210.13112"
   },
 ];
 
