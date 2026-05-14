@@ -34,7 +34,7 @@ export default function Home() {
                 My research focuses on imitation learning, reinforcement learning and its applications in robotics and autonomous systems.
               </p>
               <p>
-                I am particularly interested in next-generation robot foundation models and world models, with a focus on smart modeling and sampling techniques such as energy-based methods.
+                I am particularly interested in next-generation robot foundation models and world models.
               </p>
               <p>
                 This website collects my research, projects, and notes on robotics and AI. Feel free to explore and get in touch.
