@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RoboTwin 2.0: A Scalable Data Generator and Benchmark with Strong Domain Randomization for Robust Bimanual Robotic Manipulation | VLA / WAM Details</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f4f5f7;
+      --surface: #ffffff;
+      --ink: #1c1f23;
+      --muted: #5e6673;
+      --line: #d9dee6;
+      --accent: #0d7f78;
+      --accent-ink: #ffffff;
+      --soft: #edf7f6;
+      --shadow: 0 10px 24px rgba(28, 31, 35, 0.08);
+      --radius: 8px;
+      --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+      --sans: Inter, "Segoe UI", "Microsoft YaHei UI", "Microsoft YaHei", Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--sans);
+      font-size: 16px;
+      line-height: 1.65;
+      letter-spacing: 0;
+    }
+
+    a {
+      color: inherit;
+    }
+
+    .topbar {
+      background: #20252b;
+      color: #f6f7f9;
+      border-bottom: 4px solid var(--accent);
+    }
+
+    .topbar-inner,
+    .page {
+      width: min(1120px, calc(100% - 32px));
+      margin: 0 auto;
+    }
+
+    .topbar-inner {
+      padding: 22px 0 18px;
+    }
+
+    .eyebrow {
+      margin: 0 0 6px;
+      color: #b7c0ca;
+      font-size: 13px;
+    }
+
+    h1 {
+      margin: 0;
+      max-width: 980px;
+      font-size: 30px;
+      line-height: 1.22;
+      font-weight: 760;
+    }
+
+    .page {
+      padding: 18px 0 34px;
+    }
+
+    .detail-card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 26px 28px 30px;
+    }
+
+    .chip-row,
+    .action-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .chip-row {
+      margin: 14px 0 18px;
+    }
+
+    .chip {
+      display: inline-flex;
+      min-height: 28px;
+      align-items: center;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 4px 10px;
+      color: #39414d;
+      background: #f9fafb;
+      font-size: 13px;
+      font-weight: 650;
+    }
+
+    .summary {
+      margin: 0 0 18px;
+      border-left: 4px solid var(--accent);
+      border-radius: 0 var(--radius) var(--radius) 0;
+      background: var(--soft);
+      padding: 13px 15px;
+      color: #233f3d;
+      font-weight: 610;
+    }
+
+    .action-row {
+      margin-bottom: 22px;
+    }
+
+    .button {
+      display: inline-flex;
+      min-height: 36px;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 7px 11px;
+      background: #ffffff;
+      color: var(--ink);
+      text-decoration: none;
+      font-size: 14px;
+      white-space: nowrap;
+    }
+
+    .button.primary {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: var(--accent-ink);
+    }
+
+    .button:hover {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(13, 127, 120, 0.12);
+    }
+
+    .meta-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin: 0 0 8px;
+    }
+
+    .meta-item {
+      min-width: 0;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 10px 12px;
+      background: #fbfcfd;
+    }
+
+    .meta-item span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .meta-item strong {
+      display: block;
+      margin-top: 4px;
+      font-weight: 680;
+      overflow-wrap: anywhere;
+    }
+
+    .detail-section {
+      border-top: 1px solid var(--line);
+      padding-top: 20px;
+      margin-top: 20px;
+    }
+
+    .detail-prose {
+      border-top: 1px solid var(--line);
+      margin-top: 20px;
+      padding-top: 20px;
+    }
+
+    .detail-prose h2,
+    .detail-section h2 {
+      margin: 0 0 8px;
+      color: #2b333d;
+      font-size: 18px;
+      line-height: 1.3;
+    }
+
+    .detail-prose p {
+      margin: 10px 0 0;
+      max-width: 900px;
+      color: #2d3742;
+      overflow-wrap: anywhere;
+    }
+
+    .detail-section ul {
+      margin: 0;
+      padding-left: 21px;
+    }
+
+    .detail-section li {
+      margin: 6px 0;
+      overflow-wrap: anywhere;
+    }
+
+    .footer-note {
+      margin: 22px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    @media (max-width: 760px) {
+      .topbar-inner,
+      .page {
+        width: min(100% - 22px, 1120px);
+      }
+
+      h1 {
+        font-size: 23px;
+      }
+
+      .detail-card {
+        padding: 18px 16px 22px;
+      }
+
+      .meta-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .button {
+        white-space: normal;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <p class="eyebrow">VLA / WAM Benchmark Details · 2026-05-24T11:42:52+08:00</p>
+      <h1>RoboTwin 2.0: A Scalable Data Generator and Benchmark with Strong Domain Randomization for Robust Bimanual Robotic Manipulation</h1>
+    </div>
+  </header>
+  <main class="page">
+    <article class="detail-card">
+      <div class="chip-row">
+        <span class="chip">3.3</span>
+        <span class="chip">RoboTwin 2.0</span>
+        <span class="chip">仿真 VLA / Manipulation</span>
+        <span class="chip">未标注</span>
+      </div>
+      <p class="summary">该条目目前还没有单独摘要，详情页先展示结构化字段，后续可在 Markdown 中补充更完整的工作介绍。</p>
+      <nav class="action-row" aria-label="详情页链接">
+        <a class="button primary" href="../index.html">返回列表</a>
+<a class="button" href="https://arxiv.org/abs/2506.18088" target="_blank" rel="noopener noreferrer">arXiv</a>
+<a class="button" href="https://robotwin-platform.github.io/" target="_blank" rel="noopener noreferrer">Project</a>
+<a class="button" href="https://github.com/RoboTwin-Platform/RoboTwin" target="_blank" rel="noopener noreferrer">GitHub</a>
+      </nav>
+      <section class="meta-grid" aria-label="论文元信息">
+
+          <div class="meta-item">
+            <span>条目编号</span>
+            <strong>3.3</strong>
+          </div>
+
+
+          <div class="meta-item">
+            <span>年份</span>
+            <strong>2025</strong>
+          </div>
+
+
+          <div class="meta-item">
+            <span>类型</span>
+            <strong>双臂仿真 benchmark / data generator</strong>
+          </div>
+
+
+          <div class="meta-item">
+            <span>阶段</span>
+            <strong>仿真 VLA / Manipulation</strong>
+          </div>
+
+
+          <div class="meta-item">
+            <span>优先级</span>
+            <strong>未标注</strong>
+          </div>
+
+
+          <div class="meta-item">
+            <span>arXiv</span>
+            <strong>2506.18088</strong>
+          </div>
+
+      </section>
+
+      <section class="detail-section">
+        <h2>工作概览</h2>
+        <ul><li>50 个 dual-arm tasks，731 objects，147 categories，5 robot embodiments。</li>
+<li>五类 domain randomization：clutter、lighting、background、tabletop height、language。</li></ul>
+      </section>
+
+
+      <section class="detail-section">
+        <h2>评测与系统设计</h2>
+        <ul><li>bimanual task progress</li>
+<li>domain randomization matrix</li>
+<li>embodiment variation</li>
+<li>clutter / lighting / table height / language perturbation</li></ul>
+      </section>
+
+
+      <section class="detail-section">
+        <h2>参考场景</h2>
+        <ul><li>对叠衣服、叠纸盒的双臂或复杂 manipulation 很有参考价值。</li>
+<li>第一阶段主要借鉴 perturbation matrix。</li></ul>
+      </section>
+
+      <p class="footer-note">详情页由结构化文献库自动生成；内容会随源文档维护继续更新。</p>
+    </article>
+  </main>
+</body>
+</html>

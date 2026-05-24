@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>pi0.5: A Vision-Language-Action Model with Open-World Generalization | VLA / WAM Details</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f4f5f7;
+      --surface: #ffffff;
+      --ink: #1c1f23;
+      --muted: #5e6673;
+      --line: #d9dee6;
+      --accent: #0d7f78;
+      --accent-ink: #ffffff;
+      --soft: #edf7f6;
+      --shadow: 0 10px 24px rgba(28, 31, 35, 0.08);
+      --radius: 8px;
+      --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+      --sans: Inter, "Segoe UI", "Microsoft YaHei UI", "Microsoft YaHei", Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--sans);
+      font-size: 16px;
+      line-height: 1.65;
+      letter-spacing: 0;
+    }
+
+    a {
+      color: inherit;
+    }
+
+    .topbar {
+      background: #20252b;
+      color: #f6f7f9;
+      border-bottom: 4px solid var(--accent);
+    }
+
+    .topbar-inner,
+    .page {
+      width: min(1120px, calc(100% - 32px));
+      margin: 0 auto;
+    }
+
+    .topbar-inner {
+      padding: 22px 0 18px;
+    }
+
+    .eyebrow {
+      margin: 0 0 6px;
+      color: #b7c0ca;
+      font-size: 13px;
+    }
+
+    h1 {
+      margin: 0;
+      max-width: 980px;
+      font-size: 30px;
+      line-height: 1.22;
+      font-weight: 760;
+    }
+
+    .page {
+      padding: 18px 0 34px;
+    }
+
+    .detail-card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 26px 28px 30px;
+    }
+
+    .chip-row,
+    .action-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .chip-row {
+      margin: 14px 0 18px;
+    }
+
+    .chip {
+      display: inline-flex;
+      min-height: 28px;
+      align-items: center;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 4px 10px;
+      color: #39414d;
+      background: #f9fafb;
+      font-size: 13px;
+      font-weight: 650;
+    }
+
+    .summary {
+      margin: 0 0 18px;
+      border-left: 4px solid var(--accent);
+      border-radius: 0 var(--radius) var(--radius) 0;
+      background: var(--soft);
+      padding: 13px 15px;
+      color: #233f3d;
+      font-weight: 610;
+    }
+
+    .action-row {
+      margin-bottom: 22px;
+    }
+
+    .button {
+      display: inline-flex;
+      min-height: 36px;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 7px 11px;
+      background: #ffffff;
+      color: var(--ink);
+      text-decoration: none;
+      font-size: 14px;
+      white-space: nowrap;
+    }
+
+    .button.primary {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: var(--accent-ink);
+    }
+
+    .button:hover {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(13, 127, 120, 0.12);
+    }
+
+    .meta-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin: 0 0 8px;
+    }
+
+    .meta-item {
+      min-width: 0;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 10px 12px;
+      background: #fbfcfd;
+    }
+
+    .meta-item span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .meta-item strong {
+      display: block;
+      margin-top: 4px;
+      font-weight: 680;
+      overflow-wrap: anywhere;
+    }
+
+    .detail-section {
+      border-top: 1px solid var(--line);
+      padding-top: 20px;
+      margin-top: 20px;
+    }
+
+    .detail-prose {
+      border-top: 1px solid var(--line);
+      margin-top: 20px;
+      padding-top: 20px;
+    }
+
+    .detail-prose h2,
+    .detail-section h2 {
+      margin: 0 0 8px;
+      color: #2b333d;
+      font-size: 18px;
+      line-height: 1.3;
+    }
+
+    .detail-prose p {
+      margin: 10px 0 0;
+      max-width: 900px;
+      color: #2d3742;
+      overflow-wrap: anywhere;
+    }
+
+    .detail-section ul {
+      margin: 0;
+      padding-left: 21px;
+    }
+
+    .detail-section li {
+      margin: 6px 0;
+      overflow-wrap: anywhere;
+    }
+
+    .footer-note {
+      margin: 22px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    @media (max-width: 760px) {
+      .topbar-inner,
+      .page {
+        width: min(100% - 22px, 1120px);
+      }
+
+      h1 {
+        font-size: 23px;
+      }
+
+      .detail-card {
+        padding: 18px 16px 22px;
+      }
+
+      .meta-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .button {
+        white-space: normal;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <p class="eyebrow">VLA / WAM Benchmark Details · 2026-05-24T11:42:52+08:00</p>
+      <h1>pi0.5: A Vision-Language-Action Model with Open-World Generalization</h1>
+    </div>
+  </header>
+  <main class="page">
+    <article class="detail-card">
+      <div class="chip-row">
+        <span class="chip">1.10</span>
+        <span class="chip">pi0.5</span>
+        <span class="chip">真机 / 真实世界评测</span>
+        <span class="chip">P1</span>
+      </div>
+      <p class="summary">pi0.5 在 pi0 基础上强调 open-world generalization，通过多机器人数据、移动操作数据、高层语义预测、web 数据和两阶段训练，让模型能在新家、新场景中执行长程 household tasks。</p>
+      <nav class="action-row" aria-label="详情页链接">
+        <a class="button primary" href="../index.html">返回列表</a>
+<a class="button" href="https://arxiv.org/abs/2504.16054" target="_blank" rel="noopener noreferrer">arXiv</a>
+<a class="button" href="https://pi.website/blog/pi05" target="_blank" rel="noopener noreferrer">Project</a>
+      </nav>
+      <section class="meta-grid" aria-label="论文元信息">
+
+          <div class="meta-item">
+            <span>条目编号</span>
+            <strong>1.10</strong>
+          </div>
+
+
+          <div class="meta-item">
+            <span>年份</span>
+            <strong>2025</strong>
+          </div>
+
+
+          <div class="meta-item">
+            <span>类型</span>
+            <strong>工业界 open-world VLA 系统论文 / 真实家居泛化评测参考</strong>
+          </div>
+
+
+          <div class="meta-item">
+            <span>阶段</span>
+            <strong>真机 / 真实世界评测</strong>
+          </div>
+
+
+          <div class="meta-item">
+            <span>优先级</span>
+            <strong>P1</strong>
+          </div>
+
+
+          <div class="meta-item">
+            <span>arXiv</span>
+            <strong>2504.16054</strong>
+          </div>
+
+      </section>
+
+      <section class="detail-prose">
+        <h2>论文导读</h2>
+        <p>pi0.5 是 Physical Intelligence 在 pi0 基础上面向 open-world generalization 的系统论文，关注模型是否能在新家、新物体和更长程 household tasks 中泛化。它把多机器人数据、移动操作数据、web 多模态数据、高层语义预测和 action post-training 组合起来，使评测目标从固定桌面任务扩展到更开放的家庭环境。</p><p>这篇工作对评测设计的价值在于拆分“开放世界泛化”。新环境、新物体、新语言表达、长程任务和阶段性 progress 应该被分开记录，而不是被一个最终 success rate 混在一起。它也提示语言指令、高层 subtask、目标对象状态和 partial completion 都是评测日志的重要组成部分。</p><p>对当前项目而言，pi0.5 适合作为真实家居泛化的中期参考。第一阶段不需要直接铺开 open-world household benchmark，但可以从现在开始保留 `environment_id`、`seen_unseen_env`、`object_seen_status`、`subtask_progress`、原始 instruction 和 high-level subtask label，避免后续做泛化分析时缺关键字段。</p>
+      </section>
+
+      <p class="footer-note">详情页由结构化文献库自动生成；内容会随源文档维护继续更新。</p>
+    </article>
+  </main>
+</body>
+</html>

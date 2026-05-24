@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AutoEval: Autonomous Evaluation of Generalist Robot Manipulation Policies in the Real World | VLA / WAM Details</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f4f5f7;
+      --surface: #ffffff;
+      --ink: #1c1f23;
+      --muted: #5e6673;
+      --line: #d9dee6;
+      --accent: #0d7f78;
+      --accent-ink: #ffffff;
+      --soft: #edf7f6;
+      --shadow: 0 10px 24px rgba(28, 31, 35, 0.08);
+      --radius: 8px;
+      --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+      --sans: Inter, "Segoe UI", "Microsoft YaHei UI", "Microsoft YaHei", Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--sans);
+      font-size: 16px;
+      line-height: 1.65;
+      letter-spacing: 0;
+    }
+
+    a {
+      color: inherit;
+    }
+
+    .topbar {
+      background: #20252b;
+      color: #f6f7f9;
+      border-bottom: 4px solid var(--accent);
+    }
+
+    .topbar-inner,
+    .page {
+      width: min(1120px, calc(100% - 32px));
+      margin: 0 auto;
+    }
+
+    .topbar-inner {
+      padding: 22px 0 18px;
+    }
+
+    .eyebrow {
+      margin: 0 0 6px;
+      color: #b7c0ca;
+      font-size: 13px;
+    }
+
+    h1 {
+      margin: 0;
+      max-width: 980px;
+      font-size: 30px;
+      line-height: 1.22;
+      font-weight: 760;
+    }
+
+    .page {
+      padding: 18px 0 34px;
+    }
+
+    .detail-card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 26px 28px 30px;
+    }
+
+    .chip-row,
+    .action-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .chip-row {
+      margin: 14px 0 18px;
+    }
+
+    .chip {
+      display: inline-flex;
+      min-height: 28px;
+      align-items: center;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 4px 10px;
+      color: #39414d;
+      background: #f9fafb;
+      font-size: 13px;
+      font-weight: 650;
+    }
+
+    .summary {
+      margin: 0 0 18px;
+      border-left: 4px solid var(--accent);
+      border-radius: 0 var(--radius) var(--radius) 0;
+      background: var(--soft);
+      padding: 13px 15px;
+      color: #233f3d;
+      font-weight: 610;
+    }
+
+    .action-row {
+      margin-bottom: 22px;
+    }
+
+    .button {
+      display: inline-flex;
+      min-height: 36px;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 7px 11px;
+      background: #ffffff;
+      color: var(--ink);
+      text-decoration: none;
+      font-size: 14px;
+      white-space: nowrap;
+    }
+
+    .button.primary {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: var(--accent-ink);
+    }
+
+    .button:hover {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(13, 127, 120, 0.12);
+    }
+
+    .meta-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin: 0 0 8px;
+    }
+
+    .meta-item {
+      min-width: 0;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 10px 12px;
+      background: #fbfcfd;
+    }
+
+    .meta-item span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .meta-item strong {
+      display: block;
+      margin-top: 4px;
+      font-weight: 680;
+      overflow-wrap: anywhere;
+    }
+
+    .detail-section {
+      border-top: 1px solid var(--line);
+      padding-top: 20px;
+      margin-top: 20px;
+    }
+
+    .detail-prose {
+      border-top: 1px solid var(--line);
+      margin-top: 20px;
+      padding-top: 20px;
+    }
+
+    .detail-prose h2,
+    .detail-section h2 {
+      margin: 0 0 8px;
+      color: #2b333d;
+      font-size: 18px;
+      line-height: 1.3;
+    }
+
+    .detail-prose p {
+      margin: 10px 0 0;
+      max-width: 900px;
+      color: #2d3742;
+      overflow-wrap: anywhere;
+    }
+
+    .detail-section ul {
+      margin: 0;
+      padding-left: 21px;
+    }
+
+    .detail-section li {
+      margin: 6px 0;
+      overflow-wrap: anywhere;
+    }
+
+    .footer-note {
+      margin: 22px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    @media (max-width: 760px) {
+      .topbar-inner,
+      .page {
+        width: min(100% - 22px, 1120px);
+      }
+
+      h1 {
+        font-size: 23px;
+      }
+
+      .detail-card {
+        padding: 18px 16px 22px;
+      }
+
+      .meta-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .button {
+        white-space: normal;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <p class="eyebrow">VLA / WAM Benchmark Details · 2026-05-24T11:42:52+08:00</p>
+      <h1>AutoEval: Autonomous Evaluation of Generalist Robot Manipulation Policies in the Real World</h1>
+    </div>
+  </header>
+  <main class="page">
+    <article class="detail-card">
+      <div class="chip-row">
+        <span class="chip">1.1</span>
+        <span class="chip">AutoEval</span>
+        <span class="chip">真机 / 真实世界评测</span>
+        <span class="chip">P0</span>
+      </div>
+      <p class="summary">AutoEval 的核心不是提出新任务，而是把真实机器人 policy 评测做成可以长时间运行的自动化流程，重点在 success detection、reset 和 episode job queue。</p>
+      <nav class="action-row" aria-label="详情页链接">
+        <a class="button primary" href="../index.html">返回列表</a>
+<a class="button" href="https://arxiv.org/abs/2503.24278" target="_blank" rel="noopener noreferrer">arXiv</a>
+<a class="button" href="https://auto-eval.github.io/" target="_blank" rel="noopener noreferrer">Project</a>
+<a class="button" href="https://github.com/zhouzypaul/auto_eval" target="_blank" rel="noopener noreferrer">GitHub</a>
+      </nav>
+      <section class="meta-grid" aria-label="论文元信息">
+
+          <div class="meta-item">
+            <span>条目编号</span>
+            <strong>1.1</strong>
+          </div>
+
+
+          <div class="meta-item">
+            <span>年份</span>
+            <strong>2025</strong>
+          </div>
+
+
+          <div class="meta-item">
+            <span>类型</span>
+            <strong>真机自动评测系统</strong>
+          </div>
+
+
+          <div class="meta-item">
+            <span>阶段</span>
+            <strong>真机 / 真实世界评测</strong>
+          </div>
+
+
+          <div class="meta-item">
+            <span>优先级</span>
+            <strong>P0</strong>
+          </div>
+
+
+          <div class="meta-item">
+            <span>arXiv</span>
+            <strong>2503.24278</strong>
+          </div>
+
+      </section>
+
+      <section class="detail-prose">
+        <h2>论文导读</h2>
+        <p>AutoEval 是一篇偏评测系统工程的真机工作，核心目标不是扩展任务库，而是把 generalist robot policy 的真实世界评测变成可调度、可记录、可较长时间运行的流程。它关注一次 episode 如何启动、如何判定有效、如何自动或半自动判断成功、失败后如何 reset，以及多个评测任务如何排队执行。</p><p>这篇工作的价值在于把 success rate 背后的执行过程显式化。对真实机器人来说，评测成本往往来自人工监督、异常恢复和重复初始化，而不是模型 forward 本身；因此 AutoEval 把 success detection、reset、intervention 和 system error 都放进评测系统设计。它适合提醒评测日志不要只保存最终成败，还要保存 episode duration、reset count、human intervention count、invalid reason 等过程字段。</p><p>对当前 benchmark reference 来说，AutoEval 是第一阶段真机评测的基础参考。第一版不必追求完全自动 reset 或完全自动 success classifier，但应尽早固定 episode schema，并允许人工标注、规则判定和未来自动判定器在同一套日志里对齐。</p>
+      </section>
+
+      <p class="footer-note">详情页由结构化文献库自动生成；内容会随源文档维护继续更新。</p>
+    </article>
+  </main>
+</body>
+</html>

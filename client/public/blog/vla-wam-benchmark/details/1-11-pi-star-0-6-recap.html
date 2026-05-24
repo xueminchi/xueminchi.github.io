@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>pi-star-0.6: a VLA That Learns From Experience / RECAP | VLA / WAM Details</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f4f5f7;
+      --surface: #ffffff;
+      --ink: #1c1f23;
+      --muted: #5e6673;
+      --line: #d9dee6;
+      --accent: #0d7f78;
+      --accent-ink: #ffffff;
+      --soft: #edf7f6;
+      --shadow: 0 10px 24px rgba(28, 31, 35, 0.08);
+      --radius: 8px;
+      --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+      --sans: Inter, "Segoe UI", "Microsoft YaHei UI", "Microsoft YaHei", Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--sans);
+      font-size: 16px;
+      line-height: 1.65;
+      letter-spacing: 0;
+    }
+
+    a {
+      color: inherit;
+    }
+
+    .topbar {
+      background: #20252b;
+      color: #f6f7f9;
+      border-bottom: 4px solid var(--accent);
+    }
+
+    .topbar-inner,
+    .page {
+      width: min(1120px, calc(100% - 32px));
+      margin: 0 auto;
+    }
+
+    .topbar-inner {
+      padding: 22px 0 18px;
+    }
+
+    .eyebrow {
+      margin: 0 0 6px;
+      color: #b7c0ca;
+      font-size: 13px;
+    }
+
+    h1 {
+      margin: 0;
+      max-width: 980px;
+      font-size: 30px;
+      line-height: 1.22;
+      font-weight: 760;
+    }
+
+    .page {
+      padding: 18px 0 34px;
+    }
+
+    .detail-card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 26px 28px 30px;
+    }
+
+    .chip-row,
+    .action-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .chip-row {
+      margin: 14px 0 18px;
+    }
+
+    .chip {
+      display: inline-flex;
+      min-height: 28px;
+      align-items: center;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 4px 10px;
+      color: #39414d;
+      background: #f9fafb;
+      font-size: 13px;
+      font-weight: 650;
+    }
+
+    .summary {
+      margin: 0 0 18px;
+      border-left: 4px solid var(--accent);
+      border-radius: 0 var(--radius) var(--radius) 0;
+      background: var(--soft);
+      padding: 13px 15px;
+      color: #233f3d;
+      font-weight: 610;
+    }
+
+    .action-row {
+      margin-bottom: 22px;
+    }
+
+    .button {
+      display: inline-flex;
+      min-height: 36px;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 7px 11px;
+      background: #ffffff;
+      color: var(--ink);
+      text-decoration: none;
+      font-size: 14px;
+      white-space: nowrap;
+    }
+
+    .button.primary {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: var(--accent-ink);
+    }
+
+    .button:hover {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(13, 127, 120, 0.12);
+    }
+
+    .meta-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin: 0 0 8px;
+    }
+
+    .meta-item {
+      min-width: 0;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 10px 12px;
+      background: #fbfcfd;
+    }
+
+    .meta-item span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .meta-item strong {
+      display: block;
+      margin-top: 4px;
+      font-weight: 680;
+      overflow-wrap: anywhere;
+    }
+
+    .detail-section {
+      border-top: 1px solid var(--line);
+      padding-top: 20px;
+      margin-top: 20px;
+    }
+
+    .detail-prose {
+      border-top: 1px solid var(--line);
+      margin-top: 20px;
+      padding-top: 20px;
+    }
+
+    .detail-prose h2,
+    .detail-section h2 {
+      margin: 0 0 8px;
+      color: #2b333d;
+      font-size: 18px;
+      line-height: 1.3;
+    }
+
+    .detail-prose p {
+      margin: 10px 0 0;
+      max-width: 900px;
+      color: #2d3742;
+      overflow-wrap: anywhere;
+    }
+
+    .detail-section ul {
+      margin: 0;
+      padding-left: 21px;
+    }
+
+    .detail-section li {
+      margin: 6px 0;
+      overflow-wrap: anywhere;
+    }
+
+    .footer-note {
+      margin: 22px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    @media (max-width: 760px) {
+      .topbar-inner,
+      .page {
+        width: min(100% - 22px, 1120px);
+      }
+
+      h1 {
+        font-size: 23px;
+      }
+
+      .detail-card {
+        padding: 18px 16px 22px;
+      }
+
+      .meta-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .button {
+        white-space: normal;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <p class="eyebrow">VLA / WAM Benchmark Details · 2026-05-24T11:42:52+08:00</p>
+      <h1>pi-star-0.6: a VLA That Learns From Experience / RECAP</h1>
+    </div>
+  </header>
+  <main class="page">
+    <article class="detail-card">
+      <div class="chip-row">
+        <span class="chip">1.11</span>
+        <span class="chip">pi-star-0.6 / RECAP</span>
+        <span class="chip">真机 / 真实世界评测</span>
+        <span class="chip">P0</span>
+      </div>
+      <p class="summary">pi-star-0.6 的核心是 RECAP：把 demonstrations、autonomous rollouts、稀疏 outcome labels 和专家 corrections 结合起来，用 advantage-conditioned policies 从真实机器人经验中继续改进 VLA。</p>
+      <nav class="action-row" aria-label="详情页链接">
+        <a class="button primary" href="../index.html">返回列表</a>
+<a class="button" href="https://arxiv.org/abs/2511.14759" target="_blank" rel="noopener noreferrer">arXiv</a>
+<a class="button" href="https://pi.website/blog/pistar06" target="_blank" rel="noopener noreferrer">Project</a>
+      </nav>
+      <section class="meta-grid" aria-label="论文元信息">
+
+          <div class="meta-item">
+            <span>条目编号</span>
+            <strong>1.11</strong>
+          </div>
+
+
+          <div class="meta-item">
+            <span>年份</span>
+            <strong>2025</strong>
+          </div>
+
+
+          <div class="meta-item">
+            <span>类型</span>
+            <strong>工业界 RL-VLA / 真机经验学习与 correction data 参考</strong>
+          </div>
+
+
+          <div class="meta-item">
+            <span>阶段</span>
+            <strong>真机 / 真实世界评测</strong>
+          </div>
+
+
+          <div class="meta-item">
+            <span>优先级</span>
+            <strong>P0</strong>
+          </div>
+
+
+          <div class="meta-item">
+            <span>arXiv</span>
+            <strong>2511.14759</strong>
+          </div>
+
+      </section>
+
+      <section class="detail-prose">
+        <h2>论文导读</h2>
+        <p>pi-star-0.6 / RECAP 是 PI 系列里很适合作为“真机数据回流”参考的系统论文。它关注的不是静态 benchmark 排名，而是真实机器人在 autonomous rollouts 中产生成功、失败、人工接管和专家 correction 后，如何把这些经验继续用于改进 VLA。</p><p>这篇工作的核心价值在于把失败和纠正数据视为可学习资产。demonstrations、autonomous rollouts、outcome labels 和 expert corrections 在系统里承担不同角色；评测日志因此需要保存 outcome、failure type、intervention count、correction episode、time to success、throughput 等信息。否则真机运行只会留下成败统计，无法形成后续训练闭环。</p><p>对当前阶段来说，RECAP 不需要立刻落地 RL 或 advantage-conditioned policy，但建议从第一版 episode schema 开始区分 `demo`、`eval_only`、`autonomous_rollout`、`human_correction` 等数据角色。这样后续做数据回流时，失败 episode 和人工纠正不会被当成无效 trial 丢掉。</p>
+      </section>
+
+      <p class="footer-note">详情页由结构化文献库自动生成；内容会随源文档维护继续更新。</p>
+    </article>
+  </main>
+</body>
+</html>
