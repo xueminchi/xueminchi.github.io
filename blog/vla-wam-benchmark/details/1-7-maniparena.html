@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ManipArena: Comprehensive Real-world Evaluation of Reasoning-Oriented Generalist Robot Manipulation | VLA / WAM Details</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f4f5f7;
+      --surface: #ffffff;
+      --ink: #1c1f23;
+      --muted: #5e6673;
+      --line: #d9dee6;
+      --accent: #0d7f78;
+      --accent-ink: #ffffff;
+      --soft: #edf7f6;
+      --shadow: 0 10px 24px rgba(28, 31, 35, 0.08);
+      --radius: 8px;
+      --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+      --sans: Inter, "Segoe UI", "Microsoft YaHei UI", "Microsoft YaHei", Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--sans);
+      font-size: 16px;
+      line-height: 1.65;
+      letter-spacing: 0;
+    }
+
+    a {
+      color: inherit;
+    }
+
+    .topbar {
+      background: #20252b;
+      color: #f6f7f9;
+      border-bottom: 4px solid var(--accent);
+    }
+
+    .topbar-inner,
+    .page {
+      width: min(1120px, calc(100% - 32px));
+      margin: 0 auto;
+    }
+
+    .topbar-inner {
+      padding: 22px 0 18px;
+    }
+
+    .eyebrow {
+      margin: 0 0 6px;
+      color: #b7c0ca;
+      font-size: 13px;
+    }
+
+    h1 {
+      margin: 0;
+      max-width: 980px;
+      font-size: 30px;
+      line-height: 1.22;
+      font-weight: 760;
+    }
+
+    .page {
+      padding: 18px 0 34px;
+    }
+
+    .detail-card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 26px 28px 30px;
+    }
+
+    .chip-row,
+    .action-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .chip-row {
+      margin: 14px 0 18px;
+    }
+
+    .chip {
+      display: inline-flex;
+      min-height: 28px;
+      align-items: center;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 4px 10px;
+      color: #39414d;
+      background: #f9fafb;
+      font-size: 13px;
+      font-weight: 650;
+    }
+
+    .summary {
+      margin: 0 0 18px;
+      border-left: 4px solid var(--accent);
+      border-radius: 0 var(--radius) var(--radius) 0;
+      background: var(--soft);
+      padding: 13px 15px;
+      color: #233f3d;
+      font-weight: 610;
+    }
+
+    .action-row {
+      margin-bottom: 22px;
+    }
+
+    .button {
+      display: inline-flex;
+      min-height: 36px;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 7px 11px;
+      background: #ffffff;
+      color: var(--ink);
+      text-decoration: none;
+      font-size: 14px;
+      white-space: nowrap;
+    }
+
+    .button.primary {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: var(--accent-ink);
+    }
+
+    .button:hover {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(13, 127, 120, 0.12);
+    }
+
+    .meta-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin: 0 0 8px;
+    }
+
+    .meta-item {
+      min-width: 0;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 10px 12px;
+      background: #fbfcfd;
+    }
+
+    .meta-item span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .meta-item strong {
+      display: block;
+      margin-top: 4px;
+      font-weight: 680;
+      overflow-wrap: anywhere;
+    }
+
+    .detail-section {
+      border-top: 1px solid var(--line);
+      padding-top: 20px;
+      margin-top: 20px;
+    }
+
+    .detail-prose {
+      border-top: 1px solid var(--line);
+      margin-top: 20px;
+      padding-top: 20px;
+    }
+
+    .detail-prose h2,
+    .detail-section h2 {
+      margin: 0 0 8px;
+      color: #2b333d;
+      font-size: 18px;
+      line-height: 1.3;
+    }
+
+    .detail-prose p {
+      margin: 10px 0 0;
+      max-width: 900px;
+      color: #2d3742;
+      overflow-wrap: anywhere;
+    }
+
+    .detail-section ul {
+      margin: 0;
+      padding-left: 21px;
+    }
+
+    .detail-section li {
+      margin: 6px 0;
+      overflow-wrap: anywhere;
+    }
+
+    .footer-note {
+      margin: 22px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    @media (max-width: 760px) {
+      .topbar-inner,
+      .page {
+        width: min(100% - 22px, 1120px);
+      }
+
+      h1 {
+        font-size: 23px;
+      }
+
+      .detail-card {
+        padding: 18px 16px 22px;
+      }
+
+      .meta-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .button {
+        white-space: normal;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <p class="eyebrow">VLA / WAM Benchmark Details · 2026-05-24T11:42:52+08:00</p>
+      <h1>ManipArena: Comprehensive Real-world Evaluation of Reasoning-Oriented Generalist Robot Manipulation</h1>
+    </div>
+  </header>
+  <main class="page">
+    <article class="detail-card">
+      <div class="chip-row">
+        <span class="chip">1.7</span>
+        <span class="chip">ManipArena</span>
+        <span class="chip">真机 / 真实世界评测</span>
+        <span class="chip">P1</span>
+      </div>
+      <p class="summary">ManipArena 把真实评测、real-to-sim 环境、reasoning-oriented manipulation 和丰富传感诊断放在一起，适合作为第二阶段综合评测蓝图。</p>
+      <nav class="action-row" aria-label="详情页链接">
+        <a class="button primary" href="../index.html">返回列表</a>
+<a class="button" href="https://arxiv.org/abs/2603.28545" target="_blank" rel="noopener noreferrer">arXiv</a>
+<a class="button" href="https://github.com/maniparena/maniparena-repo" target="_blank" rel="noopener noreferrer">GitHub</a>
+<a class="button" href="https://huggingface.co/datasets/ManipArena/maniparena-dataset" target="_blank" rel="noopener noreferrer">Dataset</a>
+      </nav>
+      <section class="meta-grid" aria-label="论文元信息">
+
+          <div class="meta-item">
+            <span>条目编号</span>
+            <strong>1.7</strong>
+          </div>
+
+
+          <div class="meta-item">
+            <span>年份</span>
+            <strong>2026</strong>
+          </div>
+
+
+          <div class="meta-item">
+            <span>类型</span>
+            <strong>真实 + real-to-sim reasoning-oriented benchmark</strong>
+          </div>
+
+
+          <div class="meta-item">
+            <span>阶段</span>
+            <strong>真机 / 真实世界评测</strong>
+          </div>
+
+
+          <div class="meta-item">
+            <span>优先级</span>
+            <strong>P1</strong>
+          </div>
+
+
+          <div class="meta-item">
+            <span>arXiv</span>
+            <strong>2603.28545</strong>
+          </div>
+
+      </section>
+
+      <section class="detail-prose">
+        <h2>论文导读</h2>
+        <p>ManipArena 是更综合的 reasoning-oriented manipulation 评测框架，把真实评测、real-to-sim 环境、controlled OOD、语义/空间推理任务和丰富传感诊断放在同一套体系里。它不是最小真机闭环，而是展示了当基础 episode logging 稳定之后，评测系统可以怎样向诊断型 benchmark 演进。</p><p>这篇工作的重点是把任务成功、语言指令、场景语义、目标对象关系、低层运动信号和 real-to-sim 诊断联系起来。相比只看 task success，它更适合回答“模型为什么失败”：是语义理解错、空间关系错、对象绑定错，还是底层动作执行不稳定。</p><p>对当前项目而言，ManipArena 适合作为第二阶段蓝图。第一阶段可先吸收任务标签、失败原因和 episode schema；后续如果接入 robot state/action log 或 sim diagnostic，可以逐步形成更接近 ManipArena 的跨模态诊断能力。</p>
+      </section>
+
+      <p class="footer-note">详情页由结构化文献库自动生成；内容会随源文档维护继续更新。</p>
+    </article>
+  </main>
+</body>
+</html>

@@ -1,10 +1,10 @@
 const blogPosts = [
   {
-    id: 1,
-    title: "Blog Post Title 1",
-    date: "2024-11-05",
-    excerpt: "A brief excerpt or summary of your blog post. This gives readers a preview of what to expect.",
-    link: "#",
+    id: "vla-wam-benchmark",
+    title: "VLA / WAM Benchmark Reference",
+    date: "2026-05-24",
+    excerpt: "An interactive research map for robot VLA evaluation, real-world benchmarks, simulation proxies, and world action models.",
+    link: "/blog/vla-wam-benchmark/",
   },
 ];
 
@@ -37,7 +37,7 @@ export default function Blog() {
             <p style={{ fontSize: '14px', lineHeight: '1.6', marginBottom: '12px' }}>
               {post.excerpt}
             </p>
-            <a href={`/blog/${post.id}`} style={{ display: 'inline-block', marginTop: '8px', fontSize: '12px', color: 'rgb(59 130 246)', textDecoration: 'none' }}>
+            <a href={post.link} style={{ display: 'inline-block', marginTop: '8px', fontSize: '12px', color: 'rgb(59 130 246)', textDecoration: 'none' }}>
               Read more →
             </a>
           </article>
