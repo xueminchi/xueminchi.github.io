@@ -27,19 +27,26 @@
       <p>The work targeted an existing PyTorch π0.5 training pipeline for dual-arm garment folding. Building on the team’s acceleration branch, I integrated and validated an optional fast path without changing the model architecture or the data recipe used in the two-GPU comparison.</p>
       <ul>
         <li><strong>Compile the training model.</strong> Apply <code>torch.compile(model)</code> in default mode. In this implementation, compilation wraps the model after DistributedDataParallel (DDP); it does not compile the data loader or the entire training loop. See the <a href="https://docs.pytorch.org/docs/2.7/generated/torch.compile.html">PyTorch compile API</a>.</li>
-        <li><strong>Enable fused AdamW.</strong> Use the optimizer’s <code>fused=True</code> path. This is a separate optimization, so the measured speedup belongs to the combined configuration, not compile alone. See the <a href="https://docs.pytorch.org/docs/2.7/generated/torch.optim.AdamW.html">AdamW API</a>.</li>
+        <li><strong>Optional fused optimizer.</strong> Fused AdamW is controlled independently and can be disabled without disabling model compilation. It was enabled in the reported comparison; those timings therefore describe the combined configuration. See the <a href="https://docs.pytorch.org/docs/2.7/generated/torch.optim.AdamW.html">AdamW API</a>.</li>
         <li><strong>Preserve training compatibility.</strong> Unwrap DDP and compile wrappers when saving or loading model weights, retain the eager fallback, and provide explicit launch switches. Gradient checkpointing remained enabled in both comparison runs.</li>
       </ul>
-      <pre class="code-snippet"><code class="language-python"># Keep the existing optimizer hyperparameters.
-optimizer = torch.optim.AdamW(
-    model.parameters(),
-    **optimizer_kwargs,
-    fused=True,
-)
+      <pre class="code-snippet"><code class="language-python"># Full π0.5 policy; model_cfg.pi05 is True.
+model = PI0Pytorch(model_cfg).to(device)
 
-# Compile the training model using the default mode.
-model = torch.compile(model)</code></pre>
-      <p class="fine">Simplified core snippet: <code>optimizer_kwargs</code> contains the original optimizer hyperparameters, and <code>model</code> is already DDP-wrapped for multi-GPU training. The full integration also unwraps DDP and compile wrappers when saving or loading weights; configuration switches and that compatibility code are omitted here.</p>
+if use_ddp:
+    model = DistributedDataParallel(model, device_ids=[device.index])
+
+# Compile the model's training call, not the entire training loop.
+model = torch.compile(model)
+model.train()
+
+# Training-loop excerpt; optimizer initialization is omitted.
+loss = model(observation, actions).mean()
+loss.backward()
+optimizer.step()
+optimizer.zero_grad(set_to_none=True)</code></pre>
+      <p>Here, <code>PI0Pytorch</code> is the complete policy configured for π0.5: the vision/language backbone, Action Expert, and action/time projections. Its training call returns a loss tensor. Compilation starts from this model call, not just the action head; default mode can compile separate regions rather than requiring a single uninterrupted graph. Data loading and <code>optimizer.step()</code> remain outside this compiled entry point.</p>
+      <p class="fine">Simplified excerpt, not a standalone training script: imports, configuration, weight loading, optimizer initialization, gradient clipping and other loop details are omitted. The full integration also unwraps DDP and compile wrappers when saving or loading weights. The fused-optimizer option is separate from the compilation shown here.</p>
     </section>
     <section id="comparison">
       <h2>Two GPUs: measuring the gain</h2>
