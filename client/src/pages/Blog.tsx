@@ -1,12 +1,5 @@
 const blogPosts = [
   {
-    id: "asynchronous-vla-control",
-    title: "Asynchronous Control: Inference-Time RTC and VLASH",
-    date: "2026-09-05",
-    excerpt: "A comparative study of inference-time guidance and latency-aware training for asynchronous robot control, with offline analysis and dual-arm manipulation experiments.",
-    link: "/blog/asynchronous-vla-control/",
-  },
-  {
     id: "vla-wam-benchmark",
     title: "VLA / WAM Benchmark Reference",
     date: "2026-05-24",
