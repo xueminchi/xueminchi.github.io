@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex">
+  <meta name="description" content="A practical pi0.5 training acceleration case: 2.57 to 1.60 seconds per step in a matched two-A800 comparison, and an 80,000-step eight-A800 training run.">
+  <meta name="author" content="Xuemin Chi">
+  <meta name="color-scheme" content="light">
+  <title>Practical π0.5 Training Acceleration | Xuemin Chi</title>
+  <link rel="stylesheet" href="../asynchronous-vla-control/article.css">
+  <link rel="stylesheet" href="article.css">
+</head>
+<body>
+  <a class="skip" href="#article">Skip to article</a>
+  <nav class="site-nav" aria-label="Site navigation"><div class="nav-inner"><a class="brand" href="/">Xuemin Chi</a><div class="nav-links"><a href="/">Home</a><a href="/research">Research</a><a href="/blog" aria-current="page">Blog</a></div></div></nav>
+  <header class="hero">
+    <p class="eyebrow">Robotics / Engineering note</p>
+    <h1>Practical π0.5 Training Acceleration</h1>
+    <p class="subtitle">torch.compile, fused AdamW, and an 80K-step run on A800 GPUs</p>
+    <p class="byline">Xuemin Chi · <time datetime="2026-09-06">September 6, 2026</time></p>
+    <p class="lead">A small training-stack change reduced steady-state step time from <strong>2.57 to 1.60 seconds</strong> in a matched two-A800 comparison. A subsequent eight-A800 run completed <strong>80,000 updates at approximately 1.6 seconds per step</strong>. This note covers the implementation, the measured gain, and the difference between warm training throughput and total runtime.</p>
+  </header>
+  <main id="article" class="short-article"><article>
+    <section id="implementation">
+      <h2>What changed</h2>
+      <p>The work targeted an existing PyTorch π0.5 training pipeline for dual-arm garment folding. Building on the team’s acceleration branch, I integrated and validated an optional fast path without changing the model architecture or the data recipe used in the two-GPU comparison.</p>
+      <ul>
+        <li><strong>Compile the training model.</strong> Apply <code>torch.compile(model)</code> in default mode. In this implementation, compilation wraps the model after DistributedDataParallel (DDP); it does not compile the data loader or the entire training loop. See the <a href="https://docs.pytorch.org/docs/2.7/generated/torch.compile.html">PyTorch compile API</a>.</li>
+        <li><strong>Enable fused AdamW.</strong> Use the optimizer’s <code>fused=True</code> path. This is a separate optimization, so the measured speedup belongs to the combined configuration, not compile alone. See the <a href="https://docs.pytorch.org/docs/2.7/generated/torch.optim.AdamW.html">AdamW API</a>.</li>
+        <li><strong>Preserve training compatibility.</strong> Unwrap DDP and compile wrappers when saving or loading model weights, retain the eager fallback, and provide explicit launch switches. Gradient checkpointing remained enabled in both comparison runs.</li>
+      </ul>
+      <pre class="code-snippet"><code class="language-python"># Keep the existing optimizer hyperparameters.
+optimizer = torch.optim.AdamW(
+    model.parameters(),
+    **optimizer_kwargs,
+    fused=True,
+)
+
+# Compile the training model using the default mode.
+model = torch.compile(model)</code></pre>
+      <p class="fine">Simplified core snippet: <code>optimizer_kwargs</code> contains the original optimizer hyperparameters, and <code>model</code> is already DDP-wrapped for multi-GPU training. The full integration also unwraps DDP and compile wrappers when saving or loading weights; configuration switches and that compatibility code are omitted here.</p>
+    </section>
+    <section id="comparison">
+      <h2>Two GPUs: measuring the gain</h2>
+      <p>Both runs used two A800 GPUs, the same garment-folding configuration, global batch 32 (16 samples per GPU), and 100 optimizer updates. Checkpoint writes were disabled for this short comparison.</p>
+      <div class="table-wrap"><table>
+        <caption>Matched two-A800 comparison</caption>
+        <thead><tr><th scope="col">Training configuration</th><th scope="col">Steady step time</th><th scope="col">100-step elapsed time</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Eager + ordinary AdamW</th><td>2.57 s</td><td>4 min 36 s</td></tr>
+          <tr><th scope="row">Compile + fused AdamW</th><td><strong>1.60 s</strong></td><td>10 min 51 s</td></tr>
+        </tbody>
+      </table></div>
+      <p>This is a <strong>37.7% reduction in steady step time</strong>, or <strong>1.61× throughput</strong>. Steady values are medians of the progress-bar estimates at steps 30–90, with repeated entries removed. Elapsed-clock differences over the same interval independently give 2.583 and 1.600 seconds per update.</p>
+      <p>The compiled run was nevertheless slower over just 100 steps: its first update took approximately 297 seconds, and another 185-second pause occurred near step 94. The log does not establish the precise cause of that later pause. Short-run wall time and steady throughput therefore answer different questions.</p>
+    </section>
+    <section id="long-run">
+      <h2>Eight GPUs: verifying sustained training</h2>
+      <p>A subsequent run used <strong>8×A800-SXM4-80GB, global batch 128, and BF16</strong>, with PyTorch 2.7.1. The policy consumed three camera views and predicted 50-step action chunks. Compile, fused AdamW, and gradient checkpointing were enabled throughout.</p>
+      <p>The run completed all <strong>80,000 updates</strong> and saved the final checkpoint. After step 1,000, the median of 790 hundred-step timing windows was <strong>1.579 s/update</strong>. The complete training-loop elapsed time was approximately <strong>36.96 hours</strong>, averaging <strong>1.663 s/update</strong>, including startup within the loop and later stalls or saves.</p>
+      <p class="fine">This is evidence of sustained use, not a second matched speedup experiment: the eight-GPU run used a later dataset version and has no paired eager baseline in the audited record. Timings are training-loop wall time, not isolated model-forward latency, and exclude setup before the loop.</p>
+    </section>
+    <section id="takeaway">
+      <h2>The practical takeaway</h2>
+      <p>The useful result is not merely that a compiler flag can be enabled. It is that a measured fast path can be integrated with distributed training, ordinary weight files, and long-running jobs. Here, the two-GPU comparison establishes a steady-state gain; the eight-GPU run demonstrates approximately 1.6-second training steps over a completed 80K-update job.</p>
+      <p>For this workload, compile plus fused AdamW was a useful training optimization. The next comparison should keep the optimizer fixed to isolate compile’s contribution. These timing results do not claim improved policy quality or inference speed.</p>
+      <p class="fine">Evidence: archived May–June 2026 training logs, launch configurations, Git history, and experiment metadata, audited in September 2026. No new training run was performed for this note; private source files and raw logs are not included.</p>
+    </section>
+  </article></main>
+  <footer class="footer"><a href="/blog">← All posts</a><span>Xuemin Chi · Robotics &amp; machine learning</span></footer>
+</body>
+</html>
