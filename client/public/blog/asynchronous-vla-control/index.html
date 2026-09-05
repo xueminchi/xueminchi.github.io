@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="A comparative study of inference-time RTC and latency-aware training with VLASH for asynchronous robot control, including offline diagnostics and dual-arm manipulation results.">
+<meta name="author" content="Xuemin Chi">
+<meta name="color-scheme" content="light">
+<title>Asynchronous Control: Inference-Time RTC and VLASH | Xuemin Chi</title>
+<link rel="stylesheet" href="article.css">
+</head>
+<body>
+<a class="skip" href="#article">Skip to report</a>
+<nav class="site-nav" aria-label="Site navigation"><div class="nav-inner"><a class="brand" href="/">Xuemin Chi</a><div class="nav-links"><a href="/">Home</a><a href="/research">Research</a><a href="/blog" aria-current="page">Blog</a></div></div></nav>
+<header class="hero">
+<p class="eyebrow">Robotics / Research report</p>
+<h1>Asynchronous Control</h1>
+<p class="subtitle">A comparative study of inference-time RTC and latency-aware training with VLASH</p>
+<p class="byline">Xuemin Chi · <time datetime="2026-09-05">September 5, 2026</time></p>
+<div class="abstract"><h2>Abstract</h2>
+<p>Asynchronous robot control requires consistency between predictions made from an earlier observation and actions executed at a later state. This report compares inference-time Real-Time Chunking (RTC) with future-state-aware training using VLASH. Offline trajectory analysis and dual-arm garment-folding experiments show that VLASH achieves better measured action-chunk continuity than inference-time RTC in the evaluated system. Both methods complete 10/10 recorded trials, compared with 8/10 for naive asynchronous execution. Their accumulated inference-time means are similar. The findings favor latency-aware training when the training pipeline is accessible, while identifying a practical role for inference-time correction. The robot results are system-level comparisons with differing merging and execution settings; the quantitative evidence does not establish a general ranking across tasks or model families.</p>
+</div>
+</header>
+<div class="layout">
+<aside class="toc" aria-label="Report contents"><strong>Contents</strong><ol>
+<li><a href="#objective">01 · Objective</a></li><li><a href="#methods">02 · Methods</a></li><li><a href="#setup">03 · Experimental setup</a></li><li><a href="#offline">04 · Offline results</a></li><li><a href="#results">05 · Real-robot results</a></li><li><a href="#discussion">06 · Discussion</a></li><li><a href="#conclusion">07 · Conclusion</a></li><li><a href="#supplement">08 · Supplementary material</a></li>
+</ol></aside>
+<main id="article"><article><section id="objective"><span class="section-no">01 / OBJECTIVE</span><h2>Temporal alignment in asynchronous control</h2>
+<p>Action-chunk policies predict a sequence of future controls from an observation. Under asynchronous execution, the robot continues executing the preceding chunk while the next sequence is generated. The resulting delay creates a mismatch between the state used for prediction and the state at which the new chunk begins execution.</p>
+<div class="timeline" role="group" aria-label="Asynchronous observation, inference and execution">
+<div><b>Observation</b><span>Images and robot state define the input at prediction time.</span></div>
+<div><b>Concurrent inference</b><span>The robot continues executing the preceding action chunk.</span></div>
+<div><b>Chunk transition</b><span>The new sequence connects to the robot’s execution-time state.</span></div>
+</div>
+<p>This temporal-alignment problem is not specific to a VLA backbone; it also arises when an action-generating world model is deployed asynchronously. Transfer of a particular solution depends on the action representation, conditioning interface and executor. The quantitative experiments reported here use a π0.5-based policy; no WAM performance claim is made.</p>
+<p>The study evaluates whether continuity is better achieved by correcting predictions during inference or by incorporating future execution conditions into training. The comparison includes naive asynchronous execution, inference-time RTC, and future-state-aware training with VLASH.</p></section>
+<section id="methods"><span class="section-no">02 / METHODS</span><h2>Inference-time compensation and latency-aware training</h2>
+<div class="methods">
+<div><h3>Naive asynchronous execution</h3><p>The next action chunk is predicted without an explicit latency-compensation mechanism. This establishes the reference system.</p></div>
+<div><h3>Inference-time RTC</h3><p>Real-Time Chunking guides denoising toward the committed portion of the preceding chunk. It requires no policy retraining but adds guidance computation during inference. <a href="#ref-rtc">[1]</a></p></div>
+<div><h3>Latency-aware training: VLASH</h3><p>VLASH conditions action generation on a future execution-time state, estimated using the preceding action chunk. Training and inference are aligned around that state rather than an inference-time guidance correction. <a href="#ref-vlash">[2]</a></p></div>
+</div>
+<p><strong>Terminology.</strong> “Training-time compensation” describes the route represented here by VLASH. VLASH is a distinct method, not an alternative name for Physical Intelligence’s subsequent training-time RTC formulation. The two experimental systems are referred to as <em>inference-time RTC</em> and <em>VLASH</em> throughout this report.</p>
+<p><strong>Implementation scope.</strong> The contribution is the reproduction and integration of these prior methods: offset-dependent inputs, state/action alignment, attention and loss masks, runtime profiling, and asynchronous dual-arm execution. Training changes were validated with mask inspection and a real-batch forward/backward pass. Implementation details appear in <a href="#supplement">Supplementary material</a>.</p>
+<p>Post-prediction trajectory merging is treated separately. Interpolation between chunks changes the execution pipeline; it is not equivalent to either RTC guidance or future-state-aware training.</p></section>
+<section id="setup"><span class="section-no">03 / EXPERIMENTAL SETUP</span><h2>Offline diagnostics and real-robot evaluation</h2>
+<p>The evaluation combines fixed-observation prediction analysis with closed-loop dual-arm garment folding. Offline experiments examine selected frames, repeated samples and matched execution horizons. Robot experiments assess transition continuity, task completion and recorded inference time.</p>
+<div class="figure-pair"><figure id="fig-019" class="figure " data-source-figure="019">
+<a href="figures/figure-019.png" target="_blank" rel="noopener" aria-label="Open full-size figure 1"><img src="figures/figure-019.png" width="1280" height="926" alt="Garment-folding task · initial condition" loading="lazy" decoding="async"></a>
+<figcaption><b>Figure 1. Garment-folding task · initial condition.</b> Initial garment configuration used in the dual-arm manipulation evaluation.</figcaption></figure><figure id="fig-020" class="figure " data-source-figure="020">
+<a href="figures/figure-020.png" target="_blank" rel="noopener" aria-label="Open full-size figure 2"><img src="figures/figure-020.png" width="950" height="704" alt="Garment-folding task · target configuration" loading="lazy" decoding="async"></a>
+<figcaption><b>Figure 2. Garment-folding task · target configuration.</b> Target folded configuration for the same manipulation task.</figcaption></figure></div>
+<h3>Execution configurations</h3>
+<p>The initial baseline/RTC comparison enables trajectory merging in both systems. The later VLASH evaluation disables merging and includes the following execution configurations.</p>
+<div class="table-wrap"><table><thead><tr><th scope="col">System / configuration</th><th scope="col">Execution horizon</th><th scope="col">Delay</th><th scope="col">Recorded observation offset</th><th scope="col">Future-state index</th><th scope="col">Merge</th></tr></thead><tbody>
+<tr><td>Early baseline / RTC</td><td>25</td><td>10</td><td>—</td><td>—</td><td>On</td></tr>
+<tr><td>VLASH · A</td><td>25</td><td>5</td><td>25</td><td>30</td><td>Off</td></tr>
+<tr><td>VLASH · B</td><td>25</td><td>10</td><td>25</td><td>35</td><td>Off</td></tr>
+<tr><td>VLASH · C</td><td>30</td><td>5</td><td>30</td><td>35</td><td>Off</td></tr>
+<tr><td>VLASH · D</td><td>40</td><td>10</td><td>40</td><td>50</td><td>Off</td></tr>
+</tbody></table></div>
+<p class="fine">All table values are step/index settings, not milliseconds. For VLASH, the future-state index is the recorded observation offset plus the delay. Trial-level configuration labels are retained in the supplementary plots.</p>
+<h3>Evaluation measures</h3>
+<ul>
+<li><strong>Robot transition continuity:</strong> the shared L2 xyz transition statistic, with lower values indicating smaller discontinuities under the recorded definition.</li>
+<li><strong>Task completion:</strong> successful garment-folding trials out of ten recorded trials per system.</li>
+<li><strong>Inference time:</strong> per-call timing distributions and accumulated inference time per trial, reported separately.</li>
+<li><strong>Offline behavior:</strong> six-axis trajectory/error distributions and method-specific connection-window diagnostics at frames 300, 2000 and 4000.</li>
+</ul>
+<p>The robot comparison is a system-level evaluation because merging and execution settings differ. The matched-horizon offline comparison controls one of these factors but is not a substitute for a fully matched robot ablation.</p></section>
+<section id="offline"><span class="section-no">04 / OFFLINE RESULTS</span><h2>Prediction continuity and sensitivity to execution timing</h2>
+<h3>Inference-time guidance</h3>
+<p>The initial RTC analysis holds the observation fixed and generates twenty predictions. The trajectory and coordinate-error plots examine how guidance changes the connection to the preceding chunk within the delay interval.</p>
+<figure id="fig-001" class="figure " data-source-figure="001">
+<a href="figures/figure-001.png" target="_blank" rel="noopener" aria-label="Open full-size figure 3"><img src="figures/figure-001.png" width="1280" height="949" alt="Twenty repeated predictions" loading="lazy" decoding="async"></a>
+<figcaption><b>Figure 3. Twenty repeated predictions.</b> End-effector trajectories from the early RTC experiment. Black is the input trajectory; red and green show the labeled RTC and normal predictions. The shaded band marks the delay interval.</figcaption></figure>
+<p>RTC can reduce disagreement with the committed trajectory. Its behavior depends on guidance settings and the denoising schedule, motivating inspection of the residual, predicted clean actions and corrected vector field. Full coordinate and denoising diagnostics are included in the supplement.</p>
+<h3>Future-state-aware conditioning</h3>
+<figure id="fig-036" class="figure " data-source-figure="036">
+<a href="figures/figure-036.png" target="_blank" rel="noopener" aria-label="Open full-size figure 4"><img src="figures/figure-036.png" width="2520" height="1800" alt="Latency-aware handoff example" loading="lazy" decoding="async"></a>
+<figcaption><b>Figure 4. Latency-aware handoff example.</b> Six translational axes illustrating predictions around an action-chunk handoff. This is one diagnostic example.</figcaption></figure>
+<p>The VLASH implementation aligns the conditioning state with the intended future chunk transition. Naive execution, RTC and VLASH were compared at three observation frames, followed by matched-horizon comparisons and thirty repeated predictions at frame 300.</p>
+<figure id="fig-062" class="figure " data-source-figure="062">
+<a href="figures/figure-062.png" target="_blank" rel="noopener" aria-label="Open full-size figure 5"><img src="figures/figure-062.png" width="2520" height="1800" alt="Thirty repeats · matched-horizon trajectories" loading="lazy" decoding="async"></a>
+<figcaption><b>Figure 5. Thirty repeats · matched-horizon trajectories.</b> Thirty repeated predictions at frame 300. The spread reveals sampling variability across six translational axes.</figcaption></figure>
+<figure id="fig-063" class="figure " data-source-figure="063">
+<a href="figures/figure-063.png" target="_blank" rel="noopener" aria-label="Open full-size figure 6"><img src="figures/figure-063.png" width="2160" height="1620" alt="Matched horizon · thirty-repeat error distributions" loading="lazy" decoding="async"></a>
+<figcaption><b>Figure 6. Matched horizon · thirty-repeat error distributions.</b> Thirty predictions at frame 300, shown by translational axis. The original ordinate is “abs_err (run-mean)”. VLASH has lower displayed values than RTC on four of six axes; left x and left z do not follow that ordering. This diagnostic is distinct from the real-robot common-smoothness metric.</figcaption></figure>
+<p>VLASH has lower displayed error values than RTC on four of the six axes in the thirty-repeat plot, while left x and left z show the opposite ordering. This supports an axis-dependent comparison rather than uniform superiority in every offline view.</p>
+<p class="fine">The offline distribution plots retain the ordinate “abs_err (run-mean)”. Its precise reference definition is not fully specified in the archived figures, so these values are not equated with the robot L2 transition statistic or with ground-truth tracking accuracy. The separate connection plots also use different alignment steps or windows across methods.</p></section>
+<section id="results"><span class="section-no">05 / REAL-ROBOT RESULTS</span><h2>VLASH improves transition continuity over inference-time RTC</h2>
+<p><strong>The clearest measured advantage of VLASH is smoother action-chunk transitions.</strong> In the common robot metric, VLASH has a lower group mean and a smaller reported standard deviation than inference-time RTC; both improve over naive asynchronous execution. VLASH achieves this result in the evaluated configuration without post-prediction trajectory merging.</p>
+<figure id="fig-077" class="figure " data-source-figure="077">
+<a href="figures/figure-077.png" target="_blank" rel="noopener" aria-label="Open full-size figure 7"><img src="figures/figure-077.png" width="1248" height="832" alt="Real-robot action-chunk continuity" loading="lazy" decoding="async"></a>
+<figcaption><b>Figure 7. Real-robot action-chunk continuity.</b> Mean and standard deviation of the common L2 xyz transition metric. VLASH has the lowest group mean and reported standard deviation, followed by inference-time RTC and the baseline. Failed trials are included; the first two frames are excluded. The original plot does not specify a physical distance unit.</figcaption></figure>
+<p>This result favors latency-aware training for the evaluated system. Because execution settings differ, it should be interpreted as an observed system-level advantage rather than an isolated causal estimate of the training method.</p>
+<h3>Task completion</h3>
+<figure id="fig-078" class="figure " data-source-figure="078">
+<a href="figures/figure-078.png" target="_blank" rel="noopener" aria-label="Open full-size figure 8"><img src="figures/figure-078.png" width="1248" height="832" alt="Real-robot task completion" loading="lazy" decoding="async"></a>
+<figcaption><b>Figure 8. Real-robot task completion.</b> Observed completions in the garment-folding evaluation: baseline 8/10, inference-time RTC 10/10 and VLASH 10/10. Merging and execution settings differ across systems.</figcaption></figure>
+<p>Both RTC and VLASH complete 10/10 recorded trials, compared with 8/10 for the baseline. Task completion therefore does not distinguish the two methods in this small evaluation. Their difference is primarily expressed in transition quality, not in the reported completion count.</p>
+<h3>Recorded inference cost</h3>
+<figure id="fig-073" class="figure " data-source-figure="073">
+<a href="figures/figure-073.png" target="_blank" rel="noopener" aria-label="Open full-size figure 9"><img src="figures/figure-073.png" width="1248" height="832" alt="Accumulated inference time per trial" loading="lazy" decoding="async"></a>
+<figcaption><b>Figure 9. Accumulated inference time per trial.</b> Mean and standard deviation of accumulated inference time, including failed trials and excluding the first two frames. RTC and VLASH have similar group means. This statistic is not task completion time or isolated model latency.</figcaption></figure>
+<p>RTC and VLASH have similar mean accumulated inference time in this record. The statistic sums inference durations within a trial and depends on both call cost and call count. Failed trials are included. It does not establish faster task completion for VLASH, nor does it measure isolated per-call model latency.</p>
+<div class="table-wrap"><table><thead><tr><th scope="col">Comparison</th><th scope="col">Evidence</th><th scope="col">Interpretation</th></tr></thead><tbody>
+<tr><td>Transition continuity</td><td>Lower common-metric mean and standard deviation for VLASH</td><td>Observed advantage over inference-time RTC</td></tr>
+<tr><td>Task completion</td><td>RTC 10/10; VLASH 10/10</td><td>No difference in the recorded completion count</td></tr>
+<tr><td>Accumulated inference time</td><td>Similar group means for RTC and VLASH</td><td>No demonstrated VLASH speed advantage from this measure</td></tr>
+</tbody></table></div></section>
+<section id="discussion"><span class="section-no">06 / DISCUSSION</span><h2>Implications for asynchronous policy deployment</h2>
+<p>Inference-time RTC provides a practical route when retraining is unavailable: it improves continuity by constraining action generation at deployment. Its additional guidance computation must be considered alongside the resulting behavior.</p>
+<p>When the training pipeline is accessible, VLASH offers a more favorable continuity result in this evaluation. Incorporating future execution conditions into the policy also permits evaluation without a separate trajectory-merging step. This is the basis for preferring latency-aware training in subsequent development, not evidence that inference-time RTC is ineffective.</p>
+<p>The robot traces identify three implementation concerns: differences between nominal and actual observation/transition timing, interactions between the two arms under shared smoothing logic, and occasional merging overhead above 100 ms. The cause of the latter was not established. These observations motivate joint validation of data indexing, conditioning and the executor rather than evaluation of the policy in isolation.</p>
+<h3>Limitations</h3>
+<p>The evidence covers one manipulation setup, ten trials per system and selected offline observations. Merging and execution configurations are not fully matched. No inferential significance test is reported, and the robot metric’s physical distance unit is absent from the archived plot. Generalization to other tasks, embodiments and action-generating world models requires additional recorded evaluation.</p></section>
+<section id="conclusion"><span class="section-no">07 / CONCLUSION</span><h2>Latency-aware training is the preferred route in this evaluation</h2>
+<p>Inference-time RTC improves asynchronous execution relative to the baseline, but VLASH yields better measured chunk-transition continuity in the evaluated robot system. The methods tie on recorded task completion, and the accumulated-inference statistic does not establish a speed advantage for VLASH.</p>
+<p>The results support treating future execution-time alignment as a training concern when retraining is feasible, while retaining inference-time RTC as a useful option for existing policies. The report’s quantitative conclusions are restricted to the preserved experiments.</p></section>
+<section id="supplement"><span class="section-no">08 / SUPPLEMENTARY MATERIAL</span><h2>Experimental details and supporting figures</h2>
+<p>The following sections retain the complete experimental figure archive. Alternate views of the same runs are identified, and illustrative or implementation-only figures are separated from task-performance measurements.</p>
+<details><summary>S1 · Training implementation and attention visibility</summary><div class="detail-body archive-stack"><div class="table-wrap"><table><thead><tr><th scope="col">Component</th><th scope="col">Implementation</th></tr></thead><tbody>
+<tr><td>State/action alignment</td><td>The reproduction uses the next recorded state as action supervision, with each episode’s terminal frame removed.</td></tr>
+<tr><td>Offset-dependent inputs</td><td>Added the offset dimension to data transformations and policy inputs; changed the state-conditioning path to handle these inputs.</td></tr>
+<tr><td>Invalid targets</td><td>Masked incomplete episode tails and invalid offset branches in the loss.</td></tr>
+<tr><td>Attention visibility</td><td>Inspected masks, including cross-offset blocking and prefix/suffix boundaries.</td></tr>
+<tr><td>Forward/backward validation</td><td>Ran a real batch through forward and backward passes and checked loss and gradients. This is a functional check, not proof of convergence.</td></tr>
+</tbody></table></div><figure id="fig-037" class="figure " data-source-figure="037">
+<a href="figures/figure-037.png" target="_blank" rel="noopener" aria-label="Open full-size figure 10"><img src="figures/figure-037.png" width="1677" height="1477" alt="Attention visibility · diagnostic 1" loading="lazy" decoding="async"></a>
+<figcaption><b>Figure 10. Attention visibility · diagnostic 1.</b> Implementation check of attention visibility and offset isolation. These visualizations validate mask structure rather than policy performance.</figcaption></figure>
+<figure id="fig-038" class="figure " data-source-figure="038">
+<a href="figures/figure-038.png" target="_blank" rel="noopener" aria-label="Open full-size figure 11"><img src="figures/figure-038.png" width="1677" height="1477" alt="Attention visibility · diagnostic 2" loading="lazy" decoding="async"></a>
+<figcaption><b>Figure 11. Attention visibility · diagnostic 2.</b> Implementation check of attention visibility and offset isolation. These visualizations validate mask structure rather than policy performance.</figcaption></figure>
+<figure id="fig-039" class="figure " data-source-figure="039">
+<a href="figures/figure-039.png" target="_blank" rel="noopener" aria-label="Open full-size figure 12"><img src="figures/figure-039.png" width="1677" height="1477" alt="Attention visibility · diagnostic 3" loading="lazy" decoding="async"></a>
+<figcaption><b>Figure 12. Attention visibility · diagnostic 3.</b> Implementation check of attention visibility and offset isolation. These visualizations validate mask structure rather than policy performance.</figcaption></figure>
+<figure id="fig-040" class="figure " data-source-figure="040">
+<a href="figures/figure-040.png" target="_blank" rel="noopener" aria-label="Open full-size figure 13"><img src="figures/figure-040.png" width="1677" height="1477" alt="Attention visibility · diagnostic 4" loading="lazy" decoding="async"></a>
+<figcaption><b>Figure 13. Attention visibility · diagnostic 4.</b> Implementation check of attention visibility and offset isolation. These visualizations validate mask structure rather than policy performance.</figcaption></figure></div></details>
+<details><summary>S2 · RTC coordinate errors and guidance sensitivity</summary><div class="detail-body archive-stack"><p>The coordinate-error plots use centimetres. The parameter-sensitivity figure contains a duplicated legend label; the exact three-way parameter mapping remains unresolved.</p><figure id="fig-002" class="figure " data-source-figure="002">
+<a href="figures/figure-002.png" target="_blank" rel="noopener" aria-label="Open full-size figure 14"><img src="figures/figure-002.png" width="1482" height="888" alt="Delay-interval error · X" loading="lazy" decoding="async"></a>
+<figcaption><b>Figure 14. Delay-interval error · X.</b> Early RTC versus normal predictions across selected observation frames. Signed coordinate errors are labeled in centimetres; this is not the later common L2 handoff metric.</figcaption></figure>
+<figure id="fig-003" class="figure " data-source-figure="003">
+<a href="figures/figure-003.png" target="_blank" rel="noopener" aria-label="Open full-size figure 15"><img src="figures/figure-003.png" width="1482" height="888" alt="Delay-interval error · Y" loading="lazy" decoding="async"></a>
+<figcaption><b>Figure 15. Delay-interval error · Y.</b> The corresponding Y-coordinate distributions across the selected frames.</figcaption></figure>
+<figure id="fig-004" class="figure " data-source-figure="004">
+<a href="figures/figure-004.png" target="_blank" rel="noopener" aria-label="Open full-size figure 16"><img src="figures/figure-004.png" width="1280" height="766" alt="Delay-interval error · Z" loading="lazy" decoding="async"></a>
+<figcaption><b>Figure 16. Delay-interval error · Z.</b> The corresponding Z-coordinate distributions across the selected frames.</figcaption></figure>
+<figure id="fig-005" class="figure " data-source-figure="005">
+<a href="figures/figure-005.png" target="_blank" rel="noopener" aria-label="Open full-size figure 17"><img src="figures/figure-005.png" width="2082" height="888" alt="Guidance hyperparameter sensitivity" loading="lazy" decoding="async"></a>
+<figcaption><b>Figure 17. Guidance hyperparameter sensitivity.</b> Comparison over the 25–35 step interval. A duplicated label in the archived legend prevents an unambiguous three-way mapping to exact parameter settings.</figcaption></figure></div></details>
+<details><summary>S3 · RTC denoising diagnostics</summary><div class="detail-body archive-stack"><p>Diagnostics use a ten-step denoising schedule. The averaging illustration is synthetic; the remaining plots inspect guidance weights, residuals and vector fields.</p><figure id="fig-006" class="figure " data-source-figure="006">
+<a href="figures/figure-006.png" target="_blank" rel="noopener" aria-label="Open full-size figure 18"><img src="figures/figure-006.png" width="1481" height="885" alt="Guidance weight over denoising steps" loading="lazy" decoding="async"></a>
+<figcaption><b>Figure 18. Guidance weight over denoising steps.</b> The scalar guidance weight varies over the ten-step denoising schedule. This is a mechanism diagnostic, not a task-success result.</figcaption></figure>
+<figure id="fig-007" class="figure " data-source-figure="007">
+<a href="figures/figure-007.png" target="_blank" rel="noopener" aria-label="Open full-size figure 19"><img src="figures/figure-007.png" width="2366" height="2263" alt="Residual during denoising" loading="lazy" decoding="async"></a>
+<figcaption><b>Figure 19. Residual during denoising.</b> Joint-wise disagreement with the committed trajectory through successive denoising steps.</figcaption></figure>
+<figure id="fig-008" class="figure " data-source-figure="008">
+<a href="figures/figure-008.png" target="_blank" rel="noopener" aria-label="Open full-size figure 20"><img src="figures/figure-008.png" width="1280" height="1217" alt="Predicted clean actions during denoising" loading="lazy" decoding="async"></a>
+<figcaption><b>Figure 20. Predicted clean actions during denoising.</b> The evolving clean-action estimate compared with the preceding action chunk.</figcaption></figure>
+<figure id="fig-009" class="figure " data-source-figure="009">
+<a href="figures/figure-009.png" target="_blank" rel="noopener" aria-label="Open full-size figure 21"><img src="figures/figure-009.png" width="1280" height="318" alt="Illustrative denoising example" loading="lazy" decoding="async"></a>
+<figcaption><b>Figure 21. Illustrative denoising example.</b> Synthetic noisy-signal averaging example used to explain denoising. This figure is illustrative, not a robot experiment.</figcaption></figure>
+<figure id="fig-010" class="figure " data-source-figure="010">
+<a href="figures/figure-010.png" target="_blank" rel="noopener" aria-label="Open full-size figure 22"><img src="figures/figure-010.png" width="2384" height="2651" alt="Late-step diagnostic · step 9" loading="lazy" decoding="async"></a>
+<figcaption><b>Figure 22. Late-step diagnostic · step 9.</b> Previous action chunk, corrected update and base update at denoising step 9.</figcaption></figure>
+<figure id="fig-011" class="figure " data-source-figure="011">
+<a href="figures/figure-011.png" target="_blank" rel="noopener" aria-label="Open full-size figure 23"><img src="figures/figure-011.png" width="2384" height="2651" alt="Late-step diagnostic · step 10" loading="lazy" decoding="async"></a>
+<figcaption><b>Figure 23. Late-step diagnostic · step 10.</b> The same inspection at the final denoising step.</figcaption></figure>
+<figure id="fig-012" class="figure " data-source-figure="012">
+<a href="figures/figure-012.png" target="_blank" rel="noopener" aria-label="Open full-size figure 24"><img src="figures/figure-012.png" width="1151" height="1280" alt="Base versus corrected vector field" loading="lazy" decoding="async"></a>
+<figcaption><b>Figure 24. Base versus corrected vector field.</b> Joint-wise comparison of the base and RTC-corrected updates. The shaded area is the guidance region.</figcaption></figure></div></details>
+<details><summary>S4 · Temporal-alignment examples</summary><div class="detail-body archive-stack"><figure id="fig-034" class="figure " data-source-figure="034">
+<a href="figures/figure-034.png" target="_blank" rel="noopener" aria-label="Open full-size figure 25"><img src="figures/figure-034.png" width="1280" height="949" alt="Latency and stale-state motivation · view 1" loading="lazy" decoding="async"></a>
+<figcaption><b>Figure 25. Latency and stale-state motivation · view 1.</b> A trajectory-based illustration of why predicting from a past observation does not automatically match the state at future execution.</figcaption></figure>
+<figure id="fig-035" class="figure " data-source-figure="035">
+<a href="figures/figure-035.png" target="_blank" rel="noopener" aria-label="Open full-size figure 26"><img src="figures/figure-035.png" width="1280" height="949" alt="Latency and stale-state motivation · view 2" loading="lazy" decoding="async"></a>
+<figcaption><b>Figure 26. Latency and stale-state motivation · view 2.</b> A second view of the asynchronous observation-to-execution mismatch.</figcaption></figure></div></details>
+<details><summary>S5 · Initial offline configuration: frame 300</summary><div class="detail-body archive-stack"><figure id="fig-041" class="figure " data-source-figure="041">
+<a href="figures/figure-041.png" target="_blank" rel="noopener" aria-label="Open full-size figure 27"><img src="figures/figure-041.png" width="2520" height="1800" alt="Frame 300 · naive predictions" loading="lazy" decoding="async"></a>
+<figcaption><b>Figure 27. Frame 300 · naive predictions.</b> Offline repeated predictions for naive asynchronous execution at the selected observation.</figcaption></figure>
+<figure id="fig-042" class="figure " data-source-figure="042">
+<a href="figures/figure-042.png" target="_blank" rel="noopener" aria-label="Open full-size figure 28"><img src="figures/figure-042.png" width="2520" height="1800" alt="Frame 300 · inference-time RTC" loading="lazy" decoding="async"></a>
+<figcaption><b>Figure 28. Frame 300 · inference-time RTC.</b> The corresponding RTC predictions at frame 300.</figcaption></figure>
+<figure id="fig-043" class="figure " data-source-figure="043">
+<a href="figures/figure-043.png" target="_blank" rel="noopener" aria-label="Open full-size figure 29"><img src="figures/figure-043.png" width="2520" height="1800" alt="Frame 300 · VLASH" loading="lazy" decoding="async"></a>
+<figcaption><b>Figure 29. Frame 300 · VLASH.</b> The corresponding latency-aware predictions at frame 300.</figcaption></figure>
+<figure id="fig-044" class="figure " data-source-figure="044">
+<a href="figures/figure-044.png" target="_blank" rel="noopener" aria-label="Open full-size figure 30"><img src="figures/figure-044.png" width="2520" height="1800" alt="Frame 300 · all trajectories" loading="lazy" decoding="async"></a>
+<figcaption><b>Figure 30. Frame 300 · all trajectories.</b> The three methods shown together, under the initial execution settings.</figcaption></figure>
+<figure id="fig-045" class="figure " data-source-figure="045">
+<a href="figures/figure-045.png" target="_blank" rel="noopener" aria-label="Open full-size figure 31"><img src="figures/figure-045.png" width="2160" height="1620" alt="frame 300 · six-axis error distributions" loading="lazy" decoding="async"></a>
+<figcaption><b>Figure 31. frame 300 · six-axis error distributions.</b> Offline distributions at frame 300. The original vertical axis is labeled “abs_err (run-mean)”; this diagnostic is reported separately from the real-robot L2 transition metric.</figcaption></figure>
+<figure id="fig-046" class="figure " data-source-figure="046">
+<a href="figures/figure-046.png" target="_blank" rel="noopener" aria-label="Open full-size figure 32"><img src="figures/figure-046.png" width="2160" height="1620" alt="Frame 300 · window-specific error" loading="lazy" decoding="async"></a>
+<figcaption><b>Figure 32. Frame 300 · window-specific error.</b> VLASH's handoff step versus the RTC/naive interval diagnostic. Different windows make this a complementary view, not a like-for-like common metric.</figcaption></figure></div></details>
+<details><summary>S6 · Initial offline configuration: frames 2000 and 4000</summary><div class="detail-body archive-stack"><figure id="fig-047" class="figure " data-source-figure="047">
+<a href="figures/figure-047.png" target="_blank" rel="noopener" aria-label="Open full-size figure 33"><img src="figures/figure-047.png" width="2520" height="1800" alt="Frame 2000 · all trajectories" loading="lazy" decoding="async"></a>
+<figcaption><b>Figure 33. Frame 2000 · all trajectories.</b> Initial-settings comparison at a second observation frame.</figcaption></figure>
+<figure id="fig-048" class="figure " data-source-figure="048">
+<a href="figures/figure-048.png" target="_blank" rel="noopener" aria-label="Open full-size figure 34"><img src="figures/figure-048.png" width="2160" height="1620" alt="frame 2000 · six-axis error distributions" loading="lazy" decoding="async"></a>
+<figcaption><b>Figure 34. frame 2000 · six-axis error distributions.</b> Offline distributions at frame 2000. The original vertical axis is labeled “abs_err (run-mean)”; this diagnostic is reported separately from the real-robot L2 transition metric.</figcaption></figure>
+<figure id="fig-049" class="figure " data-source-figure="049">
+<a href="figures/figure-049.png" target="_blank" rel="noopener" aria-label="Open full-size figure 35"><img src="figures/figure-049.png" width="2160" height="1620" alt="Frame 2000 · window-specific error" loading="lazy" decoding="async"></a>
+<figcaption><b>Figure 35. Frame 2000 · window-specific error.</b> The complementary, differently windowed diagnostic at frame 2000.</figcaption></figure>
+<figure id="fig-050" class="figure " data-source-figure="050">
+<a href="figures/figure-050.png" target="_blank" rel="noopener" aria-label="Open full-size figure 36"><img src="figures/figure-050.png" width="2520" height="1800" alt="Frame 4000 · all trajectories" loading="lazy" decoding="async"></a>
+<figcaption><b>Figure 36. Frame 4000 · all trajectories.</b> Initial-settings comparison at a third observation frame.</figcaption></figure>
+<figure id="fig-051" class="figure " data-source-figure="051">
+<a href="figures/figure-051.png" target="_blank" rel="noopener" aria-label="Open full-size figure 37"><img src="figures/figure-051.png" width="2160" height="1620" alt="frame 4000 · six-axis error distributions" loading="lazy" decoding="async"></a>
+<figcaption><b>Figure 37. frame 4000 · six-axis error distributions.</b> Offline distributions at frame 4000. The original vertical axis is labeled “abs_err (run-mean)”; this diagnostic is reported separately from the real-robot L2 transition metric.</figcaption></figure>
+<figure id="fig-052" class="figure " data-source-figure="052">
+<a href="figures/figure-052.png" target="_blank" rel="noopener" aria-label="Open full-size figure 38"><img src="figures/figure-052.png" width="2160" height="1620" alt="Frame 4000 · window-specific error" loading="lazy" decoding="async"></a>
+<figcaption><b>Figure 38. Frame 4000 · window-specific error.</b> The complementary, differently windowed diagnostic at frame 4000.</figcaption></figure></div></details>
+<details><summary>S7 · Matched execution horizon: frame 300</summary><div class="detail-body archive-stack"><figure id="fig-053" class="figure " data-source-figure="053">
+<a href="figures/figure-053.png" target="_blank" rel="noopener" aria-label="Open full-size figure 39"><img src="figures/figure-053.png" width="2520" height="1800" alt="Matched horizon · frame 300 trajectories" loading="lazy" decoding="async"></a>
+<figcaption><b>Figure 39. Matched horizon · frame 300 trajectories.</b> The execution horizon is held the same across methods to reduce a confound in the initial comparison.</figcaption></figure>
+<figure id="fig-054" class="figure " data-source-figure="054">
+<a href="figures/figure-054.png" target="_blank" rel="noopener" aria-label="Open full-size figure 40"><img src="figures/figure-054.png" width="2160" height="1620" alt="Matched horizon · frame 300 · six-axis error distributions" loading="lazy" decoding="async"></a>
+<figcaption><b>Figure 40. Matched horizon · frame 300 · six-axis error distributions.</b> Offline distributions at frame 300. The original vertical axis is labeled “abs_err (run-mean)”; this diagnostic is reported separately from the real-robot L2 transition metric.</figcaption></figure>
+<figure id="fig-055" class="figure " data-source-figure="055">
+<a href="figures/figure-055.png" target="_blank" rel="noopener" aria-label="Open full-size figure 41"><img src="figures/figure-055.png" width="2160" height="1440" alt="Matched horizon · frame 300 window metric" loading="lazy" decoding="async"></a>
+<figcaption><b>Figure 41. Matched horizon · frame 300 window metric.</b> Window-specific diagnostic under the matched-horizon configuration.</figcaption></figure></div></details>
+<details><summary>S8 · Matched execution horizon: frame 2000</summary><div class="detail-body archive-stack"><figure id="fig-056" class="figure " data-source-figure="056">
+<a href="figures/figure-056.png" target="_blank" rel="noopener" aria-label="Open full-size figure 42"><img src="figures/figure-056.png" width="2520" height="1800" alt="Matched horizon · frame 2000 trajectories" loading="lazy" decoding="async"></a>
+<figcaption><b>Figure 42. Matched horizon · frame 2000 trajectories.</b> The matched-horizon comparison at the second observation.</figcaption></figure>
+<figure id="fig-057" class="figure " data-source-figure="057">
+<a href="figures/figure-057.png" target="_blank" rel="noopener" aria-label="Open full-size figure 43"><img src="figures/figure-057.png" width="2160" height="1620" alt="Matched horizon · frame 2000 · six-axis error distributions" loading="lazy" decoding="async"></a>
+<figcaption><b>Figure 43. Matched horizon · frame 2000 · six-axis error distributions.</b> Offline distributions at frame 2000. The original vertical axis is labeled “abs_err (run-mean)”; this diagnostic is reported separately from the real-robot L2 transition metric.</figcaption></figure>
+<figure id="fig-058" class="figure " data-source-figure="058">
+<a href="figures/figure-058.png" target="_blank" rel="noopener" aria-label="Open full-size figure 44"><img src="figures/figure-058.png" width="2160" height="1440" alt="Matched horizon · frame 2000 window metric" loading="lazy" decoding="async"></a>
+<figcaption><b>Figure 44. Matched horizon · frame 2000 window metric.</b> Complementary window-specific diagnostic at frame 2000.</figcaption></figure></div></details>
+<details><summary>S9 · Matched execution horizon: frame 4000</summary><div class="detail-body archive-stack"><figure id="fig-059" class="figure " data-source-figure="059">
+<a href="figures/figure-059.png" target="_blank" rel="noopener" aria-label="Open full-size figure 45"><img src="figures/figure-059.png" width="2520" height="1800" alt="Matched horizon · frame 4000 trajectories" loading="lazy" decoding="async"></a>
+<figcaption><b>Figure 45. Matched horizon · frame 4000 trajectories.</b> The matched-horizon comparison at the third observation.</figcaption></figure>
+<figure id="fig-060" class="figure " data-source-figure="060">
+<a href="figures/figure-060.png" target="_blank" rel="noopener" aria-label="Open full-size figure 46"><img src="figures/figure-060.png" width="2160" height="1620" alt="Matched horizon · frame 4000 · six-axis error distributions" loading="lazy" decoding="async"></a>
+<figcaption><b>Figure 46. Matched horizon · frame 4000 · six-axis error distributions.</b> Offline distributions at frame 4000. The original vertical axis is labeled “abs_err (run-mean)”; this diagnostic is reported separately from the real-robot L2 transition metric.</figcaption></figure>
+<figure id="fig-061" class="figure " data-source-figure="061">
+<a href="figures/figure-061.png" target="_blank" rel="noopener" aria-label="Open full-size figure 47"><img src="figures/figure-061.png" width="2160" height="1440" alt="Matched horizon · frame 4000 window metric" loading="lazy" decoding="async"></a>
+<figcaption><b>Figure 47. Matched horizon · frame 4000 window metric.</b> Complementary window-specific diagnostic at frame 4000.</figcaption></figure></div></details>
+<details><summary>S10 · Thirty-repeat connection-window comparison</summary><div class="detail-body archive-stack"><p>The methods are plotted at different alignment steps. This complements the six-axis distributions; it is not a common-window aggregate.</p><figure id="fig-064" class="figure " data-source-figure="064">
+<a href="figures/figure-064.png" target="_blank" rel="noopener" aria-label="Open full-size figure 48"><img src="figures/figure-064.png" width="2160" height="1440" alt="Thirty repeats · window-specific distribution" loading="lazy" decoding="async"></a>
+<figcaption><b>Figure 48. Thirty repeats · window-specific distribution.</b> The corresponding prediction-window diagnostic. Its comparison windows differ between methods.</figcaption></figure></div></details>
+<details><summary>S11 · Robot trial distributions and window-specific comparisons</summary><div class="detail-body archive-stack"><p>Per-trial views retain configuration labels. The final chart compares method-specific windows rather than a shared measurement interval.</p><figure id="fig-074" class="figure " data-source-figure="074">
+<a href="figures/figure-074.png" target="_blank" rel="noopener" aria-label="Open full-size figure 49"><img src="figures/figure-074.png" width="2640" height="960" alt="Common smoothness · trial distributions" loading="lazy" decoding="async"></a>
+<figcaption><b>Figure 49. Common smoothness · trial distributions.</b> Per-trial distributions expose variability that is hidden by a single group average. Trial names also encode different execution settings.</figcaption></figure>
+<figure id="fig-075" class="figure " data-source-figure="075">
+<a href="figures/figure-075.png" target="_blank" rel="noopener" aria-label="Open full-size figure 50"><img src="figures/figure-075.png" width="1920" height="880" alt="Common smoothness · per-trial means" loading="lazy" decoding="async"></a>
+<figcaption><b>Figure 50. Common smoothness · per-trial means.</b> Mean and standard deviation by trial, with the execution configuration identified in each trial label.</figcaption></figure>
+<figure id="fig-076" class="figure " data-source-figure="076">
+<a href="figures/figure-076.png" target="_blank" rel="noopener" aria-label="Open full-size figure 51"><img src="figures/figure-076.png" width="1376" height="880" alt="Window-specific smoothness comparison" loading="lazy" decoding="async"></a>
+<figcaption><b>Figure 51. Window-specific smoothness comparison.</b> Hard/soft windows for baseline and RTC versus VLASH's connection metric. These method-specific windows differ from the shared transition measure reported in the main results.</figcaption></figure></div></details>
+<details><summary>S12 · Earlier baseline / RTC robot comparison</summary><div class="detail-body archive-stack"><p>Both systems use trajectory merging. The completion counts are the same baseline/RTC groups used in the main summary and are not additional trials. Alternate charts present the same measurements in different forms.</p><figure id="fig-021" class="figure " data-source-figure="021">
+<a href="figures/figure-021.png" target="_blank" rel="noopener" aria-label="Open full-size figure 52"><img src="figures/figure-021.png" width="1760" height="960" alt="Early RTC study · per-trial latency" loading="lazy" decoding="async"></a>
+<figcaption><b>Figure 52. Early RTC study · per-trial latency.</b> Recorded delta-PTS distributions by trial. Includes failed trials; the first two frames are removed, as labeled in the original chart.</figcaption></figure>
+<figure id="fig-022" class="figure " data-source-figure="022">
+<a href="figures/figure-022.png" target="_blank" rel="noopener" aria-label="Open full-size figure 53"><img src="figures/figure-022.png" width="1280" height="960" alt="Early RTC study · grouped latency" loading="lazy" decoding="async"></a>
+<figcaption><b>Figure 53. Early RTC study · grouped latency.</b> RTC shifts the recorded per-call latency distribution upward. Delta PTS is retained as labeled; it must not be equated to the isolated compiled-model timings.</figcaption></figure>
+<figure id="fig-023" class="figure " data-source-figure="023">
+<a href="figures/figure-023.png" target="_blank" rel="noopener" aria-label="Open full-size figure 54"><img src="figures/figure-023.png" width="1760" height="960" alt="Early RTC study · accumulated time by trial" loading="lazy" decoding="async"></a>
+<figcaption><b>Figure 54. Early RTC study · accumulated time by trial.</b> Accumulated inference time within each trial, including failed trials. This is not physical task completion time.</figcaption></figure>
+<figure id="fig-024" class="figure " data-source-figure="024">
+<a href="figures/figure-024.png" target="_blank" rel="noopener" aria-label="Open full-size figure 55"><img src="figures/figure-024.png" width="1280" height="960" alt="Early RTC study · accumulated time by group" loading="lazy" decoding="async"></a>
+<figcaption><b>Figure 55. Early RTC study · accumulated time by group.</b> The grouped view of the same accumulated-inference statistic.</figcaption></figure>
+<figure id="fig-025" class="figure " data-source-figure="025">
+<a href="figures/figure-025.png" target="_blank" rel="noopener" aria-label="Open full-size figure 56"><img src="figures/figure-025.png" width="1760" height="960" alt="Early RTC study · per-trial time, alternate view" loading="lazy" decoding="async"></a>
+<figcaption><b>Figure 56. Early RTC study · per-trial time, alternate view.</b> An alternate presentation from the same experiment; not an additional independent experiment.</figcaption></figure>
+<figure id="fig-026" class="figure " data-source-figure="026">
+<a href="figures/figure-026.png" target="_blank" rel="noopener" aria-label="Open full-size figure 57"><img src="figures/figure-026.png" width="1280" height="960" alt="Early RTC study · grouped time, box plot" loading="lazy" decoding="async"></a>
+<figcaption><b>Figure 57. Early RTC study · grouped time, box plot.</b> Box-plot presentation of accumulated inference time for baseline and RTC.</figcaption></figure>
+<figure id="fig-027" class="figure " data-source-figure="027">
+<a href="figures/figure-027.png" target="_blank" rel="noopener" aria-label="Open full-size figure 58"><img src="figures/figure-027.png" width="1760" height="960" alt="Hard-window smoothness · by trial" loading="lazy" decoding="async"></a>
+<figcaption><b>Figure 58. Hard-window smoothness · by trial.</b> The early baseline/RTC comparison in the hard-smoothing window, with trajectory merging enabled.</figcaption></figure>
+<figure id="fig-028" class="figure " data-source-figure="028">
+<a href="figures/figure-028.png" target="_blank" rel="noopener" aria-label="Open full-size figure 59"><img src="figures/figure-028.png" width="1280" height="960" alt="Hard-window smoothness · by group" loading="lazy" decoding="async"></a>
+<figcaption><b>Figure 59. Hard-window smoothness · by group.</b> Grouped hard-window metric from the same merge-based comparison.</figcaption></figure>
+<figure id="fig-029" class="figure " data-source-figure="029">
+<a href="figures/figure-029.png" target="_blank" rel="noopener" aria-label="Open full-size figure 60"><img src="figures/figure-029.png" width="1760" height="960" alt="Soft-window smoothness · by trial" loading="lazy" decoding="async"></a>
+<figcaption><b>Figure 60. Soft-window smoothness · by trial.</b> Per-trial distributions in the soft-smoothing window; this window is distinct from the hard-window metric.</figcaption></figure>
+<figure id="fig-030" class="figure " data-source-figure="030">
+<a href="figures/figure-030.png" target="_blank" rel="noopener" aria-label="Open full-size figure 61"><img src="figures/figure-030.png" width="1280" height="960" alt="Soft-window smoothness · by group" loading="lazy" decoding="async"></a>
+<figcaption><b>Figure 61. Soft-window smoothness · by group.</b> Grouped soft-window metric from the early RTC experiment.</figcaption></figure>
+<figure id="fig-031" class="figure " data-source-figure="031">
+<a href="figures/figure-031.png" target="_blank" rel="noopener" aria-label="Open full-size figure 62"><img src="figures/figure-031.png" width="1040" height="800" alt="Earlier baseline / RTC task-completion comparison" loading="lazy" decoding="async"></a>
+<figcaption><b>Figure 62. Earlier baseline / RTC task-completion comparison.</b> Baseline 8/10 and RTC 10/10, with merging enabled in both systems. These are the same baseline/RTC trial groups included in the three-system summary.</figcaption></figure></div></details>
+<details><summary>S13 · VLASH qualitative execution traces</summary><div class="detail-body archive-stack"><figure id="fig-065" class="figure " data-source-figure="065">
+<a href="figures/figure-065.png" target="_blank" rel="noopener" aria-label="Open full-size figure 63"><img src="figures/figure-065.png" width="713" height="438" alt="VLASH execution trace · example 1" loading="lazy" decoding="async"></a>
+<figcaption><b>Figure 63. VLASH execution trace · example 1.</b> Qualitative trajectory inspection during robot integration. Multiple views from this series are not counted as additional independent task trials.</figcaption></figure>
+<figure id="fig-066" class="figure " data-source-figure="066">
+<a href="figures/figure-066.png" target="_blank" rel="noopener" aria-label="Open full-size figure 64"><img src="figures/figure-066.png" width="1002" height="777" alt="VLASH execution trace · example 2" loading="lazy" decoding="async"></a>
+<figcaption><b>Figure 64. VLASH execution trace · example 2.</b> Qualitative trajectory inspection during robot integration. Multiple views from this series are not counted as additional independent task trials.</figcaption></figure>
+<figure id="fig-067" class="figure " data-source-figure="067">
+<a href="figures/figure-067.png" target="_blank" rel="noopener" aria-label="Open full-size figure 65"><img src="figures/figure-067.png" width="1493" height="548" alt="VLASH execution trace · example 3" loading="lazy" decoding="async"></a>
+<figcaption><b>Figure 65. VLASH execution trace · example 3.</b> Qualitative trajectory inspection during robot integration. Multiple views from this series are not counted as additional independent task trials.</figcaption></figure>
+<figure id="fig-068" class="figure " data-source-figure="068">
+<a href="figures/figure-068.png" target="_blank" rel="noopener" aria-label="Open full-size figure 66"><img src="figures/figure-068.png" width="522" height="388" alt="VLASH execution trace · example 4" loading="lazy" decoding="async"></a>
+<figcaption><b>Figure 66. VLASH execution trace · example 4.</b> Qualitative trajectory inspection during robot integration. Multiple views from this series are not counted as additional independent task trials.</figcaption></figure>
+<figure id="fig-069" class="figure " data-source-figure="069">
+<a href="figures/figure-069.png" target="_blank" rel="noopener" aria-label="Open full-size figure 67"><img src="figures/figure-069.png" width="897" height="618" alt="VLASH execution trace · example 5" loading="lazy" decoding="async"></a>
+<figcaption><b>Figure 67. VLASH execution trace · example 5.</b> Qualitative trajectory inspection during robot integration. Multiple views from this series are not counted as additional independent task trials.</figcaption></figure>
+<figure id="fig-070" class="figure " data-source-figure="070">
+<a href="figures/figure-070.png" target="_blank" rel="noopener" aria-label="Open full-size figure 68"><img src="figures/figure-070.png" width="761" height="789" alt="VLASH execution trace · example 6" loading="lazy" decoding="async"></a>
+<figcaption><b>Figure 68. VLASH execution trace · example 6.</b> Qualitative trajectory inspection during robot integration. Multiple views from this series are not counted as additional independent task trials.</figcaption></figure>
+<figure id="fig-071" class="figure " data-source-figure="071">
+<a href="figures/figure-071.png" target="_blank" rel="noopener" aria-label="Open full-size figure 69"><img src="figures/figure-071.png" width="604" height="812" alt="VLASH execution trace · example 7" loading="lazy" decoding="async"></a>
+<figcaption><b>Figure 69. VLASH execution trace · example 7.</b> Qualitative trajectory inspection during robot integration. Multiple views from this series are not counted as additional independent task trials.</figcaption></figure>
+<figure id="fig-072" class="figure " data-source-figure="072">
+<a href="figures/figure-072.png" target="_blank" rel="noopener" aria-label="Open full-size figure 70"><img src="figures/figure-072.png" width="1317" height="503" alt="VLASH execution trace · example 8" loading="lazy" decoding="async"></a>
+<figcaption><b>Figure 70. VLASH execution trace · example 8.</b> Qualitative trajectory inspection during robot integration. Multiple views from this series are not counted as additional independent task trials.</figcaption></figure></div></details>
+<details><summary>S14 · Observation and trajectory-merging diagnostics</summary><div class="detail-body archive-stack"><figure id="fig-013" class="figure " data-source-figure="013">
+<a href="figures/figure-013.jpg" target="_blank" rel="noopener" aria-label="Open full-size figure 71"><img src="figures/figure-013.jpg" width="809" height="672" alt="Observation and handoff trace · overview" loading="lazy" decoding="async"></a>
+<figcaption><b>Figure 71. Observation and handoff trace · overview.</b> An early robot trace showing that the measured observation and actual merge point need not match the intended scheduling point.</figcaption></figure>
+<figure id="fig-014" class="figure " data-source-figure="014">
+<a href="figures/figure-014.png" target="_blank" rel="noopener" aria-label="Open full-size figure 72"><img src="figures/figure-014.png" width="840" height="553" alt="Observation and handoff trace · example 1" loading="lazy" decoding="async"></a>
+<figcaption><b>Figure 72. Observation and handoff trace · example 1.</b> Annotated observation, discarded prefix and merge positions from an individual run.</figcaption></figure>
+<figure id="fig-015" class="figure " data-source-figure="015">
+<a href="figures/figure-015.png" target="_blank" rel="noopener" aria-label="Open full-size figure 73"><img src="figures/figure-015.png" width="1163" height="539" alt="Observation and handoff trace · example 2" loading="lazy" decoding="async"></a>
+<figcaption><b>Figure 73. Observation and handoff trace · example 2.</b> A second annotated handoff from the early merge-based robot run.</figcaption></figure>
+<figure id="fig-016" class="figure " data-source-figure="016">
+<a href="figures/figure-016.png" target="_blank" rel="noopener" aria-label="Open full-size figure 74"><img src="figures/figure-016.png" width="781" height="573" alt="Observation and handoff trace · example 3" loading="lazy" decoding="async"></a>
+<figcaption><b>Figure 74. Observation and handoff trace · example 3.</b> An individual observation-to-merge timing mismatch.</figcaption></figure>
+<figure id="fig-017" class="figure " data-source-figure="017">
+<a href="figures/figure-017.png" target="_blank" rel="noopener" aria-label="Open full-size figure 75"><img src="figures/figure-017.png" width="744" height="612" alt="Observation and handoff trace · example 4" loading="lazy" decoding="async"></a>
+<figcaption><b>Figure 75. Observation and handoff trace · example 4.</b> A dual-arm transition trace; this is a diagnostic snapshot, not an independent success trial.</figcaption></figure>
+<figure id="fig-018" class="figure " data-source-figure="018">
+<a href="figures/figure-018.png" target="_blank" rel="noopener" aria-label="Open full-size figure 76"><img src="figures/figure-018.png" width="1236" height="499" alt="Observation and handoff trace · example 5" loading="lazy" decoding="async"></a>
+<figcaption><b>Figure 76. Observation and handoff trace · example 5.</b> Additional trajectory inspection from the same debugging series.</figcaption></figure></div></details>
+<details><summary>S15 · Supplementary runtime profiling</summary><div class="detail-body archive-stack">
+<p>The archived table uses the ambiguous heading “RTC w/o (ms)”. The paired values are retained without assigning an unverified on/off order.</p>
+<div class="table-wrap"><table><thead><tr><th scope="col">Hardware / π0.5</th><th scope="col">Before compilation · pair (ms)</th><th scope="col">Compiled · pair (ms)</th></tr></thead><tbody>
+<tr><td>RTX 4090D</td><td>500–600 / 250–260</td><td>160–170 / 75–85</td></tr>
+<tr><td>RTX 4090 industrial PC</td><td>300–320 / 150–160</td><td>125–140 / 60–70</td></tr>
+</tbody></table></div>
+<p>Both values in each pair decrease after compilation. These isolated measurements are distinct from the robot latency distributions and per-trial accumulated inference time.</p></div></details>
+<h3>References</h3>
+<ol class="refs">
+<li id="ref-rtc">Physical Intelligence. <a href="https://www.pi.website/research/real_time_chunking" target="_blank" rel="noopener">Real-Time Action Chunking with Large Models</a>; <a href="https://arxiv.org/abs/2506.07339" target="_blank" rel="noopener">Real-Time Execution of Action Chunking Flow Policies</a>.</li>
+<li id="ref-vlash">Tang et al. <a href="https://arxiv.org/abs/2512.01031" target="_blank" rel="noopener">VLASH: Real-Time VLAs via Future-State-Aware Asynchronous Inference</a>. <a href="https://github.com/mit-han-lab/vlash" target="_blank" rel="noopener">Project code</a>.</li>
+</ol>
+<p class="fine">Method descriptions are attributed to the cited work; the experimental results and implementation analysis are from this reproduction. Original figure files are preserved, with report-level captions added for context.</p></section></article></main>
+</div>
+<footer class="footer"><p>Xuemin Chi · Robotics &amp; embodied intelligence</p><a href="/blog">← All posts</a><a href="/">Personal homepage</a><a href="#article">Back to report</a></footer>
+</body>
+</html>
