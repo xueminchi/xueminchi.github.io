@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow"><meta name="author" content="Xuemin Chi">
+<meta name="description" content="Memory for robot policies: temporal video encoding, learned-query history compression, and observations from real-robot box folding and shell-game tasks.">
+<meta name="color-scheme" content="light">
+<title>Memory for Robot Policies | Xuemin Chi</title>
+<link rel="stylesheet" href="../asynchronous-vla-control/article.css"><link rel="stylesheet" href="article.css">
+</head>
+<body>
+<a class="skip" href="#article">Skip to article</a>
+<nav class="site-nav" aria-label="Site navigation"><div class="nav-inner"><a class="brand" href="/">Xuemin Chi</a><div class="nav-links"><a href="/">Home</a><a href="/research">Research</a><a href="/blog" aria-current="page">Blog</a></div></div></nav>
+<header class="hero">
+<p class="eyebrow">Robotics / Implementation report</p>
+<h1>Memory for Robot Policies</h1>
+<p class="subtitle">Compressing history without losing sight of the present</p>
+<p class="byline">Xuemin Chi · September 2026 · Team implementations and experimental observations</p>
+<div class="abstract"><h2>Overview</h2><p>A robot can remember the preceding action yet still fail to respond to the current scene. This report examines two practical ways to add visual history to a robot policy: temporal fusion inside a pretrained vision encoder, and learned-query compression after image encoding. It connects their PyTorch implementations to real-robot observations: reduced repeated edge pinching during box folding, but also sensitivity to initial placement and deteriorating performance after multiple cup swaps. These observations motivate a distinction between remembering a sequence and using memory to guide perception-conditioned control.</p></div>
+</header>
+<main id="article" class="layout">
+<aside class="toc" aria-label="Article contents"><strong>In this report</strong><ol><li><a href="#motivation">1. Motivation &amp; comparison</a></li><li><a href="#implementation">2. Implementation</a></li><li><a href="#observations">3. Robot observations</a></li><li><a href="#references">References</a></li></ol></aside>
+<article>
+<section id="motivation"><span class="section-no">01 / INTRODUCTION</span><h2>What must the robot remember?</h2>
+<p>A single image may not reveal which cup hides a ball after an exchange, or whether a box edge has already been pinched. History can disambiguate these situations. However, a long task does not automatically require memory: some stages can be inferred directly from the current scene. The useful question is which information is missing now, and how long it must remain available.</p>
+<p>Raw image history retains appearance but increases computation. Robot-state history is compact, but cannot by itself describe a human moving a hidden object. Text can record counts or completed subtasks, but discards geometric detail. These are different representations of history, not interchangeable forms of the same input.</p>
+<div class="table-wrap"><table><caption>Representative memory mechanisms, not a benchmark ranking</caption><thead><tr><th scope="col">Approach</th><th scope="col">What persists</th><th scope="col">Relevant trade-off</th></tr></thead><tbody>
+<tr><th scope="row">Historical image tokens</th><td>Features from each sampled image</td><td>Simple integration; additional frames expand the policy prefix.</td></tr>
+<tr><th scope="row"><a href="https://www.pi.website/download/Mem.pdf">PI MEM</a></th><td>Short-term visual context and long-term language memory</td><td>Temporal fusion inside the video encoder; semantic progress uses a separate memory representation.</td></tr>
+<tr><th scope="row"><a href="https://arxiv.org/abs/2508.19236">MemoryVLA</a></th><td>Perceptual and cognitive entries in a memory bank</td><td>Retrieves relevant entries and consolidates redundant information.</td></tr>
+<tr><th scope="row"><a href="https://arxiv.org/abs/2603.12942">ReMem-VLA</a></th><td>Frame-level and chunk-level recurrent queries</td><td>Carries a learned memory state across time, rather than recomputing each clip independently.</td></tr>
+<tr><th scope="row"><a href="https://arxiv.org/abs/2606.20562">MemoryWAM</a></th><td>Recent frames, event-boundary anchors and compact gist tokens</td><td>Separates detailed recent context from compressed longer-range history.</td></tr>
+</tbody></table></div>
+<p>The implementation comparison below is narrower. It covers a MEM-style video encoder integrated into π0.5, and a separate history resampler built around learned queries. The latter is <em>clip-based</em>: its queries start from the same learned seeds on each call. It is not a recurrent memory bank, and neither implementation should be presented as a reproduction of every component in the systems above.</p>
+</section>
+<section id="implementation"><span class="section-no">02 / PYTORCH IMPLEMENTATION</span><h2>Two places to compress history</h2>
+<div class="memory-paths">
+<div class="memory-path"><h3>A. Inside the vision encoder</h3><span class="flow-step">History + current camera frame</span><span class="flow-step">Shared spatial blocks + temporal attention</span><span class="flow-step">Current-frame patch tokens → policy</span><p>History changes the representation of the current frame.</p></div>
+<div class="memory-path"><h3>B. Appearance + motion streams</h3><span class="flow-step">Shared historical patch features</span><span class="flow-step">Appearance and feature-difference branches</span><span class="flow-step">Joint learned-query readout → memory tokens</span><p>Two token streams become a separate history input. <a href="#appearance-motion">See the dual-stream design ↓</a></p></div>
+</div>
+<p class="fine">The expandable snippets are compact teaching versions of reviewed team code. They expose the tensor operations but omit checkpoint loading, robot transport and the full training loop. The combined <a href="memory_core.py" download>PyTorch source</a> includes their imports. These excerpts are not a pretrained model or a complete training package.</p>
+<h3 id="mem-temporal-fusion">A. MEM-style temporal fusion inside the vision encoder</h3>
+<p><strong>History changes the current-image representation; it does not become a separate bank of memory tokens.</strong> This path adapts MEM's short-term visual-memory idea to a π0.5 policy. It fuses information across frames inside the vision encoder, then passes only the current frame's updated patch features to the VLM. Unlike B, there is no independent set of learned memory queries and no extra history-token block in the prefix.</p>
+<figure class="temporal-memory-figure" aria-labelledby="temporal-memory-caption">
+<div id="temporal-memory-architecture">
+<svg class="temporal-architecture" role="img" aria-labelledby="temporal-architecture-title temporal-architecture-desc"></svg>
+</div>
+<script src="temporal-memory.js" defer></script>
+<noscript><p>Each frame is patchified. At selected blocks, same-position patches exchange information causally across time, followed by spatial attention within each frame. After the last such block, historical tokens are dropped. Current-frame features pass through the vision-to-VLM projector and join language tokens in the policy prefix.</p></noscript>
+<figcaption id="temporal-memory-caption"><b>History-enhanced current-image tokens.</b> Three frames and a few patches illustrate the data flow, not a configured frame count or measured features. Temporal arrows show representative same-position links; spatial links are bidirectional within each frame. The selected-block pattern repeats every fourth vision block in the reviewed configuration; other blocks perform spatial processing only. This is an original diagram of the reviewed implementation, based on the mechanism in <a href="https://www.pi.website/download/Mem.pdf#page=4">MEM, Section III-C / Figure 4</a>.</figcaption>
+</figure>
+<h4>Time and space are mixed separately</h4>
+<p><strong>Temporal attention</strong> treats each spatial patch index as a sequence across frames. A causal mask lets a timestep read itself and earlier timesteps, but not later ones. Q, K and V are projections of those image features. The subsequent <strong>spatial block</strong> mixes different patches within each frame. In this implementation, a temporal-attention residual update precedes the normal spatial block at the selected layers.</p>
+<p>A fixed patch index does not track one object as it moves. Spatial and temporal mixing together provide routes for information to travel across locations and time, but do not implement explicit object tracking. The current frame is the latest observation available for the action; the history clip must not contain later observations.</p>
+<h4>Why can historical tokens be removed?</h4>
+<p>Before removal, the current frame's patch features have already read historical features through temporal attention. The retained tokens therefore describe the current scene with information from the observed past. This is learned compression, not a guarantee that every past event or detail survives.</p>
+<p class="shape">Per-camera hidden features: [B, T, P, D_vision]<br>Keep the current frame after temporal fusion: [B, P, D_vision]<br>Vision-to-VLM projection: [B, P, D_model]<br>Prefix: [history-enhanced current-image tokens | language tokens]</p>
+<h4>Reuse pretrained weights, not a second query bank</h4>
+<p>The temporal wrapper reuses the selected vision block's normalization and Q/K/V/output projections. Its temporal position encoding is fixed, with zero at the current frame, so the wrapper adds no independent trainable parameter set. The reused weights can still be trained; parameter reuse does not mean frozen weights or memory competence without training. Single-frame input explicitly takes the native image path, although later fine-tuning can still change that path's weights.</p>
+<details><summary>Expand PyTorch · causal temporal attention with reused vision weights</summary><pre class="code"><code class="language-python">def causal_temporal_layer(layer, x):
+    """x: [B,T,P,D_vision]; reuse one SigLIP block's norm and Q/K/V/O.
+    Q/K/V come from image features, not independent learned memory queries.
+    """
+    b, t, p, d = x.shape
+    positions = torch.arange(t, device=x.device).float() - (t - 1)
+    freq = torch.exp(-torch.arange(d // 2, device=x.device).float()
+                     * math.log(10000) / max(d // 2 - 1, 1))
+    angles = positions[:, None] * freq
+    pe = torch.cat([angles.sin(), angles.cos()], dim=-1)
+    pe = F.pad(pe - pe[-1:], (0, d - pe.shape[-1])).to(x.dtype)
+    z = (x + pe[None, :, None]).permute(0, 2, 1, 3).reshape(b*p, t, d)
+    z = layer.layer_norm1(z)
+    attn = layer.self_attn
+    h, dh = attn.num_heads, attn.head_dim
+    q, k, v = [
+        projection(z).reshape(b*p, t, h, dh).transpose(1, 2)
+        for projection in (attn.q_proj, attn.k_proj, attn.v_proj)
+    ]
+    y = F.scaled_dot_product_attention(
+        q, k, v, is_causal=True, scale=attn.scale,
+        dropout_p=attn.dropout if layer.training else 0.0,
+    )
+    y = y.transpose(1, 2).reshape(b*p, t, d)
+    # Attention output projection: stays in the vision feature space.
+    y = attn.out_proj(y).reshape(b, p, t, d).permute(0, 2, 1, 3)
+    return x + y</code></pre><p class="code-note">The input width here is D_vision. <code>attn.out_proj</code> is the attention module's output projection within that feature space, not the later vision-to-VLM projector. The temporal residual is added before the existing spatial block; this teaching excerpt describes our implementation, not a claim of operator-by-operator equivalence to the authors' internal code.</p></details>
+<details><summary>Expand PyTorch · interleave temporal mixing and retain current-frame tokens</summary><pre class="code"><code class="language-python">def encode_memory_clip(vlm, clip, every=4):
+    """clip: [B,T,3,H,W], oldest first, current frame last.
+    Returns [B,P,D_model]; internal hidden width is D_vision.
+    Expects a PaliGemma-compatible vision tower and projector.
+    """
+    if every &lt; 1:
+        raise ValueError("every must be positive")
+    b, t, c, h, w = clip.shape
+    if t == 1:
+        return vlm.get_image_features(clip[:, 0])
+    tower = vlm.vision_tower.vision_model
+    layers = tower.encoder.layers
+    x = tower.embeddings(clip.reshape(b*t, c, h, w))
+    x = x.to(layers[0].self_attn.q_proj.weight.dtype)
+    p, d = x.shape[1:]
+    x = x.reshape(b, t, p, d)
+    temporal_ids = tuple(range(every - 1, len(layers), every))
+    for i, layer in enumerate(layers):
+        if x.ndim == 4:
+            if i in temporal_ids:
+                x = causal_temporal_layer(layer, x)
+            x = layer(x.reshape(b*t, p, d),
+                      attention_mask=None, output_attentions=False)[0]
+            x = x.reshape(b, t, p, d)
+            if temporal_ids and i == temporal_ids[-1]:
+                # Drop history only after the final temporal + spatial block.
+                # For 24 layers and every=4, this is the last vision block.
+                x = x[:, -1]
+        else:
+            x = layer(x, attention_mask=None, output_attentions=False)[0]
+    x = x[:, -1] if x.ndim == 4 else x
+    # Vision-to-VLM projection: D_vision -&gt; D_model; P tokens remain.
+    return vlm.multi_modal_projector(tower.post_layernorm(x))</code></pre><p class="code-note"><code>multi_modal_projector</code> maps D_vision to D_model after the final vision normalization. It changes feature width, not the number P of retained patch tokens. With multiple cameras, this path is applied per camera and their output tokens are assembled by the policy.</p></details>
+<h4>What is saved, and what still costs compute?</h4>
+<p>The main token-count saving is downstream: each camera contributes P visual tokens to the VLM instead of T × P. The historical images still pass through the vision encoder and participate in temporal processing. In the reviewed 24-layer encoder with a four-block interval, temporal mixing occurs at blocks 4, 8, 12, 16, 20 and 24. History is therefore removed after the last vision block in this configuration, not early enough to skip a large stack of upper vision blocks. Constant output token count is not constant total latency.</p>
+<h4>A finite observation window, not persistent memory</h4>
+<p>The reviewed box-folding configuration supplies four historical frames and the current frame from each of three cameras. Its target offsets are −6, −4.5, −3, −1.5 and 0 seconds. Views share the target sampling offsets, and frames within a camera clip share augmentation parameters. Actual frame timing and freshness still depend on the observation pipeline; the encoder's time embedding represents frame-slot positions, not sensor timestamps.</p>
+<p>Each call re-encodes the supplied clip. There is no recurrent memory state that independently preserves an event after it leaves that window. This short-term visual component should also remain distinct from the complete π0.6-MEM system: our reviewed π0.5 setup does not establish integration of MEM's long-term language memory or reproduction of its full training recipe and results.</p>
+<h3 id="appearance-motion">B. Two-stream memory: appearance and motion</h3>
+<p>This path does more than pool historical images. It preserves two complementary token streams before compression: <strong>appearance</strong>, describing what each patch contains, and <strong>motion cues</strong>, describing how its features changed between adjacent sampled frames. Both are built from the same encoded image features. The reviewed shell-game and block-building configurations enable the motion branch.</p>
+<p>The earlier frame-mean implementation reduced every image to one vector before processing history. The patch-preserving version avoids that early spatial averaging. This retains information about where a visual change occurred, although a patch location is not an object identity or a tracked trajectory.</p>
+<figure class="two-stream-figure" aria-labelledby="two-stream-caption">
+<div id="appearance-motion-memory-figure">
+<svg class="memory-architecture" role="img" aria-labelledby="memory-architecture-title memory-architecture-desc"></svg>
+</div>
+<script src="two-stream-memory.js" defer></script>
+<noscript><p>Historical patch features split into appearance and adjacent-frame feature differences. Learned queries jointly read both streams; a final projection produces memory tokens, inserted between current-image and language tokens.</p></noscript>
+<figcaption id="two-stream-caption"><b>Two token streams, one joint compressor.</b> Appearance and motion share an image encoder and input projection. The output memory is concatenated with current-image and language tokens; the prefix is an input sequence, not an extra network. Token colors and grid sizes are schematic, not measured features or configured token counts.</figcaption>
+</figure>
+<p><strong>What comes out of the compressor?</strong> Cross-attention returns one vector per learned query. Query and feed-forward residual updates refine those vectors; a final normalization and linear projection map their width from <code>d</code> to the policy width <code>D</code>. The result is <code>M</code> memory tokens of shape <code>[B, M, D]</code>. The query count sets the number of output tokens; the projection changes their feature width, not their number.</p>
+<p><strong>What does “policy prefix” mean?</strong> It is the concatenated conditioning sequence <code>[current-image tokens | memory tokens | language tokens]</code>. Inserting memory adds history as an input to the policy; it does not itself produce an action or introduce a separate “prefix network.” The policy processes this sequence, and the Action Expert uses the resulting context under its existing attention rules. Current visual observations remain available alongside memory.</p>
+<h4>What is actually learned?</h4>
+<p>The input projection, time/space embeddings, two stream-type embeddings, query vectors, attention projections and feed-forward/output layers are trainable. The subtraction itself is fixed arithmetic: the model learns how to represent and use feature changes through the surrounding layers. Appearance and motion share the input projection, time/space embeddings and compressor, but have separate learned type embeddings. This path does not introduce separate appearance and motion supervision losses.</p>
+<p>Calling the second branch “motion” describes its intended cue, not a measured optical-flow field. It is a difference between features at the same patch index, with no object correspondence or camera-motion compensation. It can respond to an object moving, but also to a changing camera view or illumination. It adds a useful representation of change, not information absent from the original feature sequence.</p>
+<h4>How the two streams become memory</h4>
+<p>After concatenation, each learned query attends jointly to valid tokens from both streams. The queries are neither permanently assigned to appearance versus motion nor allocated one per frame. They select a fixed-size summary of the clip through cross-attention, followed by residual and feed-forward updates. Position embeddings distinguish sampled times and patch locations; the implementation interpolates its learned temporal embedding table when the clip length changes.</p>
+<p class="shape">Shared features Z → appearance tokens A and feature-difference tokens V<br>Q = learned memory queries; K/V = the joint appearance–motion bank<br>Joint readout: [B, M, d] → output projection → [B, M, D]</p>
+<details><summary>Expand PyTorch · two-stream construction and joint query readout</summary><pre class="code"><code class="language-python">class HistoryResampler(nn.Module):
+    """Appearance/motion token streams, jointly read by learned queries.
+    Input [B,T,P,D] -&gt; memory [B,M,D]; no recurrent state.
+    """
+    def __init__(self, dim, patches, max_frames, memory_tokens=32,
+                 width=512, heads=8, use_motion_tokens=True):
+        super().__init__()
+        self.use_motion_tokens = use_motion_tokens
+        self.in_proj = nn.Linear(dim, width)  # Shared by both streams.
+        self.time = nn.Parameter(torch.randn(1, max_frames, 1, width) * .02)
+        self.space = nn.Parameter(torch.randn(1, 1, patches, width) * .02)
+        self.appearance_type = nn.Parameter(torch.randn(1, 1, 1, width) * .02)
+        self.motion_type = nn.Parameter(torch.randn(1, 1, 1, width) * .02)
+        self.queries = nn.Parameter(torch.randn(1, memory_tokens, width) * .02)
+        self.q_norm, self.k_norm = nn.LayerNorm(width), nn.LayerNorm(width)
+        self.attn = nn.MultiheadAttention(width, heads, batch_first=True)
+        self.ff_norm = nn.LayerNorm(width)
+        self.ff = nn.Sequential(nn.Linear(width, 4*width), nn.GELU(),
+                                nn.Linear(4*width, width))
+        self.out_norm = nn.LayerNorm(width)
+        self.out_proj = nn.Linear(width, dim)
+
+    def _time_embedding(self, length, like):
+        pos = self.time.squeeze(2)
+        if length != pos.shape[1]:
+            pos = F.interpolate(pos.transpose(1, 2).float(), size=length,
+                                mode="linear", align_corners=False).transpose(1, 2)
+        return pos.unsqueeze(2).to(device=like.device, dtype=like.dtype)
+
+    def _token_bank(self, patches, valid_frames):
+        b, t, p, _ = patches.shape
+        valid = valid_frames.to(device=patches.device, dtype=torch.bool)
+        z = self.in_proj(patches)
+        pos = self._time_embedding(t, z) + self.space
+
+        # Appearance: preserve what each spatial patch contains.
+        appearance = z + pos + self.appearance_type
+        streams = [appearance]
+        masks = [valid[:, :, None].expand(-1, -1, p)]
+
+        if self.use_motion_tokens:
+            # Motion cue: difference BEFORE adding positions/type embeddings.
+            delta = torch.zeros_like(z)
+            delta[:, 1:] = z[:, 1:] - z[:, :-1]
+            motion = delta + pos + self.motion_type
+            pair_valid = torch.zeros_like(valid)
+            pair_valid[:, 1:] = valid[:, 1:] &amp; valid[:, :-1]
+            streams.append(motion)
+            masks.append(pair_valid[:, :, None].expand(-1, -1, p))
+
+        # Two streams are concatenated, not summed or pooled independently.
+        values = torch.cat(streams, dim=2).reshape(b, -1, z.shape[-1])
+        mask = torch.cat(masks, dim=2).reshape(b, -1)
+        return values, mask
+
+    def forward(self, patches, valid_frames):
+        values, mask = self._token_bank(patches, valid_frames)
+        empty = ~mask.any(dim=1)
+        mask = mask.clone()
+        mask[empty, 0] = True  # Avoid all-masked attention producing NaNs.
+        q = self.queries.expand(patches.shape[0], -1, -1).to(values)
+        pooled, _ = self.attn(self.q_norm(q), self.k_norm(values), values,
+                             key_padding_mask=~mask, need_weights=False)
+        memory = q + pooled
+        memory = memory + self.ff(self.ff_norm(memory))
+        memory = self.out_proj(self.out_norm(memory))
+        return memory.masked_fill(empty[:, None, None], 0)</code></pre><p class="code-note">This teaching version keeps the shared projection, separate stream types, optional motion branch, temporal-position interpolation and joint attention from the reviewed implementation. It additionally zeroes all-invalid output rows; the policy must mask those rows as well. It omits shape guards and training/runtime setup, and uses simplified parameter initialization.</p></details>
+<p>Every appearance token needs one valid frame; every motion token needs two adjacent valid frames. The first difference has no predecessor and is masked. Queries can read the complete observed clip because the resulting memory conditions an action after that clip; training must still exclude observations from after the action's observation time. Each call starts from the same learned query seeds, not a recurrent state carried from the previous call.</p>
+<h4>Capacity and implementation limits</h4>
+<p>For one 224 × 224 view with 256 patches and 50 history frames, the appearance stream has 12,800 tokens. Enabling motion creates a bank of 25,600 token slots; with all 50 frames valid, 25,344 are valid because the first 256 motion slots are masked. The reviewed configurations use a 512-wide bottleneck and either 32 or 512 output queries. These are implementation settings, not evidence that one setting is optimal.</p>
+<p>The audited configurations use head-camera history. The integration averages corresponding encoded patch features if multiple history cameras are supplied, so this version should not be described as preserving distinct multi-view geometry. Current-camera images are processed separately. Compression bounds the history prefix length, but still requires historical image encoding and attention over the two-stream bank; token counts are not measured latency or speedup results.</p>
+<h3>C. Let the policy use the memory</h3>
+<p>The history resampler's output is inserted between current-image tokens and language tokens in the VLM prefix. The existing policy attention rules then determine how the Action Expert reads the prefix. This is different from concatenating a pooled vector to robot state or injecting it through adaptive normalization.</p>
+<details><summary>Expand PyTorch · assemble the conditioning prefix</summary><pre class="code"><code class="language-python">def build_prefix(current_images, memory, language,
+                 image_valid, memory_valid, language_valid):
+    """All tokens are projected to the same feature width.
+    True means valid in returned padding mask.
+    """
+    tokens = torch.cat([current_images, memory, language], dim=1)
+    valid = torch.cat([image_valid, memory_valid, language_valid], dim=1)
+    # Feed these to the policy's existing prefix/Action Expert interface.
+    # The policy must still construct its own prefix-to-action attention mask.
+    return tokens, valid</code></pre><p class="code-note">This excerpt only constructs tokens and validity masks. It does not replace the policy's attention-mask logic, position IDs, normalization or action-generation path.</p></details>
+<p>Text memory serves a different role. A separate high-level implementation predicts the next subtask and an updated language memory, such as the number of cubes already placed. Its evaluation must distinguish supplying correct previous memory from feeding the model's own predictions back. That high-level route is not claimed here to have been integrated with the visual-memory controller into one evaluated robot system.</p>
+</section>
+<section id="observations"><span class="section-no">03 / REAL-ROBOT OBSERVATIONS</span><h2>Less repetition does not guarantee better grounding</h2>
+<figure class="figure">
+<video controls playsinline preload="metadata" poster="media/box-folding-poster.jpg" width="1280" height="720" aria-label="Dual-arm robot folding a cardboard box with a MEM-style policy"><source src="media/box-folding-mem.mp4" type="video/mp4">Your browser cannot play this video. <a href="media/box-folding-mem.mp4">Open the box-folding video</a>.</video>
+<figcaption><b>Box folding with a MEM-style policy.</b> One operator-provided demonstration, approximately 39 seconds, shown at recorded speed without temporal cuts. The web copy is muted, converted from HDR to SDR and resized for playback; location metadata is removed. This clip is qualitative evidence, not a paired baseline or a success-rate estimate.</figcaption>
+</figure>
+<div class="finding"><h3>Box folding: an improvement and a limitation</h3><p>The experiment notes report that repeated pinching of the box edge was not observed in this MEM run, whereas repeated pinching had been seen without memory. The available video provides an illustrative execution, but no matched no-memory clip or trial count is available for a quantitative comparison.</p></div>
+<p>The same notes record a loss of sensitivity to the initial box position: the grasp did not adjust adequately when the box was moved. They also describe the robot continuing the action routine on an empty table. The empty-table recording is not embedded here. These failures matter even if the nominal folding sequence looks smoother.</p>
+<h3>Is this simply overfitting?</h3>
+<p>Overfitting is a plausible explanation, not an established diagnosis. Repeating a familiar routine despite a changed scene is consistent with weak dependence on current visual evidence. It could reflect a narrow training distribution, use of history or proprioception as a shortcut for task phase, or a problem in observation delivery or preprocessing. The existing records do not isolate these alternatives or establish a checkpoint-by-checkpoint deterioration.</p>
+<p>The <a href="https://www.pi.website/download/Mem.pdf">MEM paper</a> discusses causal confusion in memory policies and connects robustness to diverse pretraining data. Its post-training-only variant is also weaker than its pretrained memory model. This makes training regime relevant to our observation, but does not establish its cause or exonerate the memory design.</p>
+<p>A useful next check would hold the checkpoint and robot state fixed while changing the current image, then hold the current image fixed while changing history. Earlier/later checkpoints and a moved-object scene can help distinguish a memorized routine from a history-input problem. These are proposed diagnostic comparisons, not experiments already completed for this report; any real-robot follow-up requires its normal safety controls.</p>
+<h3>Shell game: performance drops as swaps accumulate</h3>
+<p>Operator feedback reports relatively strong performance after one cup swap, but substantially poorer performance after two or three. Without counts and a fixed protocol, no percentages or benchmark score are reported. The observation should remain separate from results in published RoboMME or other evaluation suites.</p>
+<p>The failure could involve missed swaps between sampled frames, an event falling outside the history window, loss of object identity during compression, or insufficient examples of longer swap sequences. Simply increasing the number of memory tokens would not establish which explanation is correct.</p>
+<div class="note"><p><strong>Takeaway.</strong> A compact memory interface is implementable, and the box-folding case offers a useful qualitative result. The unresolved question is whether the policy uses history <em>together with current evidence</em>, rather than as a way to replay a familiar action sequence. The present evidence supports an implementation report and a limitations discussion—not a claim of general memory competence.</p></div>
+<p class="fine">Evidence boundary: source/configuration review, archived experiment notes, one supplied box-folding video and qualitative operator feedback. No complete success-rate protocol or isolated encoder-latency measurement is available here. This report therefore does not claim 100% task success or sub-300 ms inference.</p>
+</section>
+<section id="references"><h2>References</h2><ol class="refs">
+<li><a href="https://www.pi.website/download/Mem.pdf">MEM: Multi-Scale Embodied Memory for Vision Language Action Models</a>. Physical Intelligence. Video/text memory design, post-training-only comparison and causal-confusion discussion.</li>
+<li><a href="https://arxiv.org/abs/2508.19236">MemoryVLA: Perceptual-Cognitive Memory in Vision-Language-Action Models for Robotic Manipulation</a>. Perceptual-cognitive memory bank.</li>
+<li><a href="https://arxiv.org/abs/2603.12942">ReMem-VLA: Empowering Vision-Language-Action Model with Memory via Dual-Level Recurrent Queries</a>. Frame/chunk recurrent memory.</li>
+<li><a href="https://arxiv.org/abs/2606.20562">MemoryWAM: Efficient World Action Modeling with Persistent Memory</a>. Recent frames, event anchors and compact gist tokens.</li>
+</ol><p class="fine">Method descriptions cite their original authors. Team implementation excerpts have been simplified for explanation; private repository paths, checkpoints and raw internal records are not distributed with this article.</p></section>
+</article></main>
+<footer class="footer"><a href="/blog">← All posts</a><span>Xuemin Chi · Robotics &amp; machine learning</span></footer>
+</body></html>

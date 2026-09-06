@@ -1,0 +1,23 @@
+header.hero{max-width:1080px}h1{max-width:880px}.subtitle{max-width:780px}.layout{grid-template-columns:165px minmax(0,850px);gap:38px}.abstract{max-width:850px}.review-label{display:inline-block;border:1px solid var(--line);padding:3px 9px;margin-top:12px;font-size:14px;color:var(--muted)}
+.memory-paths{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:26px 0}.memory-path{border:1px solid var(--line);background:var(--paper);padding:20px}.memory-path h3{margin:0 0 16px}.memory-path p{font-size:15px;margin-bottom:0}.flow-step{display:block;padding:10px 0;border-top:1px solid var(--line);font-size:15px}.flow-step:last-of-type{color:var(--accent);font-weight:600}.shape{font:14px/1.6 var(--mono);padding:12px 16px;background:var(--paper);border-left:3px solid var(--accent);overflow-x:auto;white-space:pre-wrap}.code{overflow-x:auto;margin:0;padding:20px;font:14px/1.65 var(--mono);white-space:pre;tab-size:4}.code code{font:inherit;overflow-wrap:normal}.code-note{padding:14px 20px;margin:0;font-size:14px;color:var(--muted);border-top:1px solid var(--line)}.figure video{display:block;width:100%;height:auto;max-height:620px;background:#111}.finding{border-left:3px solid var(--accent);padding-left:20px;margin:24px 0}.finding h3{margin-top:0}.finding p:last-child{margin-bottom:0}table{font-size:15px;min-width:620px}.refs li{margin-bottom:14px}.local-note{font-size:14px;color:var(--muted)}
+@media(max-width:1000px){.layout{grid-template-columns:1fr}.toc ol{display:flex}.memory-paths{grid-template-columns:1fr 1fr}}
+@media(max-width:620px){.memory-paths{grid-template-columns:1fr}.code{padding:14px;font-size:14px}.shape{font-size:14px}.memory-path{padding:16px}}
+@media print{.review-label{display:none}.code{font-size:9pt;white-space:pre-wrap}.memory-paths{display:block}.memory-path{margin-bottom:10px}table{min-width:0}}
+/* B: a responsive architecture figure, integrated with this article's theme. */
+#appearance-motion{scroll-margin-top:90px}
+.two-stream-figure{margin:26px 0;padding:0}
+.two-stream-figure figcaption{font-size:14px;color:var(--muted);margin-top:16px;line-height:1.7}
+#appearance-motion-memory-figure{--foreground:var(--ink);--muted-foreground:var(--muted);--border:var(--line);--background:var(--paper);--viz-series-1:#296cba;--viz-series-2:#c07526;--viz-series-3:#8758aa;--viz-series-4:#298468}
+#appearance-motion-memory-figure .memory-architecture{display:block;width:100%;overflow:visible}
+#appearance-motion-memory-figure text{fill:var(--foreground);font-family:var(--sans);font-size:14px;font-weight:400}
+#appearance-motion-memory-figure .secondary{fill:var(--muted-foreground)}
+@media print{.two-stream-figure{break-inside:avoid}}
+
+/* A: temporal fusion retains current-frame patch tokens, not a query bank. */
+#mem-temporal-fusion{scroll-margin-top:90px}
+.temporal-memory-figure{margin:26px 0}
+.temporal-memory-figure figcaption{font-size:14px;color:var(--muted);margin-top:16px;line-height:1.7}
+#temporal-memory-architecture .temporal-architecture{display:block;width:100%;overflow:visible}
+#temporal-memory-architecture text{fill:var(--ink);font-family:var(--sans);font-size:14px;font-weight:400}
+#temporal-memory-architecture .secondary{fill:var(--muted)}
+@media print{.temporal-memory-figure{break-inside:avoid}}
