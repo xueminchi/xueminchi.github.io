@@ -1,0 +1,191 @@
+{
+  "scope": "Existing diagnostic experiments; not results from the cited papers. Counts are local task tests, not benchmark-wide scores.",
+  "fastwam_libero_task9": [
+    {
+      "condition": "Full context",
+      "successes": 10,
+      "trials": 10
+    },
+    {
+      "condition": "Empty instruction",
+      "successes": 9,
+      "trials": 10
+    },
+    {
+      "condition": "Zero robot-state input",
+      "successes": 7,
+      "trials": 10
+    },
+    {
+      "condition": "Empty instruction + zero state",
+      "successes": 3,
+      "trials": 10
+    },
+    {
+      "condition": "Zero projected context values",
+      "successes": 5,
+      "trials": 10
+    },
+    {
+      "condition": "Bypass entire context branch",
+      "successes": 3,
+      "trials": 10
+    }
+  ],
+  "selective_context": {
+    "keep_layers": [
+      0,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29
+    ],
+    "successes": 10,
+    "trials": 10,
+    "applies_to": "shared video/action context-branch switch"
+  },
+  "camera_probe": {
+    "episodes": 3,
+    "noninitial_replans": 37,
+    "action_change_ratios": {
+      "freeze_head": 0.20020611095048724,
+      "freeze_left_wrist": 0.2842951942382451,
+      "freeze_right_wrist": 0.27822764065618144,
+      "freeze_all": 0.3673022219324091,
+      "head_only_live": 0.38416027164083916,
+      "left_only_live": 0.3947879577769585,
+      "right_only_live": 0.3891091647350006
+    },
+    "shapley_action_restoration_share": {
+      "head": 0.2670597722917979,
+      "left_wrist": 0.3668073171818822,
+      "right_wrist": 0.36613291052631985
+    }
+  },
+  "cloth_probe": {
+    "episodes": 1,
+    "paired_replans": [
+      {
+        "replan": 1,
+        "cloth": 0.26374555620932194,
+        "background_median": 0.059004353658126514
+      },
+      {
+        "replan": 2,
+        "cloth": 0.38234897689801484,
+        "background_median": 0.09505747559073276
+      },
+      {
+        "replan": 3,
+        "cloth": 0.3307696867249277,
+        "background_median": 0.10530437336361158
+      },
+      {
+        "replan": 4,
+        "cloth": 0.16142677321826626,
+        "background_median": 0.04409998722477595
+      },
+      {
+        "replan": 5,
+        "cloth": 0.1087168821148261,
+        "background_median": 0.08752428293974451
+      },
+      {
+        "replan": 6,
+        "cloth": 0.3460974462712365,
+        "background_median": 0.07719536816022626
+      },
+      {
+        "replan": 7,
+        "cloth": 0.3944330844927701,
+        "background_median": 0.08677874490979272
+      },
+      {
+        "replan": 8,
+        "cloth": 0.14712268783935398,
+        "background_median": 0.043701155711343476
+      },
+      {
+        "replan": 9,
+        "cloth": 0.13956145181232707,
+        "background_median": 0.05786175215787297
+      },
+      {
+        "replan": 10,
+        "cloth": 0.17467118046302904,
+        "background_median": 0.06064374723068765
+      },
+      {
+        "replan": 11,
+        "cloth": 0.04981900380797299,
+        "background_median": 0.0364809186157051
+      },
+      {
+        "replan": 12,
+        "cloth": 0.06812436615820794,
+        "background_median": 0.05603940495217568
+      }
+    ],
+    "mean_cloth_ratio": 0.21390309133418786,
+    "mean_background_median_ratio": 0.0674742970428996
+  },
+  "value_decomposition": {
+    "weight_projection_fraction": 0.19232870328737842,
+    "value_projection_fraction": 0.805668588500056,
+    "interaction_projection_fraction": 0.0012983945700768716,
+    "gate_projection_fraction": 0.0,
+    "decomposition_closure_ratio": 0.013269680300792466
+  },
+  "fixed_horizon_sweep": [
+    {
+      "horizon": 10,
+      "successes": 9,
+      "trials": 10
+    },
+    {
+      "horizon": 15,
+      "successes": 8,
+      "trials": 10
+    },
+    {
+      "horizon": 20,
+      "successes": 8,
+      "trials": 10
+    },
+    {
+      "horizon": 25,
+      "successes": 7,
+      "trials": 10
+    },
+    {
+      "horizon": 30,
+      "successes": 6,
+      "trials": 10
+    }
+  ],
+  "adaptive_horizon_comparison": [
+    {
+      "policy": "H10",
+      "successes": 9,
+      "trials": 10
+    },
+    {
+      "policy": "H30",
+      "successes": 6,
+      "trials": 10
+    },
+    {
+      "policy": "AutoHorizon",
+      "successes": 8,
+      "trials": 10
+    }
+  ],
+  "residual_update_means": {
+    "self_update_ratio": 0.11423880214588,
+    "cross_update_ratio": 0.019011158004868776,
+    "ffn_update_ratio": 0.10282059318433778
+  },
+  "units": "Raw action RMS ratios are dimensionless model-output differences, not centimetres or task-success percentages."
+}

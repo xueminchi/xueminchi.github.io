@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow"><meta name="author" content="Xuemin Chi">
+<meta name="description" content="A diagnostic study of FastWAM and pi0.5: controlled input interventions, layer-selective context bypass, visual sensitivity, and internal activation analysis.">
+<meta name="color-scheme" content="light">
+<title>Beyond Attention Maps: Diagnosing Robot Policies | Xuemin Chi</title>
+<link rel="stylesheet" href="../asynchronous-vla-control/article.css"><link rel="stylesheet" href="article.css">
+</head>
+<body>
+<a class="skip" href="#article">Skip to article</a>
+<nav class="site-nav" aria-label="Site navigation"><div class="nav-inner"><a class="brand" href="/">Xuemin Chi</a><div class="nav-links"><a href="/">Home</a><a href="/research">Research</a><a href="/blog" aria-current="page">Blog</a></div></div></nav>
+<header class="hero">
+<p class="eyebrow">Robot learning / Diagnostic study</p>
+<h1>Beyond Attention Maps</h1>
+<p class="subtitle">Diagnosing information use in VLA and world–action policies</p>
+<p class="byline">Xuemin Chi · September 2026 · FastWAM and π0.5</p>
+<div class="abstract"><h2>The question</h2><p>Which information does a robot policy actually use, and can that knowledge guide a change to the model? I investigated this through two cases: a FastWAM policy that tolerated an empty instruction on one task but failed more often when its conditioning branch was removed, and a π0.5 policy whose low direct visual attention did not predict its sensitivity to image changes. The approach connects attention and residual measurements to controlled input edits, internal interventions and, where tested, closed-loop behavior.</p></div>
+<div class="contributions"><div><h2><a href="#conditioning">Input or computation?</a></h2><p>Separate changing the instruction or robot state from removing the branch that processes them.</p></div><div><h2><a href="#vision">Attention or visual use?</a></h2><p>Test camera and clothing-region inputs, then distinguish changes in attention weights from changes in the features being read.</p></div><div><h2><a href="#structure">Can the model be simplified?</a></h2><p>Use layerwise measurements to propose a selective branch bypass, then check task completion rather than infer usefulness from a heatmap.</p></div></div>
+<p class="ownership"><strong>My contribution:</strong> the diagnostic instrumentation, controlled intervention design and analysis presented here. The underlying π0.5 and FastWAM architectures and released checkpoints are prior work; the results below are task-specific tests, not a new foundation model or a benchmark-wide claim.</p>
+</header>
+<main id="article" class="layout">
+<aside class="toc" aria-label="Article contents"><strong>In this report</strong><ol><li><a href="#architecture">Model information paths</a></li><li><a href="#measurement">1. What is being measured?</a></li><li><a href="#conditioning">2. Input versus branch dependence</a></li><li><a href="#structure">3. Selective branch bypass</a></li><li><a href="#vision">4. Testing visual dependence</a></li><li><a href="#mechanism">5. Looking inside the model</a></li><li><a href="#control">Extension: diagnosis to control</a></li><li><a href="#appendix">Evidence &amp; implementation notes</a></li><li><a href="#references">References</a></li></ol></aside>
+<article>
+<section id="architecture"><span class="section-no">READING THE MODELS</span><h2>Two models, different information paths</h2>
+<p>Before interpreting an attention map, identify which computation it represents. These diagrams show the cached inference path at a new observation, not the complete training architecture. The observation branch prepares per-layer keys and values once per replan; action denoising reuses those caches. Token squares indicate information types, not token counts.</p>
+<p class="fine">Q means queries: what the action representation reads. K/V means keys and values: the information it reads from. FFN is the feed-forward network inside a Transformer layer. Input/output projections, normalization, residual connections and timestep modulation are omitted for clarity; the action head predicts a flow update, and denoising repeats to produce an action chunk.</p>
+<h3>π0.5 · one joint masked-attention path</h3>
+<figure class="figure architecture-figure" id="pi05-architecture"><a href="figures/pi05-attention-architecture.svg" aria-label="Open the full-size pi0.5 architecture diagram"><picture><source media="(max-width: 620px)" srcset="figures/pi05-attention-architecture-mobile.svg" width="400" height="844"><img src="figures/pi05-attention-architecture.svg" width="1120" height="620" alt="Pi0.5 inference: current images pass through SigLIP and join instruction and discretized state in the PaliGemma prefix. Each action-expert layer reads cached prefix keys and values together with action keys and values in one masked attention operation, followed by its feed-forward network." loading="lazy"></picture></a><figcaption><b>Cross-token interaction does not imply a separate cross-attention sublayer.</b> The prefix and action expert have separate projections; action queries read both prefix and action keys/values in the joint operation. The mask prevents prefix tokens from reading action tokens. The cache used by each action layer comes from the corresponding prefix layer, not only the final prefix output. The π0.5 state is discretized into the text prefix. Architecture checked against <a href="https://github.com/Physical-Intelligence/openpi/blob/main/src/openpi/models/gemma.py">OpenPI attention</a>, <a href="https://github.com/Physical-Intelligence/openpi/blob/main/src/openpi/models/pi0.py">policy inference</a> and <a href="https://github.com/Physical-Intelligence/openpi/blob/main/src/openpi/models/tokenizer.py">tokenization</a>.</figcaption></figure>
+<h3>FastWAM · mixed attention plus context cross-attention</h3>
+<figure class="figure architecture-figure" id="fastwam-architecture"><a href="figures/fastwam-attention-architecture.svg" aria-label="Open the full-size FastWAM architecture diagram"><picture><source media="(max-width: 620px)" srcset="figures/fastwam-attention-architecture-mobile.svg" width="400" height="966"><img src="figures/fastwam-attention-architecture.svg" width="1120" height="665" alt="FastWAM inference: a video autoencoder and Video DiT prepare cached visual keys and values. Action tokens first read visual and action keys and values in masked mixed attention, then read text and robot-state context through a separate cross-attention sublayer. Context also conditions video prefill; the outlined context sublayer is the selective bypass target." loading="lazy"></picture></a><figcaption><b>The outlined sublayer is the target of the branch-bypass experiment.</b> Visual and action tokens interact through mixed attention. Encoded text and projected robot state, when enabled, enter a separate context cross-attention branch; context also conditions video prefill. In the reviewed experiment, the layer-selection switch affects context cross-attention in both paths. It does not delete full Transformer blocks or remove mixed visual–action attention. This inference path uses current-observation prefill rather than iterative future-video generation. See <a href="https://github.com/yuantianyuan01/FastWAM/blob/main/src/fastwam/models/wan22/mot.py">the attention and post-attention blocks</a> and <a href="https://github.com/yuantianyuan01/FastWAM/blob/main/src/fastwam/models/wan22/fastwam.py">context and inference construction</a>.</figcaption></figure>
+</section>
+<section id="measurement"><span class="section-no">01 / MEASUREMENT</span><h2>A map is a starting point, not an explanation</h2>
+<p>The investigation began with action-query attention: which image patches, instruction tokens and action positions receive weight? A single averaged map hid substantial changes across layers, denoising steps and replans. I therefore organized the traces around the actual model input at each replan, with exact patch-grid mappings and separate views of the attention paths.</p>
+<p>The <a href="#architecture">information paths above</a> determine what a trace can mean: action-to-prefix weights in π0.5 are part of joint masked attention, whereas FastWAM has both mixed visual–action attention and a separate context branch. I keep these paths distinct instead of treating every action-to-condition heatmap as the same kind of cross-attention.</p>
+<div class="mechanism"><div><strong>Attention allocation</strong><p>Where the query distributes its weights.</p></div><div><strong>Residual write</strong><p>What the weighted features actually add to the hidden state.</p></div><div><strong>Behavioral effect</strong><p>How predicted actions or closed-loop completion change after intervention.</p></div></div>
+<p>These measurements answer different questions. A large attention weight need not produce a large residual update; a small update can still matter downstream. Likewise, an action-vector difference in replay is not a task-success measurement.</p>
+<figure class="figure"><a href="figures/attention-layers.png"><img src="figures/attention-layers.png" alt="Recorded action-query attention at FastWAM layers 0, 15 and 29; the allocation between visual and action keys differs across layers." width="1345" height="415" loading="lazy"></a><figcaption><b>Different layers, different allocations.</b> FastWAM, LIBERO task 9, replan 0; each panel averages denoising steps 0–9. The vertical divider separates 98 vision keys from 32 action keys. This is an observed attention map, not pixel attribution or a causal-importance score.</figcaption></figure>
+<details><summary>PyTorch · measure the residual update, not just attention weights</summary>
+<pre class="code"><code class="language-python" data-snippet="residual_metrics">def residual_metrics(x_before, update):
+    &quot;&quot;&quot;Per-token diagnostics for [batch, tokens, hidden] tensors.
+    Aggregate over explicitly named layer/step/replan axes afterwards.
+    &quot;&quot;&quot;
+    x, d = x_before.detach().float(), update.detach().float()
+    x_rms = x.square().mean(-1).sqrt().clamp_min(1e-8)
+    return {
+        &quot;update_ratio&quot;: d.square().mean(-1).sqrt() / x_rms,
+        &quot;cosine&quot;: F.cosine_similarity(x, d, dim=-1, eps=1e-8),
+        &quot;post_pre_scale&quot;: (x + d).square().mean(-1).sqrt() / x_rms,
+    }</code></pre>
+<p class="code-note">Record <code>x_before</code> immediately before the selected residual addition and <code>update</code> after its output projection and any gate. These operations measure tensors already computed by the model; they do not replace its attention kernel. The teaching helper returns per-token values. The reported traces explicitly aggregate their layer, denoising-step and replan axes.</p></details>
+</section>
+<section id="conditioning"><span class="section-no">02 / CONDITIONING</span><h2>If the instruction can be empty, can the branch disappear?</h2>
+<p>With the official FastWAM LIBERO checkpoint, task 9—putting the yellow-and-white mug in the microwave and closing it—completed in 10/10 baseline trials and 9/10 with an empty instruction. Removing the entire context cross-attention branch was very different: only 3/10 trials completed.</p>
+<div class="finding"><p><strong>Content dependence and branch dependence are not the same.</strong> Weak sensitivity to an empty instruction does not make the complete conditioning computation redundant.</p></div>
+<p>The other controls help separate these effects: zeroing robot-state input gave 7/10, empty text plus zero state gave 3/10, and zeroing the projected context values gave 5/10. Zeroing values preserves the Q/K and output-projection machinery; bypassing the branch skips its complete residual write.</p>
+<figure class="figure"><a href="figures/context-interventions.png"><img src="figures/context-interventions.png" alt="FastWAM task 9: full context 10/10, empty instruction 9/10, zero state 7/10, empty instruction and zero state 3/10, zero context values 5/10, bypass context 3/10." loading="lazy"></a><figcaption><b>Separate the intervention targets.</b> Same official checkpoint and task; 10 trials per condition. The robot-state control zeros normalized proprioception, not the physical robot pose. These are local task tests, not scores over the entire LIBERO suite.</figcaption></figure>
+<p>This behavior was not universal. FastWAM's RoboTwin hanging-mug task fell from 3/3 to 0/3 with empty text, while placing a container on a plate retained 2/3. The π0.5 LIBERO task-9 comparison retained 1/3. The appropriate conclusion is about these task/checkpoint/intervention combinations, not that robot policies ignore language.</p>
+<p class="fine">An empty or incorrect instruction can also change the input distribution. These interventions establish sensitivity to a particular modification; they do not isolate a single abstract notion of language understanding. Complete prompt controls and recording limitations are collected below.</p>
+</section>
+<section id="structure"><span class="section-no">03 / STRUCTURE</span><h2>Can the middle context branches be bypassed?</h2>
+<p>Bypassing context everywhere reduced completion, but that does not tell us whether every layer's context branch is needed. To narrow that question, I inspected what each branch writes into the residual stream. In one successful FastWAM task-9 trace, mean update-to-input RMS ratios were approximately 0.114 for mixed self-attention, 0.019 for context cross-attention and 0.103 for the feed-forward branch. The context update was small on average but not uniformly small across layers.</p>
+<p>That pattern suggested a concrete intervention: retain context cross-attention in layer 0 and layers 24–29, while bypassing it in layers 1–23. The 10-trial follow-up completed 10/10, matching the baseline's observed count; bypassing context everywhere completed only 3/10.</p>
+<figure class="figure"><a href="figures/selective-branches.png"><img src="figures/selective-branches.png" alt="A 30-position context-branch mask retains layer 0 and 24 through 29. Completion is 10/10 with full context, 3/10 with none, and 10/10 with the selected branches." loading="lazy"></a><figcaption><b>Selective branch bypass—not deleting 23 Transformer blocks.</b> Mixed self-attention and feed-forward computation remain in all 30 blocks. The reviewed switch is shared by video-prefill and action-denoising paths, so this test does not isolate the action expert alone. No retraining was used.</figcaption></figure>
+<div class="finding"><p><strong>A useful structural hypothesis, with a narrow validation scope.</strong> Layerwise measurements guided an actual intervention. The retained branches were sufficient for these trials; this does not prove that each retained layer is necessary, that the change generalizes, or that end-to-end latency improved.</p></div>
+<details><summary>Inspect the residual profile behind the layer selection</summary><div class="detail-body"><figure class="figure small"><a href="figures/residual-layer-profile.png"><img src="figures/residual-layer-profile.png" alt="Recorded context-update RMS relative to input RMS across 30 layers and 32 action positions; middle layers have smaller updates." width="900" height="827" loading="lazy"></a><figcaption>The recorded layer/action profile motivated the selection. Its low middle-layer values alone are not evidence that those branches can be removed; the closed-loop intervention provides the additional test. Cosine signs, where inspected, describe vector alignment rather than labels such as semantic correction.</figcaption></figure><p>The full trace contains 26 replans × 10 denoising steps × 30 layers = 7,800 layer events from one rollout. Those events are not 7,800 independent trials. The earlier three-trial pilot is not added to the later ten-trial result.</p></div></details>
+<details><summary>PyTorch · bypass only the selected context residual branches</summary>
+<pre class="code"><code class="language-python" data-snippet="selective_context">def post_attention_branches(block, x, context, context_mask,
+                            shift, scale, gate, layer_id, keep=None):
+    &quot;&quot;&quot;x is AFTER the mixed-self-attention residual, not a block input.
+    Call in BOTH video-prefill and action paths for the reported setting.
+    shift/scale/gate must already broadcast to x: [B,S,D].
+    &quot;&quot;&quot;
+    if context is not None and (keep is None or layer_id in keep):
+        if context_mask is not None and context_mask.ndim == 3:
+            context_mask = context_mask.unsqueeze(1)
+        delta = block.cross_attn(
+            block.norm3(x), context, ctx_mask=context_mask)
+        x = x + delta
+    # Only context cross-attention is conditional. FFN remains active.
+    z = block.norm2(x) * (1 + scale) + shift
+    return block.gate(x, gate, block.ffn(z))
+
+
+KEEP_CONTEXT_LAYERS = {0, 24, 25, 26, 27, 28, 29}</code></pre>
+<p class="code-note">Teaching adaptation of the reviewed FastWAM post-attention path. The mixed-self-attention residual has already run when this function is called. The shared keep-set is applied on both video and action calls; <code>keep=None</code> retains all context branches. Kernel selection, trace storage, gradient checkpointing and model-loading code are omitted.</p></details>
+</section>
+<section id="vision"><span class="section-no">04 / VISUAL DEPENDENCE</span><h2>Does low visual attention mean weak visual use?</h2>
+<p>In the cloth-folding π0.5 replay, some image-origin positions received surprisingly little direct action attention, while letterbox-padding positions received substantial mass. Rather than equating that map with what the policy used, I tested the image inputs.</p>
+<h3>Start with the cameras</h3>
+<p>For each recorded observation, selected cameras were replaced with their exact initial-frame input. All eight current/fixed combinations of the head and two wrist cameras were evaluated across three recorded episodes, covering 37 noninitial replans. Each paired comparison used the same prompt, zero-state representation, action anchor and explicit denoising noise.</p>
+<figure class="figure"><a href="figures/camera-combinations.png"><img src="figures/camera-combinations.png" alt="Action-change ratios for all eight camera combinations. Fixing only the head changes actions by 20.0 percent on average; fixing all cameras gives 36.7 percent, and some partial-current combinations change them more." loading="lazy"></a><figcaption><b>Camera effects interact.</b> The ordinate lists which inputs remain current. The measurement is RMS difference between raw model actions, divided by baseline action RMS, then averaged over the 37 replans. It is not a percentage loss of task performance. These are training-episode observation replays, not held-out closed-loop trials.</figcaption></figure>
+<p>Fixing the head alone changed predicted actions by about 20%, despite its smaller direct attention allocation. The combinations were non-additive and sometimes non-monotonic: restoring only one live stream did not necessarily bring the action closer to the all-current baseline. This is why a camera ranking based solely on attention—or one-camera-at-a-time ablation—would be incomplete.</p>
+<h3>Then localize the changed information</h3>
+<p>Fixing a complete camera changes robot pose, scene details and task-phase cues together. To narrow the test, tracked clothing masks were used to replace only the current clothing pixels with the same locations from the initial image. Equal-area non-clothing regions served as controls, with three background choices per replan.</p>
+<figure class="figure"><a href="figures/cloth-background.png"><img src="figures/cloth-background.png" alt="Twelve paired replans show larger action changes for cloth-region replacement than matched background replacement. Mean ratios are 21.39 and 6.75 percent." loading="lazy"></a><figcaption><b>Local information matters beyond a generic image edit.</b> One episode, 12 noninitial replans. At each replan the background value is the median of three matched controls; the chart then averages those medians. The mean cloth effect is 21.39%, versus 6.75% for background—about 3.17×. Connected points belong to one correlated sequence, not independent task trials.</figcaption></figure>
+<div class="finding"><p><strong>The policy is sensitive to information in the clothing region.</strong> This is stronger evidence of visual dependence than a heatmap, but it does not prove semantic understanding of clothing or better closed-loop folding.</p></div>
+<details><summary>PyTorch · change a visual region while holding denoising noise fixed</summary>
+<pre class="code"><code class="language-python" data-snippet="paired_probe">@torch.inference_mode()
+def paired_visual_probe(infer, observation, image_key, first_image,
+                        region_mask, noise):
+    &quot;&quot;&quot;Preprocessed image [B,C,H,W]; mask [B,1,H,W], True = replace.
+    infer(obs, noise=...) returns raw action tensor [B,Horizon,D].
+    Caller uses eval mode and deterministic preprocessing; infer is pure.
+    &quot;&quot;&quot;
+    if region_mask.dtype != torch.bool:
+        raise TypeError(&quot;region_mask must be boolean&quot;)
+    changed = dict(observation)
+    changed[image_key] = torch.where(
+        region_mask, first_image, observation[image_key])
+    clean = infer(observation, noise=noise.clone())
+    altered = infer(changed, noise=noise.clone())
+    repeat = infer(observation, noise=noise.clone())
+    delta = altered.float() - clean.float()
+    axes = tuple(range(1, clean.ndim))
+    ratio = delta.square().mean(axes).sqrt() / (
+        clean.float().square().mean(axes).sqrt().clamp_min(1e-8))
+    return clean, altered, {
+        &quot;raw_action_change_ratio&quot;: ratio,
+        &quot;repeat_max_abs&quot;: (repeat - clean).abs().max().item(),
+    }</code></pre>
+<p class="code-note">A compact single-image intervention after preprocessing. The full experiment applies its corresponding camera masks jointly and preserves the other observation fields. A caller must maintain model evaluation mode, deterministic preprocessing and the same action decoding. The repeat check detects changes in repeated calls; it does not replace a separate comparison of instrumented versus native inference.</p></details>
+</section>
+<section id="mechanism"><span class="section-no">05 / INTERNAL REPRESENTATIONS</span><h2>Look at what is written, not only where attention points</h2>
+<p>A change in image input can change both the attention weights and the features being read. For the clothing intervention, I re-ran the baseline, clothing edit and one fixed background control with internal tracing. All 39 traced calls reproduced their earlier action arrays exactly, with maximum absolute difference zero.</p>
+<p>The attention-write difference was then decomposed into a weight-change route, a Value-feature-change route and their interaction. The Value route accounted for about 80.57% of the mean signed projection along the measured write difference; changing attention weights accounted for about 19.23%.</p>
+<figure class="figure"><a href="figures/value-decomposition.png"><img src="figures/value-decomposition.png" alt="Directional decomposition of the attention-write change: weights 19.23 percent, Value features 80.57 percent, interaction 0.13 percent." loading="lazy"></a><figcaption><b>The heatmap does not capture all changes in the readout.</b> These are signed projection shares of the attention-write difference under this intervention, not final-action contributions, variance explained or independent energy percentages. The mean reconstruction discrepancy was 1.33% for clothing and 2.23% for background when comparing BF16 forward results with FP32 decomposition.</figcaption></figure>
+<details><summary>Expand the Attention/Value decomposition and its interpretation</summary><div class="detail-body"><p>Let A be the attention matrix and V the corresponding Value features. Subscripts 0 and 1 denote normal and modified inputs. Before a fixed linear output projection:</p><div class="equation">A₁V₁ − A₀V₀ = (A₁ − A₀)V₀ + A₀(V₁ − V₀) + (A₁ − A₀)(V₁ − V₀)
+                   weights          values              interaction
+
+Directional share of term t = ⟨t, Δwrite⟩ / ⟨Δwrite, Δwrite⟩</div><p>The terms must be transformed through the same output-projection and applicable gate conventions as the measured write. They can reinforce or oppose one another; a share is not constrained to [0,1]. Near-zero differences need explicit handling. This algebraic breakdown does not establish a unique semantic mechanism for the final action.</p><p>The follow-up uses one fixed background control, giving a mean action-change ratio of about 6.58%, rather than the median-of-three 6.75% in the preceding figure. They are different summaries of the controls, not contradictory measurements.</p></div></details>
+<h3>Test hidden-state locations with activation patching</h3>
+<p>To go beyond image edits, I also implemented clean-to-corrupted prefix activation patching. At a chosen Transformer layer, a subset of the corrupted run's input residual positions is replaced by the corresponding clean activations. The remaining prefix computation and action denoising then continue with the same noise.</p>
+<div class="mechanism"><div><strong>1 · Clean</strong><p>Record the chosen layer's residual inputs and reference action.</p></div><div><strong>2 · Corrupted</strong><p>Alter the image region; measure the resulting action difference.</p></div><div><strong>3 · Patched</strong><p>Restore selected internal positions and measure recovery toward the clean action.</p></div></div>
+<p>This distinguishes intervention on pixels from intervention on a representation. Regions can be compared at a fixed layer, or the same region can be restored across layers. The code below exposes the mechanism; this report does not attach an aggregate success-rate claim to the patching probe.</p>
+<details><summary>PyTorch · restore selected residual positions at a chosen prefix layer</summary>
+<pre class="code"><code class="language-python" data-snippet="activation_patch">@contextmanager
+def patch_layer_input(layer, clean_hidden, positions):
+    &quot;&quot;&quot;Replace selected [B,S,D] layer-input residual positions.
+    clean_hidden is recorded at this SAME layer on the clean prefix pass.
+    Supports positional or keyword &#39;hidden_states&#39;; removes hook on error.
+    &quot;&quot;&quot;
+    def replace(_module, args, kwargs):
+        keyword_input = &quot;hidden_states&quot; in kwargs
+        x = kwargs[&quot;hidden_states&quot;] if keyword_input else args[0]
+        restored = x.clone()
+        clean = clean_hidden.detach().to(device=x.device, dtype=x.dtype)
+        restored[:, positions, :] = clean[:, positions, :]
+        if keyword_input:
+            return args, {**kwargs, &quot;hidden_states&quot;: restored}
+        return (restored, *args[1:]), kwargs
+
+    handle = layer.register_forward_pre_hook(replace, with_kwargs=True)
+    try:
+        yield
+    finally:
+        handle.remove()
+
+
+def directional_recovery(clean_action, corrupt_action, patched_action):
+    target = (clean_action - corrupt_action).double().flatten()
+    recovered = (patched_action - corrupt_action).double().flatten()
+    denom = target.dot(target)
+    if denom &lt;= 1e-12:
+        raise ValueError(&quot;No clean/corrupt gap to explain&quot;)
+    return recovered.dot(target) / denom  # Not clipped to [0,1].</code></pre>
+<p class="code-note">Run the corrupted prefix under <code>with patch_layer_input(layer, clean_hidden, positions):</code>, then denoise using the resulting cache and the same explicit noise. Capture the clean tensor at the same layer-input boundary. Earlier layers' already-produced K/V entries remain corrupted when patching a later layer; late patching therefore need not recover the whole clean action.</p></details>
+<p>Padding-origin positions require particular care. After visual encoding and layer mixing, their features need not represent only the original black pixels. Likewise, different attention heads can specialize in different cameras; averaging heads conceals some of that structure. The investigation included headwise output-projection checks and mask-quality review rather than treating the smooth overlay as an exact explanation.</p>
+</section>
+<section id="control"><span class="section-no">EXTENSION / CONTROL</span><h2>An interpretable signal is not automatically a better controller</h2>
+<p><a href="https://arxiv.org/abs/2602.21445">AutoHorizon</a> motivated another question: can action-to-action attention help choose how much of an action chunk to execute before observing again? I adapted its soft-pointer idea to FastWAM and tested it against fixed execution lengths.</p>
+<p>An initial H=30 pass covered all ten LIBERO-10 tasks with ten trials each. Task 4—placing two mugs on their respective plates—was selected for a finer sweep. Longer execution was more fragile in this slice, but the adaptive policy did not outperform the best short fixed setting.</p>
+<figure class="figure"><a href="figures/execution-horizon.png"><img src="figures/execution-horizon.png" alt="Fixed execution lengths 10, 15, 20, 25 and 30 yield 9, 8, 8, 7 and 6 completed trials out of 10. A separate comparison yields fixed H10 9/10, H30 6/10 and adaptive 8/10." loading="lazy"></a><figcaption><b>Keep the negative result.</b> Task 4, ten trials per condition. The fixed sweep and three-policy comparison are separate evaluations; their counts are not pooled. The lines connect measured fixed settings only. The adaptive implementation is a FastWAM adaptation, not a reproduction of the original paper's full benchmark protocol.</figcaption></figure>
+<p>Paired traces further limited the interpretation. For one selected trial, H10 succeeded and H30 failed; for another, both failed. Attention-derived execution length was therefore a candidate diagnostic signal, not a calibrated guarantee of predictive reliability.</p>
+<details><summary>Implementation scope of the adaptive-horizon experiment</summary><div class="detail-body"><p>The adapted path extracts the action-to-action submatrix, normalizes its rows, computes the expected attended action index (a soft pointer), and detects limited pointer progress after entropy filtering. It uses bidirectional checks and local threshold choices. The evaluated FastWAM variant reads the last denoising step and averages the configured layers/heads; it should not be conflated with the original implementation's sampling-step choices.</p><p>No isolated instrumentation-overhead or end-to-end speedup result is claimed here. A policy that chooses shorter chunks may make more inference calls. Completion, model latency, replanning frequency and physical task time need separate accounting.</p></div></details>
+<h3>What I take from these experiments</h3>
+<p>The most useful workflow was not to assign meaning to every bright patch. It was to use a trace to form a specific hypothesis, implement an intervention at the correct computational boundary, and check the output at the appropriate level. That process identified a task-specific branch-bypass opportunity, established visual sensitivity beyond attention mass, and rejected an overly strong adaptive-control claim.</p>
+<p>For subsequent model work, the practical tools are reusable: correctly located hooks, paired inference with explicit noise, layer-selective switches, internal activation restoration and an evidence viewer that keeps inputs, model versions and experimental conditions connected.</p>
+</section>
+<section id="appendix"><span class="section-no">SUPPLEMENT / EVIDENCE</span><h2>Experimental scope and implementation notes</h2>
+<p class="supplement-links"><a href="diagnostic_core.py" download>Download PyTorch teaching excerpts</a><a href="results.json" download>Download plotted numerical results</a></p>
+<p>The excerpts are compact adaptations of the reviewed diagnostic code, not a pretrained model package. The figures report existing experiments, not results produced by the teaching snippets. Simulator tests use official task-specific checkpoints; clothing analyses use task-trained π0.5 variants and recorded training observations.</p>
+<details><summary>Full scope: what was measured, and what was not</summary><div class="detail-body"><div class="table-wrap"><table class="appendix-table"><thead><tr><th scope="col">Investigation</th><th scope="col">Evidence</th><th scope="col">Boundary</th></tr></thead><tbody>
+<tr><th scope="row">FastWAM context controls</th><td>LIBERO task 9; six conditions × ten trials, plus selective-branch follow-up</td><td>One task; no benchmark-wide non-inferiority or acceleration claim</td></tr>
+<tr><th scope="row">Prompt sensitivity</th><td>FastWAM on two RoboTwin tasks; π0.5 on LIBERO task 9; three trials per condition</td><td>Small samples; prompt edits need precise naming</td></tr>
+<tr><th scope="row">Camera combinations</th><td>Three episodes, 37 noninitial replans, eight current/fixed input combinations</td><td>Recorded observations, zero-state representation; not independent closed-loop episodes</td></tr>
+<tr><th scope="row">Clothing-region sensitivity</th><td>One episode, twelve paired noninitial replans, three matched background controls</td><td>Local sensitivity, not semantic understanding or task success</td></tr>
+<tr><th scope="row">A/V and residual trace</th><td>39 calls; 13 replans × three conditions × ten denoising steps × 18 layers</td><td>7,020 layer events; not 7,020 independent samples</td></tr>
+<tr><th scope="row">Headwise attention</th><td>AgileX clothing replay; 37 calls; per-head output-projection reconstruction</td><td>Descriptive specialization, not a controlled comparison of embodiments</td></tr>
+<tr><th scope="row">Prefix activation patching</th><td>Selected clothing frame/replan; layer-input intervention implementation</td><td>No aggregate completion or quantitative recovery claim in this article</td></tr>
+<tr><th scope="row">Execution horizon</th><td>100-trial difficult-task search; task-4 fixed and adaptive comparisons</td><td>Adaptive 8/10 did not exceed H10's 9/10</td></tr>
+</tbody></table></div><p>No confidence interval is inferred by treating correlated replans, heads or layer events as independent task trials. Reported 10/10 and 3/3 outcomes describe the observed samples, not perfect generalization. The workbench also has planned model entries; they are not counted as evaluated models.</p></div></details>
+<details><summary>Prompt controls: preserve the exceptions, not just a headline</summary><div class="detail-body"><div class="table-wrap"><table class="appendix-table"><caption>Observed completions; each cell is a separate three-trial condition</caption><thead><tr><th scope="col">Text condition</th><th scope="col">FastWAM · hanging mug</th><th scope="col">FastWAM · container on plate</th><th scope="col">π0.5 · LIBERO task 9</th></tr></thead><tbody>
+<tr><th scope="row">Normal</th><td>3/3</td><td>3/3</td><td>3/3</td></tr>
+<tr><th scope="row">Empty</th><td>0/3</td><td>2/3</td><td>1/3</td></tr>
+<tr><th scope="row">Stopword text</th><td>0/3</td><td>2/3</td><td>1/3</td></tr>
+<tr><th scope="row">Random-word text</th><td>0/3</td><td>2/3</td><td>0/3</td></tr>
+<tr><th scope="row">Word-order modification</th><td>1/3</td><td>3/3</td><td>3/3</td></tr>
+<tr><th scope="row">Wrong task</th><td>0/3</td><td>0/3</td><td>0/3</td></tr>
+<tr><th scope="row">Keywords only</th><td>0/3</td><td>3/3</td><td>3/3</td></tr>
+<tr><th scope="row">Object-word replacement</th><td>0/3</td><td>3/3</td><td>3/3</td></tr>
+</tbody></table></div><p>RoboTwin's historical “shuffled” condition reverses word order; its “same length” conditions do not strictly match tokenizer length. Per-episode sampled and modified RoboTwin strings were not fully retained, so no reconstructed strings are presented as original logs. The π0.5 fixed-string conditions are separately recorded; the broad row names do not imply identical edits across models.</p></div></details>
+<details><summary>Shapley attribution and further visual controls</summary><div class="detail-body"><p>All eight camera combinations also permit an exact three-player Shapley calculation. The utility is negative RMS distance to the all-current baseline action. The head, left wrist and right wrist account for approximately 26.7%, 36.7% and 36.6% of that restoration utility. This is an attribution under the chosen initial-frame intervention and output metric, not a hardware recommendation or fixed camera-importance ranking.</p><p>Additional head-image controls tested clothing hue, blur and delays of one, two and four replans. Hue perturbations were not perfectly matched in pixel magnitude, and delay effects were not monotonic. They therefore do not establish a clean causal ranking of color versus geometry or a model memory length.</p><p>Clothing masks were also reviewed for missed regions. A later SAM3 mask-quality improvement was not followed by a complete rerun of the earlier SAM2 activation-patching study; those stages must not be relabeled as a single experiment.</p></div></details>
+<details><summary>Base-policy and language-generation probes</summary><div class="detail-body"><p>A π0.5 base zero-shot LIBERO trace failed its single task attempt despite showing visual attention. It used benchmark normalization support and is not a controlled experiment that isolates the effect of post-training. Separately, a single-image autoregressive probe through the retained language-model head produced unhelpful outputs. That non-native probe is not a validated VLM evaluation and cannot establish loss of general language capability.</p><p>These observations are retained as diagnostic history, not promoted to headline results. They illustrate why a failed auxiliary probe or an attention visualization alone is insufficient for a broad claim about foundation-model capabilities.</p></div></details>
+</section>
+<section id="references"><span class="section-no">REFERENCES</span><h2>Models and methodological starting points</h2><ol class="references">
+<li><a href="https://arxiv.org/abs/2603.16666">Fast-WAM: Do World Action Models Need Test-time Future Imagination?</a> · <a href="https://github.com/yuantianyuan01/FastWAM">Official implementation</a>. Model architecture and released benchmark checkpoints used as the basis for the FastWAM diagnostics.</li>
+<li><a href="https://www.pi.website/blog/pi05">π0.5: a VLA with Open-World Generalization</a> · <a href="https://github.com/Physical-Intelligence/openpi">OpenPI</a>. Foundation and task-trained policy paths used for the π0.5 analyses.</li>
+<li><a href="https://arxiv.org/abs/2602.21445">VLA Knows Its Limits</a> · <a href="https://github.com/hatchetProject/AutoHorizon">AutoHorizon implementation</a>. Starting point for the attention-based execution-length investigation; the FastWAM adaptation and its results here are separate.</li>
+</ol><p class="reference-note">Reported counts and effect sizes are from this diagnostic investigation, not copied from the cited papers. Teaching excerpts explain the interventions without shipping the full internal experiment environment.</p></section>
+</article></main>
+<footer class="footer"><span>Xuemin Chi · Research notes</span></footer>
+</body></html>
