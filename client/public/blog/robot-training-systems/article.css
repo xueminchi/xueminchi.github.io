@@ -1,0 +1,16 @@
+:root{--accent:#245c8a;--soft:#eef5fa}
+.layout{grid-template-columns:170px minmax(0,870px);gap:38px}
+.eyebrow,.section-no{font-size:14px}.review-label{display:inline-block;border:1px solid var(--line);padding:3px 10px;font-size:14px;color:var(--muted)}
+.ownership{max-width:900px;font-size:14px;color:var(--muted);margin-top:22px}.ownership strong{color:var(--ink)}
+.finding{border-left:3px solid var(--accent);padding:4px 0 4px 20px;margin:24px 0}.finding p{margin:0}.finding strong{color:var(--accent)}
+.figure.plot{background:transparent;border:0;padding:0}.plot figcaption{padding:14px 0 0;border:0}.plot img{width:100%;height:auto}
+.code{margin:0;padding:20px;overflow-x:auto;white-space:pre;font:14px/1.65 var(--mono)}.code code{font:inherit;overflow-wrap:normal}.code-note{font-size:14px;color:var(--muted);padding:14px 20px;margin:0;border-top:1px solid var(--line)}
+table caption{text-align:left;padding:12px 15px;color:var(--muted);font-size:14px}td{font-variant-numeric:tabular-nums}.detail-body table{min-width:610px}
+.mechanism{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;margin:28px 0}.mechanism>div{border-top:2px solid var(--accent);padding-top:12px}.mechanism b{display:block;font-size:16px}.mechanism span{font-size:14px;color:var(--muted);line-height:1.6;display:block;margin-top:8px}
+.replay{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:28px 0}.replay>div{border:1px solid var(--line);padding:16px;background:var(--paper)}.replay b{display:block;font-size:15px}.replay span{font:14px/1.7 var(--mono);display:block;margin-top:8px}.replay .committed{color:#216452}.replay .pending{color:#946118}.replay small{display:block;font-size:14px;line-height:1.5;color:var(--muted);margin-top:8px}
+.supplement-links{display:flex;gap:20px;flex-wrap:wrap;font-size:14px}.stat-line{font-size:1.12rem;font-variant-numeric:tabular-nums;color:var(--accent)}
+.code:focus-visible,.table-wrap:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+.table-wrap::before{content:"Scroll horizontally to view all columns.";display:none;padding:12px 15px 0;font-size:13px;color:var(--muted);position:sticky;left:0;width:100%}
+@media(max-width:1000px){.layout{grid-template-columns:1fr}}
+@media(max-width:620px){.mechanism,.replay{grid-template-columns:1fr}.code{padding:14px}.code-note{padding:12px 14px}.finding{padding-left:14px}.table-wrap::before{display:block}}
+@media print{.review-label{display:none}.code{white-space:pre-wrap;font-size:9pt}}

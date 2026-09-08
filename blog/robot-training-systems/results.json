@@ -1,0 +1,27 @@
+{
+  "source": "Sanitized retained August 2026 experiment summaries; historical configurations, not a new benchmark.",
+  "locality": {
+    "hardware": "1 node x 8 A800 GPUs", "consumer": "pi0.5", "global_batch": 64, "workers_per_rank": 8, "steps": 25, "warmup_steps": 5,
+    "trials": [
+      {"id": "object_random_a", "samples_s": 32.10, "p50_s": 1.430, "p95_s": 4.875},
+      {"id": "filesystem_random_a", "samples_s": 43.59, "p50_s": 1.424, "p95_s": 1.683},
+      {"id": "object_random_b", "samples_s": 33.12, "p50_s": 1.447, "p95_s": 5.089},
+      {"id": "filesystem_random_b", "samples_s": 43.43, "p50_s": 1.423, "p95_s": 1.675},
+      {"id": "object_local", "samples_s": 43.66, "p50_s": 1.424, "p95_s": 1.665},
+      {"id": "filesystem_local", "samples_s": 42.97, "p50_s": 1.430, "p95_s": 1.687}
+    ],
+    "limits": "Short steady-state comparisons; page cache not cleared; no policy-quality comparison between orders."
+  },
+  "topology": {
+    "hardware": "2 nodes x 4 A800 GPUs; reference 1 node x 8", "consumer": "pi0.5; ABC:AgiBot 1:1", "global_batch": 16, "workers_per_rank": 2, "steps": 24, "warmup_steps": 4,
+    "single_node_samples_s": 22.2523,
+    "trials": [
+      {"id": "one_hca", "label": "Restricted to 1 RDMA network card per node", "samples_s": 16.3792},
+      {"id": "two_hca_a", "label": "2 existing RDMA network cards enabled per node", "samples_s": 21.5084},
+      {"id": "two_hca_b", "label": "Same 2-card configuration per node, independent repeat", "samples_s": 21.9321}
+    ],
+    "limits": "No hardware added. Gains relative to a restrictive per-node interface setting, not a universal algorithm speedup. Same total GPU count; placement efficiency, not 8-to-16 GPU weak scaling."
+  },
+  "weak_scaling": {"hardware": "2 nodes x 8 A800 GPUs", "global_batch": 32, "steps": 300, "warmup_steps": 20, "samples_s": 39.9290, "efficiency_percent": 89.72, "limits": "Bounded run; no checkpoint writes."},
+  "recovery": {"hardware": "2 nodes x 8 A800 GPUs", "control_steps": 4, "checkpoint_step": 2, "global_batch": 32, "unique_samples": 128, "rank_overlap": 0, "data_order_exact": true, "bitwise_replay_passed": false, "step4_loss_control": 0.05378730595111847, "step4_loss_resumed": 0.053783170878887177, "model_max_abs_difference": 0.0001220703125, "limits": "Four-step test. Rank-0 Python RNG restore ordering remained open; no claim of bitwise or long-run equivalence."}
+}

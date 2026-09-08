@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="660" viewBox="0 0 1120 660" role="img" aria-labelledby="title desc">
+<title id="title">Correcting the RDMA configuration</title>
+<desc id="desc">Same two nodes with four GPUs each. One enabled RDMA card per node: 16.38 samples/s. Two existing cards per node: 21.51, repeated at 21.93. Single-node eight-GPU reference: 22.25. No hardware added.</desc>
+<rect width="1120" height="660" fill="#f5f5f5"/>
+<g font-family="Segoe UI,Arial,sans-serif" fill="#222831">
+<text x="36.00" y="49.00" font-size="32" text-anchor="start" fill="#222831" font-weight="600">Correcting the RDMA configuration</text>
+<text x="36.00" y="88.00" font-size="20" text-anchor="start" fill="#222831" font-weight="400">Same 8 GPUs: 2 nodes x 4  |  Global batch 16</text>
+<text x="36.00" y="124.00" font-size="18" text-anchor="start" fill="#596674" font-weight="400">Existing network cards; only the configuration changed.</text>
+<path d="M36 166 H78" stroke="#596674" stroke-width="2" stroke-dasharray="6 5"/>
+<text x="88.00" y="172.00" font-size="19" text-anchor="start" fill="#596674" font-weight="400">1 node x 8 GPUs: 22.25 samples/s</text>
+<text x="330.00" y="217.00" font-size="18" text-anchor="start" fill="#596674" font-weight="400">Measured global training throughput</text>
+<path d="M330.00 237 V565" stroke="#dce1e6" stroke-width="1"/>
+<text x="330.00" y="601.00" font-size="20" text-anchor="middle" fill="#596674" font-weight="400">0</text>
+<path d="M478.00 237 V565" stroke="#dce1e6" stroke-width="1"/>
+<text x="478.00" y="601.00" font-size="20" text-anchor="middle" fill="#596674" font-weight="400">5</text>
+<path d="M626.00 237 V565" stroke="#dce1e6" stroke-width="1"/>
+<text x="626.00" y="601.00" font-size="20" text-anchor="middle" fill="#596674" font-weight="400">10</text>
+<path d="M774.00 237 V565" stroke="#dce1e6" stroke-width="1"/>
+<text x="774.00" y="601.00" font-size="20" text-anchor="middle" fill="#596674" font-weight="400">15</text>
+<path d="M922.00 237 V565" stroke="#dce1e6" stroke-width="1"/>
+<text x="922.00" y="601.00" font-size="20" text-anchor="middle" fill="#596674" font-weight="400">20</text>
+<path d="M1070.00 237 V565" stroke="#dce1e6" stroke-width="1"/>
+<text x="1070.00" y="601.00" font-size="20" text-anchor="middle" fill="#596674" font-weight="400">25</text>
+<path d="M988.67 237 V565" stroke="#596674" stroke-width="1.6" stroke-dasharray="6 5"/>
+<text x="306.00" y="267.00" font-size="21" text-anchor="end" fill="#222831" font-weight="500">Restricted to 1 RDMA card</text>
+<text x="306.00" y="292.00" font-size="17" text-anchor="end" fill="#596674" font-weight="400">per node</text>
+<rect data-trial="one_hca" data-value="16.3792" x="330" y="248" width="484.82432" height="46" fill="#627588"/>
+<text x="802.82" y="278.00" font-size="22" text-anchor="end" fill="#ffffff" font-weight="600">16.38</text>
+<text x="306.00" y="387.00" font-size="21" text-anchor="end" fill="#222831" font-weight="500">2 RDMA cards enabled</text>
+<text x="306.00" y="412.00" font-size="17" text-anchor="end" fill="#596674" font-weight="400">per node</text>
+<rect data-trial="two_hca_a" data-value="21.5084" x="330" y="368" width="636.64864" height="46" fill="#2d6a9e"/>
+<text x="954.65" y="398.00" font-size="22" text-anchor="end" fill="#ffffff" font-weight="600">21.51</text>
+<text x="306.00" y="507.00" font-size="21" text-anchor="end" fill="#222831" font-weight="500">Same 2-card configuration</text>
+<text x="306.00" y="532.00" font-size="17" text-anchor="end" fill="#596674" font-weight="400">per node / independent repeat</text>
+<rect data-trial="two_hca_b" data-value="21.9321" x="330" y="488" width="649.19016" height="46" fill="#287768"/>
+<text x="967.19" y="518.00" font-size="22" text-anchor="end" fill="#ffffff" font-weight="600">21.93</text>
+<path d="M330 565 H1070" stroke="#b9c2cd" stroke-width="1.5"/>
+<text x="700.00" y="634.00" font-size="19" text-anchor="middle" fill="#596674" font-weight="400">samples/s across all 8 GPUs (higher is better)</text>
+<text x="36.00" y="638.00" font-size="19" text-anchor="start" fill="#245c8a" font-weight="400">+31.3% / +33.9% versus the restrictive configuration</text>
+</g>
+</svg>
