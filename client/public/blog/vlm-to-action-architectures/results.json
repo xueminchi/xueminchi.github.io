@@ -1,0 +1,52 @@
+{
+  "title": "VLM-to-action architectures: reported LIBERO results",
+  "evidence_status": "reproduced_from_retained_experiment_summary; raw_rollout_logs_not_independently_reaudited_for_this_article",
+  "data_type": "recorded_experiments_not_synthetic",
+  "protocol": {
+    "benchmark": "standard LIBERO, four suites",
+    "tasks": 40,
+    "initial_states_per_task": 50,
+    "rollouts_per_checkpoint": 2000,
+    "predicted_actions": 10,
+    "executed_actions": 5,
+    "flow_integration_steps": 10,
+    "environment_seed": 7,
+    "policy_seed": 42,
+    "noise_scheme": "episode-keyed",
+    "training_runs_per_main_curve": 1,
+    "robot_policy_pretraining": false,
+    "vlm_pretraining": true
+  },
+  "suite_order": ["Long", "Goal", "Object", "Spatial"],
+  "models": [
+    {
+      "id": "pooled", "label": "Qwen: pooled conditioning",
+      "steps": [10000, 20000, 30000],
+      "success_percent": [63.45, 82.20, 77.70],
+      "best_observed_step": 20000,
+      "selected_suite_success_percent": [54.2, 82.0, 95.6, 97.0],
+      "action_side_parameters_approx": 55990000
+    },
+    {
+      "id": "joint", "label": "Qwen: joint attention",
+      "steps": [10000, 20000, 30000],
+      "success_percent": [69.25, 74.25, 79.80],
+      "best_observed_step": 30000,
+      "selected_suite_success_percent": [58.8, 77.2, 86.0, 97.2],
+      "action_side_parameters_approx": 1105000000
+    },
+    {
+      "id": "control", "label": "PaliGemma: pi0.5 control",
+      "steps": [10000, 20000, 29999],
+      "success_percent": [77.65, 76.00, 76.05],
+      "best_observed_step": 10000,
+      "selected_suite_success_percent": [54.4, 79.0, 85.0, 92.2]
+    }
+  ],
+  "limitations": [
+    "Architecture, backbone, action capacity, state input and optimization are not fully matched.",
+    "Best observed points are selected from the reported evaluation sweep, not from an independent validation set.",
+    "No multi-training-seed significance or unseen-task generalization claim.",
+    "No throughput or real-robot results in this comparison."
+  ]
+}

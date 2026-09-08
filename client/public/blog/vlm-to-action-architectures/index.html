@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow"><meta name="author" content="Xuemin Chi">
+<meta name="description" content="A LIBERO study of two VLM-to-action interfaces: pooled conditioning and joint multimodal attention, without robot-policy pretraining.">
+<meta name="color-scheme" content="light">
+<title>From VLM Features to Robot Actions | Xuemin Chi</title>
+<link rel="stylesheet" href="../asynchronous-vla-control/article.css"><link rel="stylesheet" href="article.css">
+</head>
+<body>
+<a class="skip" href="#article">Skip to article</a>
+<nav class="site-nav" aria-label="Site navigation"><div class="nav-inner"><a class="brand" href="/">Xuemin Chi</a><div class="nav-links"><a href="/">Home</a><a href="/research">Research</a><a href="/blog">Blog</a></div></div></nav>
+<header class="hero">
+<p class="eyebrow">Robot learning / Architecture study</p>
+<h1>From VLM Features<br>to Robot Actions</h1>
+<p class="subtitle">Compact pooled conditioning or deep joint attention?</p>
+<p class="byline">Xuemin Chi · September 2026 · Qwen3.5, action diffusion and LIBERO</p>
+<div class="abstract"><h2>The question</h2><p>A pretrained vision–language model provides a starting representation, but it does not determine how a robot should act. Should its features be compressed into a small conditioning vector, or repeatedly interact with action tokens? I implemented both paths on Qwen3.5-4B and trained them on LIBERO demonstrations, without loading robot-policy pretrained weights. Both obtained checkpoints above a PaliGemma-initialized π0.5 architecture control; their learning trajectories and implementation costs tell a more useful story than that ranking alone.</p></div>
+<p class="ownership"><strong>Scope of my work:</strong> implementing and integrating these VLM-to-action interfaces, training the policies and analyzing the recorded evaluations. Learned-query pooling, adaptive normalization, MMDiT and π0.5 are prior methods, not architectures invented in this study.</p>
+</header>
+<main id="article" class="layout">
+<aside class="toc" aria-label="Article contents"><strong>In this report</strong><ol><li><a href="#question">1. The design question</a></li><li><a href="#pooled">2. Pool, then condition</a></li><li><a href="#joint">3. Let the streams interact</a></li><li><a href="#results">4. What the runs show</a></li><li><a href="#judgment">5. What I would keep</a></li><li><a href="#notes">Implementation &amp; evidence</a></li><li><a href="#references">References</a></li></ol></aside>
+<article>
+<section id="question"><span class="section-no">01 / THE QUESTION</span><h2>What should cross the VLM–action boundary?</h2>
+<p>Replacing a backbone is not simply replacing a checkpoint. A robot policy still needs a way to turn image and instruction features into continuous actions, combine them with robot state, and condition action generation at each denoising step.</p>
+<p>I focused on two concrete choices. A <strong>pooled interface</strong> asks the VLM to provide a compact summary that modulates a small action network. A <strong>joint-attention interface</strong> preserves the context sequence and lets condition and action representations evolve together. The former imposes an explicit information bottleneck; the latter allows richer interaction but adds computation and a more coupled optimization problem.</p>
+<div class="finding"><p><strong>The experiment is about usable model designs, not a pure topology ablation.</strong> The two Qwen policies share the pretrained backbone, but differ in action capacity and optimization. The PaliGemma control also changes backbone and implementation. The results therefore compare the tested systems—not the isolated causal effect of one attention mechanism.</p></div>
+<p class="fine">Here, “without robot-policy pretraining” means the action network starts randomly initialized. The Qwen and PaliGemma vision–language models still start from their publicly released pretrained weights. These are downstream behavior-cloning experiments, not foundation-model pretraining or evaluation of the official robot-pretrained π0.5 checkpoint.</p>
+</section>
+<section id="pooled"><span class="section-no">02 / POOLED CONDITIONING</span><h2>Compress the context; keep action generation small</h2>
+<p>The first design is inspired by <a href="https://arxiv.org/abs/2606.27375">ABC’s pooled conditioning</a>, adapted here to Qwen3.5. Eight learned queries attend to the final VLM feature sequence. Their outputs are flattened and combined with encoded robot state and diffusion time to produce one conditioning vector.</p>
+<p>This vector predicts the shifts, scales and residual gates for an eight-layer action Transformer. Self-attention mixes the noisy action tokens; the complete VLM sequence is not reread by a separate cross-attention layer in every action block.</p>
+<figure class="figure architecture"><a href="figures/pooled-architecture.svg"><picture><source media="(max-width: 620px)" srcset="figures/pooled-architecture-mobile.svg" width="440" height="870"><img src="figures/pooled-architecture.svg" width="1120" height="535" alt="Learned queries pool Qwen features into eight vectors. Flattened pooled features, state and time form one condition vector, which modulates eight action-only Transformer blocks." loading="lazy"></picture></a><figcaption><b>A compact forward interface.</b> Eight learned queries read context keys/values. Their outputs are flattened into the condition MLP&mdash;not inserted as memory or policy-prefix tokens. State and time are encoded separately before concatenation. The final head predicts a flow update, not the final action in one pass.</figcaption></figure>
+<p><strong>Why try it?</strong> It separates representation extraction from repeated action denoising and keeps the action side to about 56M parameters. The trade-off is equally explicit: information discarded by the learned pool cannot be recovered by deeper action self-attention.</p>
+<p class="fine">“One-way” describes the forward information path, not a frozen backbone or a stop-gradient: the VLM is updated during training. The implementation uses RMSNorm with zero-initialized shift/scale/gate projections—an AdaLN-Zero-style design, not literal LayerNorm throughout.</p>
+<details><summary>PyTorch &middot; learned queries, followed by one conditioning vector</summary>
+<pre class="code"><code class="language-python" data-snippet="QueryPool,make_condition">class QueryPool(nn.Module):
+    &quot;&quot;&quot;[B, L, vlm_width] -&gt; [B, queries, width]; True means a valid token.&quot;&quot;&quot;
+
+    def __init__(self, vlm_width, width=512, queries=8, eps=1e-6):
+        super().__init__()
+        self.width = width
+        self.input_norm = nn.RMSNorm(vlm_width, eps=eps)
+        self.key = nn.Linear(vlm_width, width, bias=False)
+        self.value = nn.Linear(vlm_width, width, bias=False)
+        self.query = nn.Parameter(torch.randn(queries, width) * 0.02)
+        self.query_norm = nn.RMSNorm(width, eps=eps)
+        self.key_norm = nn.RMSNorm(width, eps=eps)
+        self.output_norm = nn.RMSNorm(width, eps=eps)
+
+    def forward(self, context, valid):
+        # At least one context token must be valid in each example.
+        if not valid.any(-1).all():
+            raise ValueError(&quot;An example cannot have an empty valid context&quot;)
+        z = self.input_norm(context)
+        k, v = self.key_norm(self.key(z)), self.value(z)
+        q = self.query_norm(self.query).expand(context.shape[0], -1, -1)
+        logits = torch.einsum(&quot;bqd,bkd-&gt;bqk&quot;, q.float(), k.float())
+        logits = logits / math.sqrt(self.width)
+        weights = logits.masked_fill(~valid[:, None], -torch.inf).softmax(-1)
+        pooled = torch.einsum(&quot;bqk,bkd-&gt;bqd&quot;, weights.to(v.dtype), v)
+        return self.output_norm(pooled)
+
+
+def make_condition(pool, state_encoder, time_encoder, condition_encoder,
+                   context, valid, state, time_embedding):
+    # The eight pooled tokens are FLATTENED, not appended as a policy prefix.
+    pooled = pool(context, valid).flatten(1)
+    parts = (pooled, state_encoder(state), time_encoder(time_embedding))
+    return condition_encoder(torch.cat(parts, dim=-1))</code></pre>
+<p class="code-note">The recorded configuration uses context width 2,560, eight queries of width 512, and a final condition width of 512. The condition encoder is an MLP. Time arrives as a sinusoidal embedding. The compact helper omits most production guards; the downloaded file includes all imports.</p></details>
+<details><summary>PyTorch &middot; how the condition changes an action block</summary>
+<pre class="code"><code class="language-python" data-snippet="PooledActionBlock">class PooledActionBlock(nn.Module):
+    &quot;&quot;&quot;Action self-attention + FFN, modulated by one pooled condition.&quot;&quot;&quot;
+
+    def __init__(self, width=512, heads=8, intermediate=2048):
+        super().__init__()
+        self.attention_norm = nn.RMSNorm(width, eps=1e-6)
+        self.ffn_norm = nn.RMSNorm(width, eps=1e-6)
+        self.attention = ActionSelfAttention(width, heads)
+        self.ffn = SwiGLU(width, intermediate)
+        self.modulation = nn.Linear(width, 6 * width)
+        nn.init.zeros_(self.modulation.weight)
+        nn.init.zeros_(self.modulation.bias)
+
+    def forward(self, x, condition):
+        a_shift, a_scale, a_gate, f_shift, f_scale, f_gate = (
+            self.modulation(condition).chunk(6, -1))
+        z = self.attention_norm(x) * (1 + a_scale[:, None]) + a_shift[:, None]
+        x = x + a_gate[:, None] * self.attention(z)
+        z = self.ffn_norm(x) * (1 + f_scale[:, None]) + f_shift[:, None]
+        return x + f_gate[:, None] * self.ffn(z)</code></pre>
+<p class="code-note">ActionSelfAttention and SwiGLU are included in the downloadable teaching file. The condition generates separate shifts, scales and gates for attention and FFN residuals. Zero-initialized gates make this block an identity at initialization; this does not imply identity of the whole policy. The trained architecture stacks eight blocks and has a separate final normalization and output projection.</p></details>
+</section>
+<section id="joint"><span class="section-no">03 / JOINT ATTENTION</span><h2>Keep the context sequence inside the action model</h2>
+<p>The second design projects the VLM sequence to a width of 1,536 and adds robot-state and learned-summary tokens. Four dual-stream blocks use separate condition/action projections and feed-forward networks, but concatenate their queries, keys and values for a joint attention operation. Sixteen subsequent single-stream blocks process the combined sequence.</p>
+<figure class="figure architecture"><a href="figures/joint-architecture.svg"><picture><source media="(max-width: 620px)" srcset="figures/joint-architecture-mobile.svg" width="440" height="875"><img src="figures/joint-architecture.svg" width="1120" height="585" alt="Qwen context, state and a learned summary token interact bidirectionally with action tokens in four dual-stream blocks. Sixteen joint single-stream blocks follow; only action positions are read by the output head." loading="lazy"></picture></a><figcaption><b>Separate parameters do not mean isolated information.</b> Dual-stream blocks use separate condition/action projections and FFNs but one joint attention operation. The later single-stream blocks share their projections. Invalid padding is masked; valid condition and action tokens can read each other. Residual and normalization details are simplified in the diagram.</figcaption></figure>
+<p>Both streams can read each other. Timestep modulation is applied only to action positions, yet the condition stream can still become noise-dependent by attending to the noisy actions. This is different from a read-only visual–language prefix. It is also <strong>not</strong> a conventional action self-attention layer followed by an independent cross-attention layer.</p>
+<p><strong>Why try it?</strong> The action model can revisit individual context tokens and revise its internal conditioning through depth. In this implementation, that flexibility comes with about 1.105B action-side parameters, versus 56M for the pooled design. Parameter count alone does not establish a latency or throughput difference; those were not measured as a matched comparison here.</p>
+<p class="fine">The retained implementation includes one learned summary token. Although named “skill token” in the source, it has no skill supervision, router or experts; it should not be interpreted as evidence of skill discovery.</p>
+<details><summary>PyTorch &middot; two streams, one joint attention operation</summary>
+<pre class="code"><code class="language-python" data-snippet="joint_mask,JointAttention">def joint_mask(condition_valid, action_tokens):
+    &quot;&quot;&quot;SDPA boolean mask: True allows attention; no causal separation.&quot;&quot;&quot;
+    b, c = condition_valid.shape
+    action_valid = torch.ones(b, action_tokens, dtype=torch.bool,
+                              device=condition_valid.device)
+    valid = torch.cat((condition_valid, action_valid), -1)
+    mask = valid[:, None, None, :].expand(b, 1, c + action_tokens,
+                                       c + action_tokens).clone()
+    # Padded condition queries are discarded; match their safe self-edge.
+    diagonal = torch.arange(c, device=condition_valid.device)
+    mask[:, 0, diagonal, diagonal] = True
+    return mask
+
+
+class JointAttention(nn.Module):
+    &quot;&quot;&quot;Dual-stream projections, ONE bidirectional attention operation.
+
+    Inputs are already normalized (and action positions time-modulated).
+    Residual additions and the two streams&#x27; FFNs live in the enclosing block.
+    &quot;&quot;&quot;
+
+    def __init__(self, width, heads):
+        super().__init__()
+        self.heads = heads
+        self.condition_qkv = nn.Linear(width, 3 * width)
+        self.action_qkv = nn.Linear(width, 3 * width)
+        self.condition_output = nn.Linear(width, width)
+        self.action_output = nn.Linear(width, width)
+
+    def _qkv(self, x, projection):
+        b, n, d = x.shape
+        qkv = projection(x).reshape(b, n, 3, self.heads, d // self.heads)
+        return tuple(z.transpose(1, 2) for z in qkv.unbind(2))
+
+    def forward(self, condition, action, mask):
+        qc, kc, vc = self._qkv(condition, self.condition_qkv)
+        qa, ka, va = self._qkv(action, self.action_qkv)
+        q, k, v = (torch.cat(pair, dim=2)
+                   for pair in ((qc, qa), (kc, ka), (vc, va)))
+        y = F.scaled_dot_product_attention(q, k, v, attn_mask=mask,
+                                           dropout_p=0.0)
+        y = y.transpose(1, 2).flatten(2)
+        c = condition.shape[1]
+        # Both condition and action are updated; not action-only cross-attn.
+        return (self.condition_output(y[:, :c]),
+                self.action_output(y[:, c:]))</code></pre>
+<p class="code-note">Q/K/V mean queries, keys and values; FFN is the feed-forward network. This helper is the attention sublayer only: the enclosing dual-stream block adds residuals and separate FFNs. Inputs have already been normalized, with timestep modulation on action positions. Both returned streams are updated. The sixteen later single-stream blocks instead share projections across the concatenated sequence.</p></details>
+</section>
+<section id="results"><span class="section-no">04 / RECORDED RESULTS</span><h2>Two viable paths, different learning trajectories</h2>
+<p>The main comparison uses standard LIBERO’s four suites: 40 tasks, each evaluated from 50 official initial states. Each checkpoint therefore has 2,000 rollouts. Policies predict 10 actions, execute the first 5, then replan; action generation uses 10 flow-integration steps.</p>
+<p class="review-evidence">The scores below are reproduced from the retained experiment summary and checked for internal consistency. The original rollout logs were not independently re-audited for this article.</p>
+<figure class="figure"><a href="figures/checkpoint-curves.svg"><img src="figures/checkpoint-curves.svg" alt="At 10K, 20K and 30K updates, pooled Qwen scores 63.45, 82.20 and 77.70 percent; joint Qwen 69.25, 74.25 and 79.80; the PaliGemma control 77.65, 76.00 and 76.05." loading="lazy"></a><figcaption><b>All three recorded checkpoints, not just the peaks.</b> Lines connect measured checkpoint values for readability; they do not represent continuous evaluation or fitted learning curves. Equal training updates do not mean equal compute.</figcaption></figure>
+<div class="table-wrap"><table class="results"><caption>Recorded success rates (%). Bold marks each model’s best observed checkpoint, not an independently validated checkpoint selection.</caption><thead><tr><th scope="col">Model</th><th scope="col">10K</th><th scope="col">20K</th><th scope="col">30K</th></tr></thead><tbody>
+<tr><th scope="row">Qwen · pooled conditioning</th><td>63.45</td><td><strong>82.20</strong></td><td>77.70</td></tr>
+<tr><th scope="row">Qwen · joint attention</th><td>69.25</td><td>74.25</td><td><strong>79.80</strong></td></tr>
+<tr><th scope="row">PaliGemma · π0.5 control</th><td><strong>77.65</strong></td><td>76.00</td><td>76.05*</td></tr>
+</tbody></table></div>
+<p class="fine">* The final PaliGemma checkpoint is step 29,999. Each curve is one training run; 2,000 rollouts are not 2,000 independent training seeds. These are task-execution results on the standard benchmark, not an unseen-task or robustness evaluation.</p>
+<p>The pooled policy’s best observed score is <strong>82.20%</strong>, 4.55 percentage points above the control’s best observed 77.65%. The joint-attention policy reaches <strong>79.80%</strong>, 2.15 points above the same reference. But at 10K the control leads both; at 30K the joint policy leads the pooled policy. A single endpoint or selected maximum would hide that reversal.</p>
+<figure class="figure"><a href="figures/suite-breakdown.svg"><img src="figures/suite-breakdown.svg" alt="Long, Goal, Object and Spatial success at each model&rsquo;s best observed checkpoint. Pooled Qwen: 54.2, 82.0, 95.6, 97.0. Joint Qwen: 58.8, 77.2, 86.0, 97.2. PaliGemma control: 54.4, 79.0, 85.0, 92.2 percent." loading="lazy"></a><figcaption><b>A higher average is not a gain in every suite.</b> Each suite contains 500 rollouts. The models are shown at different selected checkpoints: pooled 20K, joint 30K and control 10K. This is a task-profile comparison of their observed peaks.</figcaption></figure>
+<p>The suite breakdown also changes the interpretation. At its best overall checkpoint, the pooled model’s Long score is 54.2%, essentially level with the control’s 54.4%; its larger gains are in Object and Spatial. The joint model reaches 58.8% on Long but trails the pooled model on Object. Neither result demonstrates uniform improvement across capabilities.</p>
+<details><summary>Training settings and what is not controlled</summary><div class="detail-body">
+<div class="table-wrap"><table><thead><tr><th>Setting</th><th>Pooled Qwen</th><th>Joint Qwen</th><th>PaliGemma–π0.5</th></tr></thead><tbody>
+<tr><th>Robot-policy initialization</th><td>None</td><td>None</td><td>None</td></tr>
+<tr><th>Action-side parameters</th><td>≈56M</td><td>≈1.105B</td><td>Gemma-300M expert family</td></tr>
+<tr><th>Backbone / action peak LR</th><td>5e−5 / 5e−5</td><td>5e−6 / 5e−5</td><td>5e−5 / 5e−5</td></tr>
+<tr><th>Batch / training length</th><td>256 / 30K</td><td>256 / 30K</td><td>256 / 30K</td></tr>
+<tr><th>Warmup / later schedule</th><td colspan="3">10K steps / constant</td></tr>
+<tr><th>Training implementation</th><td>PyTorch; no EMA</td><td>PyTorch; no EMA</td><td>OpenPI JAX; EMA 0.999</td></tr>
+<tr><th>Weight decay</th><td>1e−10</td><td>0.01</td><td>1e−10</td></tr>
+<tr><th>State input</th><td>Explicit state encoder</td><td>Explicit state token</td><td>No explicit robot-state token in the reviewed configuration</td></tr>
+</tbody></table></div>
+<p>All three use shuffled training transitions, rather than the task/episode-quota sampler used in earlier exploratory runs. The Qwen policies use 256-pixel inputs and a 768-token context cap. The control uses 224-pixel inputs; its configuration disables discrete-state tokenization, and the π0.5 action branch does not add a continuous-state token. Robot pose may still be visible in the images. This is another reason to describe it as the tested control, not as an input-matched baseline.</p>
+<p>Backbone, preprocessing, state handling, normalization, action capacity, optimizer details and EMA prevent this from being a single-variable comparison; equal optimizer steps are not equal compute.</p>
+<p>The recorded evaluation protocol specifies environment seed 7, policy seed 42 and episode-keyed action noise. No multiple-training-seed confidence estimate is reported. The historical checkpoint sweep supports a descriptive comparison, not a statistical-significance claim.</p>
+</div></details>
+</section>
+<section id="judgment"><span class="section-no">05 / WHAT I WOULD KEEP</span><h2>Complexity needs a reason beyond flexibility</h2>
+<p><strong>A compact interface is a serious baseline.</strong> The small pooled model reached the highest observed score in this non-policy-pretrained group. I would retain it as the simpler starting point unless a specific failure motivates token-level interaction. This is a design judgment from the tested systems, not proof that pooling is universally better.</p>
+<p><strong>Joint attention is viable, but its benefit needs to be localized.</strong> The clean-loader joint model continued improving through 30K and did better on Long at its selected checkpoint. That is a reason to investigate how it uses context—not to dismiss the architecture, or assume its extra capacity has already paid off.</p>
+<p><strong>Follow behavior through training.</strong> The pooled model dropped from 82.20% to 77.70% between 20K and 30K. More training did not automatically yield a better policy. The record establishes a decline in rollout performance; it does not, by itself, identify overfitting or semantic degradation as the cause.</p>
+<div class="finding"><p>The most useful takeaway is not “Qwen beats π0.5.” It is that a pretrained VLM can support more than one effective action interface, and the choice should be argued through information flow, optimization, task-level behavior and implementation cost.</p></div>
+</section>
+<section id="notes"><span class="section-no">APPENDIX / IMPLEMENTATION &amp; EVIDENCE</span><h2>What the comparison leaves open</h2>
+<details><summary>Does noisy action corrupt the condition stream?</summary><div class="detail-body"><p>The joint model allows noisy actions to update condition tokens. The pooled model does not. It is plausible that isolating the condition representation makes learning easier, but these runs do not isolate that mechanism: action size and optimization change at the same time. A read-only condition mask under a matched recipe would answer a narrower causal question. It has not been established by this report.</p></div></details>
+<details><summary>What about initializing the action model from π0.5?</summary><div class="detail-body"><p>A separate joint-attention variant copied approximately 430.10M action-side parameters from π0.5 and reached 80.60% at 30K. It is excluded from the main comparison because it uses robot-policy pretrained weights and a different historical sampling recipe.</p><p>The important implementation lesson is that <strong>exact tensor copying is not function preservation</strong>. Inserting new blocks and changing which tokens can attend to each other changes the inputs and computation of the inherited layers, even when every copied tensor matches exactly. A future weight-transfer design should test the full forward function, not just tensor shapes and equality.</p></div></details>
+<details><summary>Source and evidence boundaries</summary><div class="detail-body"><p>The diagrams describe the implemented pooled action module and retained clean-loader joint-attention module, not an exact reproduction of ABC’s released model. Compact code below each method is a teaching adaptation: distributed training, model loading and production guards are omitted.</p><p>The numerical source is the retained architecture-study phase report. Its three checkpoint points per main model and selected-suite values are reproduced here without interpolation or synthetic measurements. The earlier quota-sampler experiments, partially pretrained variants and separate DINO/CLIP ABC port are not mixed into the headline curves.</p><p>There are no real-robot results, cross-embodiment claims or measured deployment-speed gains in this article. The unresolved question is how these interfaces behave with larger robot pretraining and broader tasks.</p><p class="supplement-links"><a href="results.json">Machine-readable reported results</a><a href="architecture_core.py">PyTorch teaching code</a></p></div></details>
+</section>
+<section id="references"><span class="section-no">REFERENCES</span><h2>Methods this study builds on</h2>
+<ol class="refs"><li><a href="https://arxiv.org/abs/2606.27375">Allshire et al. — Scalable Behavior Cloning with Open Data, Training, and Evaluation.</a> Source of the ABC pooled-conditioning design reference; this study uses Qwen and LIBERO rather than reproducing its full training setup.</li><li><a href="https://arxiv.org/abs/2403.03206">Esser et al. — Scaling Rectified Flow Transformers for High-Resolution Image Synthesis.</a> Separate modality weights with joint, bidirectional attention; inspiration for the dual-stream design, not evidence for these robot results.</li><li><a href="https://huggingface.co/Qwen/Qwen3.5-4B">Qwen3.5-4B official model.</a> The pretrained vision–language backbone used by both Qwen policies.</li><li><a href="https://github.com/Physical-Intelligence/openpi">Physical Intelligence — OpenPI.</a> π0.5 architecture and PaliGemma initialization utilities used by the non-policy-pretrained control.</li><li><a href="https://github.com/Lifelong-Robot-Learning/LIBERO">LIBERO.</a> The task suites and evaluation environments.</li></ol>
+</section>
+</article></main>
+<footer class="footer">Xuemin Chi · Architecture study</footer>
+</body></html>

@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="585" viewBox="0 0 1120 585" role="img">
+<title>Joint attention: four dual-stream blocks then sixteen bidirectional single-stream blocks</title>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#626b75"/></marker></defs>
+<rect width="1120" height="585" fill="#f5f5f5"/>
+<text x="30" y="38" text-anchor="start" font-family="Segoe UI,Arial,sans-serif" font-size="23" fill="#25313b">B / Joint-attention conditioning</text>
+<rect x="30" y="118" width="290" height="100" rx="3" fill="white" stroke="#82a6cb" stroke-width="1.6"/>
+<text x="175.0" y="161.3" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="18" fill="#25313b">Projected Qwen tokens</text>
+<text x="175.0" y="187.3" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="18" fill="#25313b">+ state + summary token</text>
+<rect x="68" y="237" width="15" height="15" rx="2" fill="#82a6cb"/>
+<rect x="90" y="237" width="15" height="15" rx="2" fill="#82a6cb"/>
+<rect x="112" y="237" width="15" height="15" rx="2" fill="#82a6cb"/>
+<rect x="134" y="237" width="15" height="15" rx="2" fill="#82a6cb"/>
+<rect x="156" y="237" width="15" height="15" rx="2" fill="#82a6cb"/>
+<rect x="178" y="237" width="15" height="15" rx="2" fill="#82a6cb"/>
+<rect x="200" y="237" width="15" height="15" rx="2" fill="#82a6cb"/>
+<rect x="222" y="237" width="15" height="15" rx="2" fill="#82a6cb"/>
+<rect x="244" y="237" width="15" height="15" rx="2" fill="#82a6cb"/>
+<rect x="30" y="318" width="290" height="80" rx="3" fill="white" stroke="#d1a777" stroke-width="1.6"/>
+<text x="175.0" y="364.3" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="18" fill="#25313b">Noisy action tokens</text>
+<polyline points="320,168 400,168" fill="none" stroke="#626b75" stroke-width="1.8" marker-end="url(#arrow)"/>
+<polyline points="320,358 400,358" fill="none" stroke="#626b75" stroke-width="1.8" marker-end="url(#arrow)"/>
+<rect x="400" y="95" width="285" height="330" rx="3" fill="white" stroke="#b4bdc7" stroke-width="1.6"/>
+<text x="542.5" y="266.65" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="19" fill="#25313b"></text>
+<text x="542" y="129" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="20" fill="#25313b">4 × Dual-stream block</text>
+<text x="542" y="177" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="17" fill="#286792">Condition Q/K/V + FFN</text>
+<rect x="423" y="222" width="239" height="65" rx="3" fill="white" stroke="#d5d8dd" stroke-width="1.6"/>
+<text x="542.5" y="261.5" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="20" fill="#25313b">Joint attention</text>
+<polyline points="542,187 542,221" fill="none" stroke="#626b75" stroke-width="1.8" marker-end="url(#arrow)" marker-start="url(#arrow)"/>
+<text x="542" y="361" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="17" fill="#ad652d">Action Q/K/V + FFN</text>
+<polyline points="542,288 542,331" fill="none" stroke="#626b75" stroke-width="1.8" marker-end="url(#arrow)" marker-start="url(#arrow)"/>
+<polyline points="685,256 755,256" fill="none" stroke="#626b75" stroke-width="1.8" marker-end="url(#arrow)"/>
+<text x="720" y="234" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="15" fill="#596674">Concat</text>
+<rect x="755" y="128" width="320" height="255" rx="3" fill="white" stroke="#b4bdc7" stroke-width="1.6"/>
+<text x="915.0" y="209.8" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="18" fill="#25313b">16 × Single-stream block</text>
+<text x="915.0" y="235.8" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="18" fill="#25313b"></text>
+<text x="915.0" y="261.8" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="18" fill="#25313b">Condition + action tokens</text>
+<text x="915.0" y="287.8" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="18" fill="#25313b">Bidirectional self-attention</text>
+<text x="915.0" y="313.8" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="18" fill="#25313b">Shared projections + FFN</text>
+<polyline points="915,383 915,449" fill="none" stroke="#626b75" stroke-width="1.8" marker-end="url(#arrow)"/>
+<rect x="785" y="449" width="260" height="65" rx="3" fill="white" stroke="#d5d8dd" stroke-width="1.6"/>
+<text x="915.0" y="488.15" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="19" fill="#25313b">Action-flow update</text>
+<text x="895" y="432" text-anchor="end" font-family="Segoe UI,Arial,sans-serif" font-size="16" fill="#596674">Read action positions only</text>
+<text x="355" y="488" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="18" fill="#596674">Time → action modulation only</text>
+<polyline points="430,468 455,425" fill="none" stroke="#626b75" stroke-width="1.8" marker-end="url(#arrow)" stroke-dasharray="6 5"/>
+<polyline points="610,483 723,483 723,368 755,368" fill="none" stroke="#626b75" stroke-width="1.8" marker-end="url(#arrow)" stroke-dasharray="6 5"/>
+<text x="560" y="554" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="17" fill="#596674">Condition ↔ action interaction is allowed; the condition stream is not read-only.</text>
+</svg>

@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="440" height="870" viewBox="0 0 440 870" role="img">
+<title>Pooled conditioning, vertical reading layout</title>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#626b75"/></marker></defs>
+<rect width="440" height="870" fill="#f5f5f5"/>
+<text x="220" y="37" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="22" fill="#25313b">A / Pooled conditioning</text>
+<rect x="65" y="75" width="310" height="80" rx="3" fill="white" stroke="#d5d8dd" stroke-width="1.6"/>
+<text x="220.0" y="108.15" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="19" fill="#25313b">Qwen3.5 VLM</text>
+<text x="220.0" y="135.15" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="19" fill="#25313b">Images + instruction</text>
+<polyline points="275,155 275,240" fill="none" stroke="#626b75" stroke-width="1.8" marker-end="url(#arrow)"/>
+<text x="292" y="188" text-anchor="start" font-family="Segoe UI,Arial,sans-serif" font-size="16" fill="#25313b">K / V</text>
+<circle cx="45.0" cy="200.0" r="5.0" fill="#ac91c2"/>
+<circle cx="62.0" cy="200.0" r="5.0" fill="#ac91c2"/>
+<circle cx="79.0" cy="200.0" r="5.0" fill="#ac91c2"/>
+<circle cx="96.0" cy="200.0" r="5.0" fill="#ac91c2"/>
+<circle cx="113.0" cy="200.0" r="5.0" fill="#ac91c2"/>
+<circle cx="130.0" cy="200.0" r="5.0" fill="#ac91c2"/>
+<circle cx="147.0" cy="200.0" r="5.0" fill="#ac91c2"/>
+<circle cx="164.0" cy="200.0" r="5.0" fill="#ac91c2"/>
+<text x="103" y="184" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="15" fill="#25313b">Learned queries</text>
+<polyline points="103,211 103,240" fill="none" stroke="#626b75" stroke-width="1.8" marker-end="url(#arrow)"/>
+<rect x="65" y="240" width="310" height="80" rx="3" fill="white" stroke="#82a6cb" stroke-width="1.6"/>
+<text x="220.0" y="273.3" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="18" fill="#25313b">Learned-query attention pool</text>
+<text x="220.0" y="299.3" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="18" fill="#25313b">8 × 512</text>
+<polyline points="220,320 220,351" fill="none" stroke="#626b75" stroke-width="1.8" marker-end="url(#arrow)"/>
+<rect x="40" y="351" width="360" height="43" rx="3" fill="white" stroke="#d5d8dd" stroke-width="1.6"/>
+<text x="220.0" y="377.75" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="15" fill="#25313b">Flattened pool + encoded state + time</text>
+<polyline points="220,394 220,410" fill="none" stroke="#626b75" stroke-width="1.8" marker-end="url(#arrow)"/>
+<rect x="65" y="410" width="310" height="74" rx="3" fill="white" stroke="#d5d8dd" stroke-width="1.6"/>
+<text x="220.0" y="452.95" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="17" fill="#25313b">Condition MLP → 512-d vector</text>
+<polyline points="296,484 296,596" fill="none" stroke="#626b75" stroke-width="1.8" marker-end="url(#arrow)"/>
+<text x="310" y="521" text-anchor="start" font-family="Segoe UI,Arial,sans-serif" font-size="15" fill="#25313b">Shift / scale</text>
+<text x="310" y="544" text-anchor="start" font-family="Segoe UI,Arial,sans-serif" font-size="15" fill="#25313b">Gates</text>
+<rect x="25" y="530" width="223" height="48" rx="3" fill="white" stroke="#d5d8dd" stroke-width="1.6"/>
+<text x="136.5" y="559.95" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="17" fill="#25313b">Noisy action tokens</text>
+<polyline points="133,578 133,596" fill="none" stroke="#626b75" stroke-width="1.8" marker-end="url(#arrow)"/>
+<rect x="65" y="596" width="310" height="100" rx="3" fill="white" stroke="#d1a777" stroke-width="1.6"/>
+<text x="220.0" y="639.3" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="18" fill="#25313b">8 × Action DiT block</text>
+<text x="220.0" y="665.3" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="18" fill="#25313b">Action self-attention + FFN</text>
+<polyline points="220,696 220,749" fill="none" stroke="#626b75" stroke-width="1.8" marker-end="url(#arrow)"/>
+<rect x="85" y="761" width="270" height="65" rx="3" fill="white" stroke="#d5d8dd" stroke-width="1.6"/>
+<text x="220.0" y="800.15" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="19" fill="#25313b">Action-flow update</text>
+</svg>

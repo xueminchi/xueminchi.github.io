@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="440" height="875" viewBox="0 0 440 875" role="img">
+<title>Joint attention, vertical reading layout</title>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#626b75"/></marker></defs>
+<rect width="440" height="875" fill="#f5f5f5"/>
+<text x="220" y="37" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="22" fill="#25313b">B / Joint attention</text>
+<rect x="25" y="72" width="390" height="80" rx="3" fill="white" stroke="#82a6cb" stroke-width="1.6"/>
+<text x="220.0" y="105.3" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="18" fill="#25313b">Projected Qwen tokens</text>
+<text x="220.0" y="131.3" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="18" fill="#25313b">+ robot state + learned summary</text>
+<polyline points="135,152 135,232" fill="none" stroke="#626b75" stroke-width="1.8" marker-end="url(#arrow)"/>
+<text x="285" y="183" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="17" fill="#25313b">Noisy actions</text>
+<polyline points="305,194 305,232" fill="none" stroke="#626b75" stroke-width="1.8" marker-end="url(#arrow)"/>
+<rect x="25" y="244" width="390" height="204" rx="3" fill="white" stroke="#b4bdc7" stroke-width="1.6"/>
+<text x="220.0" y="352.65" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="19" fill="#25313b"></text>
+<text x="220" y="279" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="21" fill="#25313b">4 × Dual-stream block</text>
+<text x="125" y="319" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="17" fill="#286792">Condition</text>
+<text x="318" y="319" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="17" fill="#ad652d">Action</text>
+<text x="220" y="358" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="17" fill="#596674">Separate Q/K/V and FFNs</text>
+<text x="220" y="403" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="19" fill="#25313b">Joint bidirectional attention</text>
+<polyline points="220,448 220,522" fill="none" stroke="#626b75" stroke-width="1.8" marker-end="url(#arrow)"/>
+<text x="235" y="485" text-anchor="start" font-family="Segoe UI,Arial,sans-serif" font-size="17" fill="#25313b">Concatenate</text>
+<rect x="25" y="535" width="390" height="152" rx="3" fill="white" stroke="#d5d8dd" stroke-width="1.6"/>
+<text x="220.0" y="590.65" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="19" fill="#25313b">16 × Single-stream block</text>
+<text x="220.0" y="617.65" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="19" fill="#25313b">Condition + action tokens</text>
+<text x="220.0" y="644.65" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="19" fill="#25313b">Shared attention + FFN</text>
+<polyline points="220,687 220,752" fill="none" stroke="#626b75" stroke-width="1.8" marker-end="url(#arrow)"/>
+<text x="230" y="720" text-anchor="start" font-family="Segoe UI,Arial,sans-serif" font-size="16" fill="#25313b">Action positions</text>
+<rect x="70" y="763" width="300" height="65" rx="3" fill="white" stroke="#d5d8dd" stroke-width="1.6"/>
+<text x="220.0" y="802.15" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="19" fill="#25313b">Action-flow update</text>
+<text x="220" y="856" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="16" fill="#596674">Time modulates action positions only.</text>
+</svg>

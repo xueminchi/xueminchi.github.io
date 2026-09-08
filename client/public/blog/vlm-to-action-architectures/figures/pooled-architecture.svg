@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="535" viewBox="0 0 1120 535" role="img">
+<title>Pooled conditioning: learned queries summarize VLM tokens before action modulation</title>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#626b75"/></marker></defs>
+<rect width="1120" height="535" fill="#f5f5f5"/>
+<text x="30" y="38" text-anchor="start" font-family="Segoe UI,Arial,sans-serif" font-size="23" fill="#25313b">A / Pooled conditioning</text>
+<rect x="35" y="160" width="240" height="100" rx="3" fill="white" stroke="#d5d8dd" stroke-width="1.6"/>
+<text x="155.0" y="203.15" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="19" fill="#25313b">Qwen3.5 VLM</text>
+<text x="155.0" y="230.15" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="19" fill="#25313b">Images + instruction</text>
+<rect x="100" y="280" width="15" height="15" rx="2" fill="#82a6cb"/>
+<rect x="122" y="280" width="15" height="15" rx="2" fill="#82a6cb"/>
+<rect x="144" y="280" width="15" height="15" rx="2" fill="#82a6cb"/>
+<rect x="166" y="280" width="15" height="15" rx="2" fill="#82a6cb"/>
+<rect x="188" y="280" width="15" height="15" rx="2" fill="#82a6cb"/>
+<text x="155" y="320" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="17" fill="#596674">Context tokens</text>
+<polyline points="275,210 370,210" fill="none" stroke="#626b75" stroke-width="1.8" marker-end="url(#arrow)"/>
+<circle cx="391.5" cy="87.5" r="7.5" fill="#ac91c2"/>
+<circle cx="413.5" cy="87.5" r="7.5" fill="#ac91c2"/>
+<circle cx="435.5" cy="87.5" r="7.5" fill="#ac91c2"/>
+<circle cx="457.5" cy="87.5" r="7.5" fill="#ac91c2"/>
+<circle cx="479.5" cy="87.5" r="7.5" fill="#ac91c2"/>
+<circle cx="501.5" cy="87.5" r="7.5" fill="#ac91c2"/>
+<circle cx="523.5" cy="87.5" r="7.5" fill="#ac91c2"/>
+<circle cx="545.5" cy="87.5" r="7.5" fill="#ac91c2"/>
+<text x="460" y="66" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="17" fill="#25313b">Learned queries</text>
+<polyline points="460,104 460,160" fill="none" stroke="#626b75" stroke-width="1.8" marker-end="url(#arrow)"/>
+<text x="480" y="135" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="16" fill="#25313b">Q</text>
+<rect x="370" y="160" width="210" height="100" rx="3" fill="white" stroke="#82a6cb" stroke-width="1.6"/>
+<text x="475.0" y="203.15" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="19" fill="#25313b">Attention pool</text>
+<text x="475.0" y="230.15" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="19" fill="#25313b">8 × 512</text>
+<text x="319" y="193" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="16" fill="#596674">K / V</text>
+<polyline points="580,210 750,210" fill="none" stroke="#626b75" stroke-width="1.8" marker-end="url(#arrow)"/>
+<text x="665" y="187" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="17" fill="#596674">Flatten</text>
+<rect x="750" y="160" width="270" height="100" rx="3" fill="white" stroke="#d5d8dd" stroke-width="1.6"/>
+<text x="885.0" y="203.15" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="19" fill="#25313b">Condition MLP</text>
+<text x="885.0" y="230.15" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="19" fill="#25313b">One 512-d vector</text>
+<rect x="750" y="64" width="270" height="56" rx="3" fill="white" stroke="#d5d8dd" stroke-width="1.6"/>
+<text x="885.0" y="97.95" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="17" fill="#25313b">Encoded state + time</text>
+<polyline points="885,120 885,160" fill="none" stroke="#626b75" stroke-width="1.8" marker-end="url(#arrow)"/>
+<rect x="35" y="385" width="240" height="76" rx="3" fill="white" stroke="#d5d8dd" stroke-width="1.6"/>
+<text x="155.0" y="429.65" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="19" fill="#25313b">Noisy action tokens</text>
+<rect x="410" y="373" width="290" height="100" rx="3" fill="white" stroke="#d1a777" stroke-width="1.6"/>
+<text x="555.0" y="416.15" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="19" fill="#25313b">8 × Action DiT block</text>
+<text x="555.0" y="443.15" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="19" fill="#25313b">Self-attention + FFN</text>
+<polyline points="275,423 410,423" fill="none" stroke="#626b75" stroke-width="1.8" marker-end="url(#arrow)"/>
+<polyline points="885,260 885,316 555,316 555,373" fill="none" stroke="#626b75" stroke-width="1.8" marker-end="url(#arrow)"/>
+<text x="736" y="303" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="16" fill="#596674">Shift / scale / residual gates</text>
+<rect x="835" y="385" width="235" height="76" rx="3" fill="white" stroke="#d5d8dd" stroke-width="1.6"/>
+<text x="952.5" y="429.65" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="19" fill="#25313b">Action-flow update</text>
+<polyline points="700,423 835,423" fill="none" stroke="#626b75" stroke-width="1.8" marker-end="url(#arrow)"/>
+<text x="560" y="505" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="17" fill="#596674">No noisy-action feedback into the context; VLM gradients still flow during training.</text>
+</svg>
