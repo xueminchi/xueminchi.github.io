@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="description" content="A coauthor's technical note on OpenWAM: action-specific capacity, joint attention, information flow and the evidence behind a dual-system design.">
+  <title>How Should a World Model Talk to an Action Model? | Xuemin Chi</title>
+  <link rel="canonical" href="https://xueminchi.github.io/blog/openwam-architecture/">
+  <link rel="stylesheet" href="article.css">
+</head>
+<body>
+<a class="skip" href="#article">Skip to article</a>
+<header class="site-nav"><div class="nav-inner"><a class="brand" href="https://xueminchi.github.io/">Xuemin Chi</a><nav class="nav-links" aria-label="Main navigation"><a href="https://xueminchi.github.io/">Home</a><a href="https://xueminchi.github.io/research/">Research</a><a href="https://xueminchi.github.io/blog/">Blog</a></nav></div></header>
+<div class="hero">
+  <p class="eyebrow">World–action models / Architecture</p>
+  <h1>How should a world model<br>talk to an action model?</h1>
+  <p class="subtitle">OpenWAM: separating action capacity from video prediction, while keeping the right information paths between them.</p>
+  <p class="byline">Xuemin Chi · Research note · September 2026</p>
+  <div class="abstract"><p>A video model can represent how a scene changes. A robot policy must decide how to change it. Connecting the two is not simply a matter of appending action tokens: we need to decide <strong>which parameters actions own, which world features they can read, and how gradients couple the two objectives</strong>. OpenWAM makes those choices explicit. Its comparisons support a dual-system design with separate transformer parameters and joint attention, without establishing that more streams are always better.</p></div>
+  <p class="ownership">A coauthor’s technical explanation of OpenWAM. Numerical results below are from the team’s manuscript; implementation excerpts are reduced for readability. This note focuses on architecture, leaving encoder studies, pretraining and acceleration to separate articles.</p>
+</div>
+<main class="layout">
+<aside class="toc" aria-label="On this page"><b>On this page</b><ol><li><a href="#problem">01 · The design problem</a></li><li><a href="#families">02 · Three architecture families</a></li><li><a href="#evidence">03 · What the comparison says</a></li><li><a href="#bridge">04 · Inside the attention bridge</a></li><li><a href="#visibility">05 · What can each token see?</a></li><li><a href="#judgment">06 · The resulting design</a></li><li><a href="#sources">Sources &amp; scope</a></li></ol></aside>
+<article id="article">
+<section id="problem">
+  <p class="section-no">01 / The design problem</p>
+  <h2>Good video prediction is not yet a control interface.</h2>
+  <p>A world–action model predicts future visual states and an action chunk from the current observation, instruction and robot state. The useful question is not only whether it can generate a plausible future, but <em>how the action predictor uses the representations learned through that task</em>.</p>
+  <p>Sharing everything is economical in design, but video and action tokens need not benefit from the same parameters. Separating everything gives actions their own capacity, but risks losing the world model’s useful features. Adding a vision-language model supplies another source of information, yet also introduces another stream to train and deploy.</p>
+  <div class="decision-grid"><div><h3>Capacity</h3><p>Do action tokens share the video transformer, or have a dedicated action transformer?</p></div><div><h3>Communication</h3><p>Do the streams interact inside attention, through a conditioning bridge, or in two stages?</p></div><div><h3>Visibility</h3><p>Can actions read predicted world features? Can those features also read actions?</p></div></div>
+  <p>These are related decisions, not synonyms. In particular, <strong>separate parameters do not imply isolated attention</strong>, and a one-way forward path does not imply a frozen world model.</p>
+</section>
+<section id="families">
+  <p class="section-no">02 / Three architecture families</p>
+  <h2>Make sharing a choice, not an accident of the codebase.</h2>
+  <figure class="figure"><a href="figures/design-space.svg" aria-label="Open the architecture family diagram at full size"><img src="figures/design-space.svg" width="1120" height="490" alt="Single-system shares a transformer; dual-system separates world and action parameters; tri-system adds an understanding stream from a frozen VLM."></a><figcaption><b>Figure 1.</b> The three families differ in parameter ownership and communication. The diagram summarizes the design space; a particular attention mask may restrict the arrows. FFN means feed-forward network.</figcaption></figure>
+  <p><strong>Single-system</strong> sends video and action tokens through a shared transformer. The vanilla variant shares the dense blocks; the MoE variant hard-routes action tokens to a dedicated feed-forward expert while retaining shared attention. Here “MoE” does not mean a learned router chooses an arbitrary expert for every token.</p>
+  <p><strong>Dual-system</strong> gives actions a dedicated ActionDiT—a diffusion transformer for action chunks. Joint self-attention mixes projected video and action tokens within a layer. Cross-attention instead lets action queries read video features. The inverse-dynamics variant generates a video trajectory first, then predicts actions from it.</p>
+  <p><strong>Tri-system</strong> adds a trainable understanding stream fed by a frozen vision-language model. World and action streams can read its tokens; the understanding tokens attend only within their own stream. This is not unrestricted three-way feedback.</p>
+  <details><summary>Implementation design: one execution contract, different compositions</summary><div class="detail-body"><p>Each backbone exposes input preparation, a per-layer step and final prediction. For joint attention, the layer step is split into <code>pre_attn_at_layer</code> and <code>post_attn_at_layer</code>. The first emits queries, keys and values; the second consumes the attention result.</p><p>The composition driver schedules the streams and substitutes the attention operation. It owns no learned parameters: weights remain in the backbones. This keeps a change in communication from requiring a separate trainer or policy-server implementation.</p><p>That modularity makes comparisons practical; it does not automatically make different architectures parameter- or compute-matched.</p></div></details>
+</section>
+<section id="evidence">
+  <p class="section-no">03 / What the comparison says</p>
+  <h2>Dedicated action capacity helps here. A third stream adds less.</h2>
+  <p>The architecture study evaluates RoboTwin2.0-Full, trained with 2,500 clean-scene and 25,000 randomized-scene demonstrations. Both clean and randomized evaluations are therefore part of the <strong>in-domain protocol</strong>, not a test of training only on clean scenes and generalizing to unseen randomization.</p>
+  <div class="table-wrap" tabindex="0" role="region" aria-label="Architecture comparison"><table class="wide-table" id="architecture-results"><caption>Table 1 · Team-reported success rates (%), manuscript Table 1. Six variants; seven conditions because cross-attention has two gradient settings.</caption><thead><tr><th scope="col">Family</th><th scope="col">Variant</th><th scope="col">Clean</th><th scope="col">Randomized</th><th scope="col">Average</th></tr></thead><tbody>
+  <tr><td>Single</td><td>Vanilla</td><td>85.20</td><td>85.80</td><td>85.50</td></tr>
+  <tr><td>Single</td><td>MoE</td><td>86.22</td><td>83.04</td><td>84.63</td></tr>
+  <tr class="highlight"><td>Dual</td><td>Joint self-attention</td><td>92.34</td><td>92.38</td><td><strong>92.36</strong></td></tr>
+  <tr><td>Dual</td><td>Joint cross-attention</td><td>87.86</td><td>88.64</td><td>88.25</td></tr>
+  <tr><td>Dual</td><td>Detached cross-attention</td><td>92.06</td><td>91.64</td><td>91.85</td></tr>
+  <tr><td>Dual</td><td>IDM</td><td>87.76</td><td>88.14</td><td>87.95</td></tr>
+  <tr><td>Tri</td><td>Joint self-attention</td><td>92.84</td><td>92.36</td><td>92.60</td></tr>
+  </tbody></table></div>
+  <h3>The useful comparison is not simply “more parameters wins.”</h3>
+  <p>Dual joint self-attention exceeds single vanilla by <strong>6.86 percentage points</strong> in this comparison. But routing actions to their own feed-forward expert alone does not improve the average. The result favors the tested dual design; it does not isolate parameter count from the other architectural changes.</p>
+  <h3>Forward information and backward gradients are different design choices.</h3>
+  <p>Detaching video features in the cross-attention bridge improves the average from 88.25% to 91.85%, a <strong>3.60-point</strong> difference. The action model still reads video features; its loss simply stops updating the video model through that bridge. Video learning can continue through the video objective. Gradient interference is a plausible explanation to investigate, not a mechanism established by this table alone.</p>
+  <h3>The highest number is not automatically the best default.</h3>
+  <p>The tri-system result is 92.60%, versus 92.36% for dual joint self-attention: a <strong>0.24-point</strong> gap without reported seed uncertainty in this table. The study adopts the dual design to balance complexity and performance, and to investigate world–action interaction without the extra VLM features. This is a scoped choice, not evidence that VLM understanding is unnecessary for all robotics tasks.</p>
+</section>
+<section id="bridge">
+  <p class="section-no">04 / Inside the attention bridge</p>
+  <h2>Share an attention space, not all transformer weights.</h2>
+  <p>In the final OpenWAM-α configuration, video tokens have residual width 3072 and action tokens width 1024. Those tensors cannot simply be concatenated along their sequence axis. Each stream first uses its own projections to produce a compatible attention layout: <strong>24 heads × 128 dimensions</strong>.</p>
+  <figure class="figure"><a href="figures/joint-block.svg" aria-label="Open the joint-attention block diagram at full size"><img src="figures/joint-block.svg" width="1120" height="915" loading="lazy" alt="World and action features use their own Q/K/V projections, concatenate in a common attention space, then split and return through stream-specific output projections and transformer blocks."></a><figcaption><b>Figure 2.</b> One paired transformer layer, repeated across all 30 bridge layers in OpenWAM-α. The world–action bridge is joint self-attention. The separate cross-attention below it reads language and robot-state context. Output heads predict flow velocities; the sampler turns these predictions into denoising updates.</figcaption></figure>
+  <p>Queries, keys and values—Q, K and V—are the projected tensors used to compute attention. Concatenating each of them along sequence creates one attention operation over both token groups. Its output is split again; each stream projects back to its own width and continues through its own residual and feed-forward paths.</p>
+  <div class="finding"><p><strong>The distinction that matters:</strong> “joint self-attention” describes the combined token sequence. It does not mean shared Q/K/V weights, identical hidden widths, or the absence of other cross-attention layers.</p></div>
+  <details><summary>PyTorch · the joint-attention operation</summary><pre class="code" tabindex="0"><code data-source-function="joint_attention">def joint_attention(video_qkv, action_qkv, allow, num_heads):
+    """Inputs: three [B, sequence, heads * head_dim] tensors per stream."""
+    n_video = video_qkv[0].shape[1]
+    n_action = action_qkv[0].shape[1]
+    # Projections and positional encoding have ALREADY been applied.
+    # Concatenate on sequence, not on feature width.
+    q, k, v = [
+        torch.cat([world, action], dim=1)
+        for world, action in zip(video_qkv, action_qkv)
+    ]
+    batch, length, width = q.shape
+    head_dim = width // num_heads
+
+    def heads(x):
+        return x.reshape(batch, length, num_heads, head_dim).transpose(1, 2)
+
+    mixed = F.scaled_dot_product_attention(
+        heads(q), heads(k), heads(v),
+        attn_mask=allow,  # Boolean True means this key is visible.
+        dropout_p=0.0,
+    )
+    mixed = mixed.transpose(1, 2).reshape(batch, length, width)
+    world_out, action_out = mixed.split([n_video, n_action], dim=1)
+    # Each stream next applies its OWN output projection and block suffix.
+    return world_out.contiguous(), action_out.contiguous()</code></pre><p class="code-note">Reduced from the inspected execution contract, not a complete model. The caller supplies stream-specific normalization, timestep modulation, Q/K/V projections and positional encoding; output projection, residual updates, context attention and feed-forward layers follow this function. <a href="joint_attention.py">Download the two-function example</a>.</p></details>
+  <p>The final model starts its world transformer from pretrained Wan2.2-TI2V-5B weights and adds a dedicated 1B-parameter ActionDiT. During embodied training, both transformers are updated. The video encoder and text encoder remain frozen. <em>Reusing a video prior is not the same as freezing the world model.</em></p>
+</section>
+<section id="visibility">
+  <p class="section-no">05 / What can each token see?</p>
+  <h2>Protect the present. Let actions read the predicted world.</h2>
+  <p>“Joint attention” still leaves a question unanswered: which keys are visible to each query? The clean observed-frame tokens must not read noised future tokens or noised actions. Otherwise the representation of the current observation would itself become contaminated by the variables being denoised.</p>
+  <p>The final mutual mask is easy to state at the token-group level. Rows below are <strong>queries</strong>; columns are the <strong>keys they may read</strong>. Each cell expands into a full block of token-to-token permissions.</p>
+  <div class="table-wrap" tabindex="0" role="region" aria-label="Mutual attention visibility matrix"><table class="matrix"><caption>Final mutual mask · first-frame-causal video attention</caption><thead><tr><th scope="col">Query ↓ / Key →</th><th scope="col">Observed video</th><th scope="col">Future video</th><th scope="col">Actions</th></tr></thead><tbody><tr><th scope="row">Observed video</th><td class="allowed">Read</td><td class="blocked">Blocked</td><td class="blocked">Blocked</td></tr><tr><th scope="row">Future video</th><td class="allowed">Read</td><td class="allowed">Read</td><td class="allowed">Read</td></tr><tr><th scope="row">Actions</th><td class="allowed">Read</td><td class="allowed">Read</td><td class="allowed">Read</td></tr></tbody></table></div>
+  <details><summary>PyTorch · the mutual mask, without ambiguous arrow notation</summary><pre class="code" tabindex="0"><code data-source-function="mutual_mask">def mutual_mask(n_observed, n_future, n_action, device=None):
+    """Rows are queries; columns are keys. Order: observed, future, action."""
+    n_video = n_observed + n_future
+    total = n_video + n_action
+    allow = torch.zeros((total, total), dtype=torch.bool, device=device)
+    # Clean observation tokens read only the clean observation.
+    allow[:n_observed, :n_observed] = True
+    # Noisy future-video and action tokens read all three groups.
+    allow[n_observed:, :] = True
+    return allow</code></pre><p class="code-note">This example omits padding and extra streams. It uses PyTorch scaled-dot-product attention’s boolean convention: True permits attention. The 3 × 3 table is a group-level view, not the actual token-length mask.</p></details>
+  <p>The separate masking study asks whether the action and predicted-video streams need access to one another. All four masks retain access from actions to the current observation; the comparison changes access to <strong>future-video features</strong>. That access matters much more here than the reverse direction:</p>
+  <div class="table-wrap" tabindex="0" role="region" aria-label="Mask comparison"><table id="mask-results"><caption>Table 2 · Team-reported RoboTwin2.0-Full results, manuscript Table 2. These are separate runs from the architecture comparison.</caption><thead><tr><th scope="col">Mask label in manuscript</th><th scope="col">Clean</th><th scope="col">Randomized</th><th scope="col">Average</th></tr></thead><tbody><tr><td>Isolated</td><td>88.08</td><td>86.74</td><td>87.41</td></tr><tr><td>Video sees action</td><td>87.92</td><td>87.34</td><td>87.63</td></tr><tr class="highlight"><td>Action sees video</td><td>92.98</td><td>91.80</td><td><strong>92.39</strong></td></tr><tr><td>Mutual</td><td>92.50</td><td>91.80</td><td>92.15</td></tr></tbody></table></div>
+  <p>Allowing actions to additionally read future-video features raises the average from 87.41% to 92.39% in this study. These are intermediate features of the jointly denoised video stream, not a finished video plan that must be decoded first. Adding the reverse path does not improve this particular comparison. The choice between one-way and mutual visibility is revisited after pretraining; the final OpenWAM-α uses mutual attention. The pretraining evidence belongs in its own article.</p>
+  <details><summary>A naming subtlety: “isolated” still retains current visual conditioning</summary><div class="detail-body"><p>Figure 8 of the manuscript and the inspected mask implementation agree: action queries can read clean observed-frame tokens in all four modes. “Isolated” blocks action–future-video interaction, not access to the present observation.</p><p>Read the manuscript’s shorthand “no cross-stream communication” in that narrower sense. The difference being tested is whether actions can use the future-video stream’s evolving representations, rather than whether the policy has any visual input at all.</p></div></details>
+</section>
+<section id="judgment">
+  <p class="section-no">06 / The resulting design</p>
+  <h2>The interface is the architectural decision.</h2>
+  <p>The useful outcome is not a catalogue of single-, dual- and tri-system models. It is a concrete design: a pretrained world transformer and a dedicated action transformer; compatible attention projections but separate residual paths; action access to world features; and a protected clean-observation prefix.</p>
+  <p>My main takeaway is to separate <strong>capacity, forward visibility and gradient coupling</strong> before interpreting an architecture result. A larger action expert, an extra VLM and a different mask change different things. Treating them as one “fusion strategy” makes both experiments and failure analysis harder to explain.</p>
+  <div class="finding"><p><strong>What this evidence supports:</strong> dual-system joint attention is a well-motivated default for the studied setting. It does not establish that a world model is explicitly planning, that tri-system semantics have no value, or that these benchmark numbers transfer unchanged to real robots.</p></div>
+  <p>The next architectural question is therefore task-dependent: which failures actually require additional semantic understanding, and which can be addressed within the existing world–action interface? That is a more useful reason to add a stream than architectural complexity by itself.</p>
+</section>
+<section id="sources">
+  <p class="section-no">Sources / Evidence boundary</p>
+  <h2>What this note is based on</h2>
+  <ol class="refs"><li><cite>OpenWAM: An Open, Modular Exploration Towards Systematic World–Action Model Pretraining</cite>, manuscript, September 2026. Architecture definitions: §3.1. Protocol and comparisons: §4 and §4.2, Tables 1–2. Final model: §5.1.1 and Figure 12.</li><li>OpenWAM implementation, revision <code>308175a</code> (June 23, 2026): dual-system joint-attention driver, cross-attention bridge and mask construction. Used to explain mechanics, not asserted to be the precise revision that produced the manuscript results.</li></ol>
+  <p class="fine">These are team-reported measurements, not new reproductions conducted for this page. The architecture comparison is not established here as parameter- or compute-matched, and the reported tables provide no seed uncertainty. Upstream video pretraining and embodied pretraining are distinct; a study without embodied pretraining need not initialize its video backbone randomly.</p>
+  <div class="artifact-links"><a href="joint_attention.py">Educational PyTorch excerpt</a><a href="results.json">Reported values · JSON</a></div>
+</section>
+</article>
+</main>
+<footer class="footer">Xuemin Chi · OpenWAM architecture research note</footer>
+</body>
+</html>

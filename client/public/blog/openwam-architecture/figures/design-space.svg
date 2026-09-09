@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="490" viewBox="0 0 1120 490" role="img" aria-labelledby="title desc">
+<title id="title">Where should action-specific capacity live?</title>
+<desc id="desc">Single-system models share a transformer between video and action tokens. Dual-system models use separate world and action transformers with an attention bridge. Tri-system models add an understanding stream fed by a frozen vision-language model. Colors identify video, action and understanding features, not parameter counts.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 10 5 0 10Z" fill="#626b75"/></marker></defs>
+<style>text{font-family:"Segoe UI",Arial,sans-serif;fill:#1c1f23;font-size:18px}.heading{font-size:24px;font-weight:600}.muted{fill:#58616c;font-size:17px}.small{font-size:16px}.box{fill:white;stroke:#d0d5dc;stroke-width:1.6;rx:4}.flow{fill:none;stroke:#626b75;stroke-width:1.8;marker-end:url(#arrow)}.both{marker-start:url(#arrow)}.world{fill:#91b4d4}.action{fill:#78ad9e}.understanding{fill:#b299c8}</style>
+<rect width="1120" height="490" fill="#f5f5f5"/>
+<text x="26" y="35" class="heading">One shared model, two specialists, or a third stream?</text>
+<text x="26" y="65" class="muted">A choice about parameter ownership and information flow — not just the number of boxes.</text>
+<path d="M365 96V450M747 96V450" stroke="#d5d8dd"/>
+<text x="182" y="120" text-anchor="middle" class="heading">Single-system</text>
+<text x="555" y="120" text-anchor="middle" class="heading">Dual-system</text>
+<text x="932" y="120" text-anchor="middle" class="heading">Tri-system</text>
+<g class="world"><rect x="106" y="153" width="16" height="16" rx="2"/><rect x="129" y="153" width="16" height="16" rx="2"/><rect x="152" y="153" width="16" height="16" rx="2"/></g>
+<g class="action"><rect x="189" y="153" width="16" height="16" rx="2"/><rect x="212" y="153" width="16" height="16" rx="2"/><rect x="235" y="153" width="16" height="16" rx="2"/></g>
+<path d="M182 180V210" class="flow"/>
+<rect x="59" y="214" width="246" height="91" class="box"/>
+<text x="182" y="249" text-anchor="middle">Shared attention</text><text x="182" y="277" text-anchor="middle">+ feed-forward blocks</text>
+<text x="182" y="343" text-anchor="middle" class="small">Vanilla: shared capacity</text>
+<text x="182" y="369" text-anchor="middle" class="small">MoE: dedicated action FFN</text>
+<text x="182" y="422" text-anchor="middle" class="muted">How much sharing is enough?</text>
+<g class="world"><rect x="431" y="153" width="16" height="16" rx="2"/><rect x="454" y="153" width="16" height="16" rx="2"/><rect x="477" y="153" width="16" height="16" rx="2"/></g>
+<g class="action"><rect x="613" y="153" width="16" height="16" rx="2"/><rect x="636" y="153" width="16" height="16" rx="2"/><rect x="659" y="153" width="16" height="16" rx="2"/></g>
+<path d="M462 180V210" class="flow"/><path d="M644 180V210" class="flow"/>
+<rect x="397" y="214" width="130" height="91" class="box"/><rect x="579" y="214" width="130" height="91" class="box"/>
+<text x="462" y="251" text-anchor="middle">World</text><text x="462" y="277" text-anchor="middle">transformer</text>
+<text x="644" y="251" text-anchor="middle">Action</text><text x="644" y="277" text-anchor="middle">transformer</text>
+<path d="M532 259H574" class="flow both"/>
+<text x="555" y="343" text-anchor="middle" class="small">Joint self / cross-attention</text>
+<text x="555" y="369" text-anchor="middle" class="small">or video-then-action prediction</text>
+<text x="555" y="422" text-anchor="middle" class="muted">Where should the streams interact?</text>
+<rect x="800" y="156" width="268" height="48" class="box"/>
+<text x="934" y="186" text-anchor="middle">Frozen vision-language model</text>
+<path d="M934 205V223" class="flow"/>
+<rect x="800" y="228" width="268" height="50" class="box"/>
+<rect x="815" y="245" width="15" height="15" rx="2" class="understanding"/>
+<text x="947" y="259" text-anchor="middle" class="small">Trainable understanding stream</text>
+<path d="M886 280V309" class="flow"/><path d="M982 280V309" class="flow"/>
+<rect x="798" y="314" width="118" height="49" class="box"/><rect x="954" y="314" width="118" height="49" class="box"/>
+<text x="857" y="345" text-anchor="middle">World</text><text x="1013" y="345" text-anchor="middle">Action</text>
+<path d="M921 340H949" class="flow both"/>
+<text x="934" y="393" text-anchor="middle" class="small">World / action read understanding tokens</text>
+<text x="934" y="422" text-anchor="middle" class="muted">Does extra semantic input pay off?</text>
+<text x="26" y="476" class="small muted">Conceptual family map. Attention masks determine the allowed directions; arrows do not imply unrestricted attention.</text>
+</svg>

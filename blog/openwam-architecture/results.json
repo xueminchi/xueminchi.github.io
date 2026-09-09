@@ -1,0 +1,22 @@
+{
+  "source": "OpenWAM manuscript supplied 2026-09-09, Tables 1 and 2",
+  "metric": "success rate (%)",
+  "benchmark": "RoboTwin2.0-Full",
+  "training_data": {"clean_demonstrations": 2500, "randomized_demonstrations": 25000},
+  "scope": "Team-reported manuscript results; not re-run for this article. Different tables are separate studies.",
+  "architecture": [
+    {"system": "Single", "variant": "Vanilla", "clean": 85.20, "randomized": 85.80, "average": 85.50},
+    {"system": "Single", "variant": "MoE", "clean": 86.22, "randomized": 83.04, "average": 84.63},
+    {"system": "Dual", "variant": "Joint self-attention", "clean": 92.34, "randomized": 92.38, "average": 92.36},
+    {"system": "Dual", "variant": "Joint cross-attention", "clean": 87.86, "randomized": 88.64, "average": 88.25},
+    {"system": "Dual", "variant": "Detached cross-attention", "clean": 92.06, "randomized": 91.64, "average": 91.85},
+    {"system": "Dual", "variant": "IDM", "clean": 87.76, "randomized": 88.14, "average": 87.95},
+    {"system": "Tri", "variant": "Joint self-attention", "clean": 92.84, "randomized": 92.36, "average": 92.60}
+  ],
+  "mask": [
+    {"variant": "Isolated", "clean": 88.08, "randomized": 86.74, "average": 87.41},
+    {"variant": "Video sees action", "clean": 87.92, "randomized": 87.34, "average": 87.63},
+    {"variant": "Action sees video", "clean": 92.98, "randomized": 91.80, "average": 92.39},
+    {"variant": "Mutual", "clean": 92.50, "randomized": 91.80, "average": 92.15}
+  ]
+}

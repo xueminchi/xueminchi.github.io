@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="915" viewBox="0 0 1120 915" role="img" aria-labelledby="title desc">
+<title id="title">Separate transformer parameters, one joint attention operation</title>
+<desc id="desc">OpenWAM-alpha embeds observed and noised future video into width-3072 tokens and noised actions into width-1024 tokens. At each of thirty paired layers, each stream normalizes and projects its own query, key and value tensors into the same 24-head by 128-dimensional attention layout. Projected tensors are concatenated along sequence and processed by masked joint self-attention. Results are split and projected back to each stream, with separate residual updates, language-and-state cross-attention and feed-forward networks. The two final heads predict video and action flow velocities.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 10 5 0 10Z" fill="#626b75"/></marker></defs>
+<style>text{font-family:"Segoe UI",Arial,sans-serif;fill:#1c1f23;font-size:19px}.title{font-size:26px;font-weight:600}.muted{fill:#58616c;font-size:17px}.small{font-size:16px}.box{fill:white;stroke:#cdd3db;stroke-width:1.6;rx:4}.world{fill:#e6eff7;stroke:#91b4d4}.action{fill:#e5f0ec;stroke:#78ad9e}.flow{fill:none;stroke:#626b75;stroke-width:1.8;marker-end:url(#arrow)}.context{fill:none;stroke:#9575ae;stroke-width:1.8;stroke-dasharray:5 4;marker-end:url(#arrow)}</style>
+<rect width="1120" height="915" fill="#f5f5f5"/>
+<text x="26" y="37" class="title">Different residual widths. Compatible attention space.</text>
+<text x="26" y="68" class="muted">Dual-system joint self-attention · OpenWAM-α configuration · one denoising forward pass</text>
+<rect x="50" y="105" width="420" height="68" class="box world"/><rect x="650" y="105" width="420" height="68" class="box action"/>
+<text x="260" y="133" text-anchor="middle">Observed + noised future video latents</text><text x="260" y="157" text-anchor="middle" class="small">Frozen video encoder → patch embedding</text>
+<text x="860" y="133" text-anchor="middle">Noised action chunk</text><text x="860" y="157" text-anchor="middle" class="small">One embedded token per action step</text>
+<path d="M260 174V244" class="flow"/><path d="M860 174V244" class="flow"/>
+<text x="279" y="201" class="muted">width 3072</text><text x="879" y="201" class="muted">width 1024</text>
+<rect x="26" y="220" width="1068" height="561" fill="none" stroke="#aab2bd" stroke-width="1.5" stroke-dasharray="6 5" rx="6"/>
+<rect x="412" y="207" width="296" height="29" fill="#f5f5f5"/><text x="560" y="228" text-anchor="middle" class="muted">Repeat at all 30 paired layers</text>
+<rect x="50" y="250" width="420" height="91" class="box world"/><rect x="650" y="250" width="420" height="91" class="box action"/>
+<text x="260" y="282" text-anchor="middle">World-owned normalization + Q/K/V</text><text x="260" y="311" text-anchor="middle" class="small">Video noise level · spatial-temporal positions</text>
+<text x="860" y="282" text-anchor="middle">Action-owned normalization + Q/K/V</text><text x="860" y="311" text-anchor="middle" class="small">Action noise level · action-step positions</text>
+<path d="M260 343V376H447V405" class="flow"/><path d="M860 343V376H673V405" class="flow"/>
+<text x="560" y="362" text-anchor="middle" class="muted">Both: 24 heads × 128 dimensions</text>
+<rect x="303" y="412" width="514" height="92" class="box"/>
+<text x="560" y="443" text-anchor="middle">Concatenate projected Q/K/V along sequence</text><text x="560" y="475" text-anchor="middle">Masked joint self-attention</text>
+<path d="M447 506V533H260V560" class="flow"/><path d="M673 506V533H860V560" class="flow"/>
+<text x="560" y="544" text-anchor="middle" class="muted">Split by stream</text>
+<rect x="50" y="566" width="420" height="58" class="box world"/><rect x="650" y="566" width="420" height="58" class="box action"/>
+<text x="260" y="601" text-anchor="middle">World output projection → width 3072</text><text x="860" y="601" text-anchor="middle">Action output projection → width 1024</text>
+<path d="M260 626V663" class="flow"/><path d="M860 626V663" class="flow"/>
+<rect x="411" y="636" width="298" height="32" fill="#f5f5f5"/><text x="560" y="657" text-anchor="middle" class="small" fill="#795193">Language + state context</text>
+<path d="M560 664V680H491V710H475" class="context"/><path d="M560 680H629V710H645" class="context"/>
+<rect x="50" y="670" width="420" height="81" class="box world"/><rect x="650" y="670" width="420" height="81" class="box action"/>
+<text x="260" y="701" text-anchor="middle">Own residual path + context cross-attention</text><text x="260" y="731" text-anchor="middle">+ feed-forward network</text>
+<text x="860" y="701" text-anchor="middle">Own residual path + context cross-attention</text><text x="860" y="731" text-anchor="middle">+ feed-forward network</text>
+<path d="M260 753V810" class="flow"/><path d="M860 753V810" class="flow"/>
+<rect x="91" y="816" width="338" height="52" class="box world"/><rect x="691" y="816" width="338" height="52" class="box action"/>
+<text x="260" y="848" text-anchor="middle">Video velocity prediction head</text><text x="860" y="848" text-anchor="middle">Action velocity prediction head</text>
+<text x="26" y="902" class="small muted">Residual additions and timestep gates are summarized inside stream blocks. This diagram does not imply shared weights.</text>
+</svg>
