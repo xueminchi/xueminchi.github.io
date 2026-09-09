@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="570" viewBox="0 0 1040 570" role="img" aria-labelledby="title desc">
+<title id="title">Match camera frames by time, not by row number</title>
+<desc id="desc">Numbers are zero-based record indices, not timestamps. For each control timestamp, select the latest image at or before it in each camera stream. Control 0 maps to image 4; control 650 maps to 648; control 1,249 maps to top 1,243 and each wrist 1,242. These are measured software associations in one ABC episode, not proof of physical synchronization.</desc>
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#7a8590"/></marker></defs>
+<rect width="1040" height="570" fill="#f5f5f5"/>
+<g font-family="Segoe UI,Arial,sans-serif" fill="#1c1f23">
+<text x="20" y="38" font-size="28" font-weight="600">Match camera frames by time, not by row number.</text>
+<text x="20" y="71" font-size="18" fill="#58616c">One measured episode: 1,300 control records · 1,294 image records per camera</text>
+<text x="20" y="101" font-size="19" fill="#245c8a">Numbers below are zero-based record indices, not timestamps.</text>
+<g font-size="18" fill="#58616c"><text x="359" y="155" text-anchor="middle">Near the start</text><text x="619" y="155" text-anchor="middle">Middle</text><text x="879" y="155" text-anchor="middle">Later in the episode</text></g>
+<g font-size="20"><text x="20" y="207">Control record #</text><text x="20" y="357">Top camera #</text><text x="20" y="461">Each wrist camera #</text></g>
+<g fill="white" stroke="#cad0d7"><rect x="259" y="174" width="200" height="48" rx="3"/><rect x="519" y="174" width="200" height="48" rx="3"/><rect x="779" y="174" width="200" height="48" rx="3"/></g>
+<g font-size="26" text-anchor="middle"><text x="359" y="207">0</text><text x="619" y="207">650</text><text x="879" y="207">1,249</text></g>
+<g fill="#e7eff7" stroke="#8faeca"><rect x="259" y="326" width="200" height="48" rx="3"/><rect x="519" y="326" width="200" height="48" rx="3"/><rect x="779" y="326" width="200" height="48" rx="3"/></g>
+<g font-size="26" fill="#245c8a" text-anchor="middle"><text x="359" y="359">4</text><text x="619" y="359">648</text><text x="879" y="359">1,243</text></g>
+<g fill="#e6f1ee" stroke="#8fbab0"><rect x="259" y="430" width="200" height="48" rx="3"/><rect x="519" y="430" width="200" height="48" rx="3"/><rect x="779" y="430" width="200" height="48" rx="3"/></g>
+<g font-size="26" fill="#216c61" text-anchor="middle"><text x="359" y="463">4</text><text x="619" y="463">648</text><text x="879" y="463">1,242</text></g>
+<g stroke="#7a8590" stroke-width="1.8" fill="none" marker-end="url(#arrow)"><path d="M359 222V318"/><path d="M619 222V318"/><path d="M879 222V318"/><path d="M285 222H239V406H359V422"/><path d="M545 222H499V406H619V422"/><path d="M805 222H759V406H879V422"/></g>
+<g font-size="16" fill="#58616c"><text x="373" y="266">Match by</text><text x="373" y="288">timestamp</text><text x="633" y="266">Match by</text><text x="633" y="288">timestamp</text><text x="893" y="266">Match by</text><text x="893" y="288">timestamp</text></g>
+<text x="20" y="519" font-size="18" fill="#245c8a">For each camera: choose the latest image at or before the control timestamp.</text>
+<text x="20" y="549" font-size="18" fill="#58616c">The same index or one fixed offset cannot reproduce these measured matches.</text>
+</g></svg>

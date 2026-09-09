@@ -1,0 +1,84 @@
+{
+  "title": "Robot data pipeline: numerical supplement",
+  "scope": "Retained August-September 2026 experiments; not a fresh rerun. Experiments below have different data subsets and validation coverage.",
+  "source_format_probe": {
+    "abc_tasks": 36,
+    "episodes": 36,
+    "h264_camera_streams": 108,
+    "decoded_frames": 408930,
+    "sampled_seek_windows": 108,
+    "passed_seek_windows": 108
+  },
+  "time_association_case": {
+    "control_rows": 1300,
+    "packets_per_camera": 1294,
+    "rule": "latest declared source timestamp at or before control timestamp",
+    "zero_based": true,
+    "shown_anchors": [
+      {"control": 0, "top": 4, "left_wrist": 4, "right_wrist": 4},
+      {"control": 650, "top": 648, "left_wrist": 648, "right_wrist": 648},
+      {"control": 1249, "top": 1243, "left_wrist": 1242, "right_wrist": 1242}
+    ],
+    "limit": "Three of six sampled control anchors shown, one real episode. Not proof of exposure-time or physical clock accuracy."
+  },
+  "lossless_time_index_comparison": {
+    "before_index_bytes": 5733,
+    "after_index_bytes": 9535,
+    "before_three_initial_lookups_seconds": 0.2112437,
+    "after_three_initial_lookups_seconds": 0.000079,
+    "selected_images_unchanged": true,
+    "limit": "One warm CPU metadata-lookup comparison; video decode and end-to-end training speed are not measured by this number."
+  },
+  "video_conversion_calibration": {
+    "encoding": "H264, output playback clock 30 FPS, fixed GOP30, B=0, yuv420p",
+    "source_time_index": "Retained separately; output playback timestamps do not establish sensor capture times.",
+    "rows": [
+      {"source": "ABC", "episodes": 3, "input_bytes": 378373903, "output_bytes": 334235729},
+      {"source": "AgiBot", "episodes": 3, "input_bytes": 43128085, "output_bytes": 88086985}
+    ],
+    "worst_sampled_psnr_db": 39.635,
+    "worst_sampled_mean_absolute_pixel_error": 1.750,
+    "chosen_psnr_threshold_db": 35.0,
+    "chosen_mae_threshold": 4.0,
+    "limit": "Whole conversion-pipeline byte ratios; not an isolated B-frame or equal-quality compression comparison. Image-error checks are not policy-quality tests."
+  },
+  "published_common_view": {
+    "abc_episodes": 360,
+    "agibot_episodes": 274,
+    "episodes": 634,
+    "payload_bytes": 61058550563,
+    "full_payload_hash_verification": true,
+    "indexed_control_and_camera_read_per_episode": true,
+    "post_publication_full_hash_and_decode_readback": {"abc_episodes": 3, "agibot_episodes": 3},
+    "limit": "All payloads hashed; full decoding of all 634 episodes or every possible training window not claimed."
+  },
+  "recipe_audit_20260828": {
+    "inventory_episodes": 634,
+    "eligible_abc_episodes": 360,
+    "eligible_agibot_episodes": 272,
+    "eligible_episodes": 632,
+    "limit": "One recipe audit, not a universal rejection of the two source episodes."
+  },
+  "cpu_sample_parity_20260908": {
+    "workers": 2,
+    "batch_sizes": [2, 16],
+    "abc_agibot_ratio": [1, 1],
+    "repeated_final_tensor_hashes_equal": true,
+    "limit": "Bounded repeated plans, not all-episode coverage or measured GPU acceleration."
+  },
+  "training_functional_checks": {
+    "model": "pi0.5",
+    "forward_backward_optimizer": true,
+    "eight_gpu": {"steps": 24, "global_batch": 16, "unique_samples": 384, "cross_rank_overlap": 0},
+    "sixteen_gpu": {"steps": 24, "global_batch": 32, "unique_samples": 768, "cross_rank_overlap": 0, "transport": "TCP", "throughput_acceptance": false},
+    "limit": "Bounded functional tests; no policy-quality or production reliability claim."
+  },
+  "collection_design": {"candidate_templates": 54, "example_cards": 8, "implemented_collection_volume_claimed": false},
+  "anonymized_raw_audit": {
+    "episodes": 1,
+    "parsed_messages": 31928,
+    "decoded_camera_frames": [717, 716, 717],
+    "video_record_minus_embedded_timestamp_median_ms": [871.85, 872.11, 871.86],
+    "limit": "Timestamp semantics and clock mapping unresolved; not a measured physical camera latency or synchronization error."
+  }
+}

@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="540" height="990" viewBox="0 0 540 990" role="img" aria-labelledby="title desc">
+<title id="title">Match camera frames by time, not by row number</title>
+<desc id="desc">Numbers are zero-based record indices, not timestamps. For each control timestamp, select the latest image at or before it in each camera stream. Control 0 maps to image 4; control 650 maps to 648; control 1,249 maps to top 1,243 and each wrist 1,242. These are measured software associations in one ABC episode, not proof of physical synchronization.</desc>
+<rect width="540" height="990" fill="#f5f5f5"/>
+<g font-family="Segoe UI,Arial,sans-serif" fill="#1c1f23">
+<text x="16" y="38" font-size="29" font-weight="600">Match camera frames by time,</text>
+<text x="16" y="75" font-size="29" font-weight="600">not by row number.</text>
+<text x="16" y="114" font-size="21" fill="#58616c">1,300 controls · 1,294 records / camera</text>
+<g font-size="21" fill="#245c8a"><text x="16" y="150">Numbers are zero-based record indices,</text><text x="16" y="179">not timestamps.</text></g>
+<g fill="white" stroke="#d5d8dd"><rect x="16" y="203" width="508" height="191" rx="3"/><rect x="16" y="414" width="508" height="191" rx="3"/><rect x="16" y="625" width="508" height="191" rx="3"/></g>
+<g font-size="24"><text x="36" y="241">Control record #0</text><text x="36" y="452">Control record #650</text><text x="36" y="663">Control record #1,249</text></g>
+<g font-size="19" fill="#58616c"><text x="36" y="279">↓ Match by timestamp</text><text x="36" y="490">↓ Match by timestamp</text><text x="36" y="701">↓ Match by timestamp</text></g>
+<g font-size="23" fill="#245c8a"><text x="36" y="322">Top camera #</text><text x="491" y="322" text-anchor="end">4</text><text x="36" y="533">Top camera #</text><text x="491" y="533" text-anchor="end">648</text><text x="36" y="744">Top camera #</text><text x="491" y="744" text-anchor="end">1,243</text></g>
+<g font-size="23" fill="#216c61"><text x="36" y="366">Each wrist camera #</text><text x="491" y="366" text-anchor="end">4</text><text x="36" y="577">Each wrist camera #</text><text x="491" y="577" text-anchor="end">648</text><text x="36" y="788">Each wrist camera #</text><text x="491" y="788" text-anchor="end">1,242</text></g>
+<g font-size="21" fill="#245c8a"><text x="16" y="860">For each camera, choose the latest image</text><text x="16" y="889">at or before the control timestamp.</text></g>
+<g font-size="21" fill="#58616c"><text x="16" y="937">Neither the same index nor a fixed offset</text><text x="16" y="966">reproduces these measured matches.</text></g>
+</g></svg>

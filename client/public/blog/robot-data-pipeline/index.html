@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow"><meta name="author" content="Xuemin Chi">
+<link rel="canonical" href="https://xueminchi.github.io/blog/robot-data-pipeline/">
+<meta name="description" content="Building and validating a shared MCAP training view for heterogeneous robot data: time alignment, video access, reproducible ingestion and model-independent storage.">
+<title>From Robot Recordings to Training Samples | Xuemin Chi</title>
+<link rel="stylesheet" href="article.css?v=interview-2">
+</head>
+<body>
+<a class="skip" href="#article">Skip to article</a>
+<nav class="site-nav" aria-label="Site navigation"><div class="nav-inner"><a class="brand" href="https://xueminchi.github.io/">Xuemin Chi</a><div class="nav-links"><a href="https://xueminchi.github.io/">Home</a><a href="https://xueminchi.github.io/research">Research</a><a href="https://xueminchi.github.io/blog">Blog</a></div></div></nav>
+<header class="hero">
+<p class="eyebrow">Robot learning / Data systems</p>
+<h1>From Robot Recordings<br>to Training Samples</h1>
+<p class="subtitle">Designing the data interface between robot collection and policy learning.</p>
+<p class="byline">Xuemin Chi &middot; September 2026</p>
+<div class="abstract"><h2>Two data sources. One tested training path.</h2>
+<p>ABC-130K and AgiBot expose different camera timing, robot fields and video layouts. I designed and implemented a shared MCAP training view, with explicit source mappings and a separate model-input adapter. The goal was to make those differences inspectable before they reached the learning target.</p>
+<p><strong>Outcome:</strong> a 634-episode snapshot passed integrity and indexed-read checks; mixed-source samples were reproducible across repeated worker runs, and the path supported real &pi;0.5 training updates. The validation also exposed incorrect index-based alignment and instruction-boundary risks that file-format checks alone would miss.</p></div>
+<p class="ownership"><strong>My contribution:</strong> defining collection and training-data requirements, designing the ingestion/reader/model interface, implementing the common data path, and building the correctness checks. Collection planning and the implemented training path are distinguished below.</p>
+</header>
+<main id="article" class="layout">
+<aside class="toc" aria-label="Article contents"><strong>In this report</strong><ol>
+<li><a href="#problem">The training problem</a></li>
+<li><a href="#pipeline">1. Preserve raw, version derived</a></li>
+<li><a href="#model-interface">2. Keep the model replaceable</a></li>
+<li><a href="#time">3. Validate the learning target</a></li>
+<li><a href="#evidence">Results and scope</a></li>
+<li><a href="#collection">Back to collection</a></li>
+<li><a href="#implementation">Implementation notes</a></li>
+<li><a href="#references">References</a></li>
+</ol></aside>
+<article>
+<section id="problem"><p class="section-no">THE TRAINING PROBLEM</p><h2>Opening both datasets was not enough.</h2>
+<p>A policy sample combines images, state, an instruction and future actions. A common file extension does not tell us whether those components describe the same moment or task. In one inspected ABC episode, <strong>1,300 control rows corresponded to 1,294 packets per camera</strong>. Pairing them by row number would silently change the observation/action association.</p>
+<p>I approached this as a training-interface problem: which source facts must survive conversion, which choices belong to the model, and how can each resulting sample be checked? Those questions led to three design decisions.</p>
+</section>
+<section id="pipeline"><p class="section-no">DECISION 1 / DATA LIFECYCLE</p><h2>Preserve recordings. Version the training view.</h2>
+<p>I kept the original recordings unchanged and generated a separate view for training access. <em>Ingestion</em> performs the conversion, validation and indexing once; workers read its checked outputs. This lets the encoding or index evolve while preserving the source information needed to rebuild or audit a dataset.</p>
+<figure class="pipeline"><ol><li><b>Source recordings</b><span>Original bytes, clocks, robot fields and annotations.</span></li><li><b>Ingestion</b><span>Explicit source mappings, video conversion and validation.</span></li><li><b>Shared MCAP view</b><span>Video + control groups, time indexes and content identity.</span></li><li><b>Dataset selection</b><span>Eligible intervals, instructions and a versioned training recipe.</span></li><li><b>Model adapter</b><span>Normalization, action horizon, image transforms and tensors.</span></li></ol><figcaption>Implemented separation of responsibilities. Data access is shared; robot dimensions, clocks and action semantics are not assumed to be identical.</figcaption></figure>
+<p>ABC's fixed-GOP training video and Dyna's modality-specific MCAP grouping informed different parts of the design.<a href="#ref-abc"> [1]</a><a href="#ref-abc-paper"> [2]</a><a href="#ref-dyna"> [3]</a> I used a common H.264 access profile and separate camera/control groups: sparse image requests and longer action windows should not force the same storage reads.</p>
+<div class="finding"><p><strong>The tradeoff:</strong> ingestion pays conversion time and additional storage in exchange for a consistent reader path. In the three-episode-per-source calibration, ABC shrank while AgiBot grew. Capacity estimates therefore stayed source-specific; a pooled average would have hidden the cost.</p></div>
+<p>A later metadata/index revision reused the existing video and control payloads. That was a concrete benefit of separating the stored data from its access metadata: a new index did not require another video conversion.</p>
+</section>
+<section id="model-interface"><p class="section-no">DECISION 2 / MODEL INTERFACE</p><h2>Share the reader, not every policy assumption.</h2>
+<p>I kept field definitions, clocks and source provenance in the storage layer. The <em>training recipe</em> selects observations and commands, their time relationship, valid task intervals and action horizon. A separate adapter performs policy-specific normalization, image transforms, padding and tokenization.</p>
+<p>This matters across embodiments. The tested joint recipe handles ABC's 14-value state/action layout and AgiBot's 16-value joint/gripper layout through explicit mappings. Matching tensor width does not make their gripper units, joints or coordinate frames equivalent.</p>
+<div class="finding"><p><strong>The design choice:</strong> PI0.5-specific transforms live outside the physical reader. The tested integration uses PI0.5; the replaceable interface is what permits future model recipes without making one policy's tensor format the permanent storage format.</p></div>
+<details><summary>Data layout &middot; what is shared, and what stays model-specific</summary><pre class="code" tabindex="0" role="region" aria-label="Logical episode and training recipe layout"><code># Logical layout; payloads may be reused by immutable reference.
+episode/
+    manifest.json          # schemas, clocks, provenance, content hashes
+    camera_group.mcap      # compressed video, grouped by access pattern
+    control_group.mcap     # typed robot observations and commands
+    camera_index.json      # source time + video seek information
+    control_index.json     # bounded access to numeric rows
+
+# Separate from the stored physical episode:
+training_catalog           # eligible episode intervals and instructions
+model_recipe               # fields, timing rule, units and action horizon
+model_adapter              # resize, normalize, pad, tokenize</code></pre><p class="code-note">The logical episode may reference immutable payload objects. End-effector pose recipes need their own coordinate-frame and action-semantic checks; the joint-policy tests do not establish those conversions.</p></details>
+</section>
+<section id="time"><p class="section-no">DECISION 3 / LEARNING TARGETS</p><h2>Validate the observation/action relationship.</h2>
+<p>For the inspected ABC source, I used the latest declared camera timestamp at or before a control anchor. Control row 0 selected frame 4; row 650 selected frame 648. Near the end, top and wrist cameras selected different indices. Neither equal-index matching nor a fixed offset described the recording correctly.</p>
+<figure class="figure"><a href="figures/alignment.svg?v=time-match-1"><picture><source media="(max-width:620px)" srcset="figures/alignment-mobile.svg?v=time-match-1" width="540" height="990"><img src="figures/alignment.svg?v=time-match-1" width="1040" height="570" loading="lazy" alt="Numbers are record indices, not timestamps. Arrows select the latest image at or before each control timestamp. Control indices 0, 650 and 1249 map to top-camera indices 4, 648 and 1243; each wrist camera maps to 4, 648 and 1242."></picture></a><figcaption><b>Match by timestamp, not by record number.</b> Numbers are zero-based record indices, not timestamps. Each arrow selects the latest image at or before the control timestamp, independently for each camera. Three of six inspected control records from one ABC episode are shown; arrow length does not represent elapsed time. These software associations do not by themselves establish physical synchronization or prove dropped frames.</figcaption></figure>
+<p>The recipe also checks the <em>future</em> target: an action chunk must remain inside its selected instruction segment. In one audit, 634 stored episodes yielded 632 recipe-eligible episodes because two lacked the required committed intervals or annotations. Those source recordings remained in the inventory; the recipe did not invent missing instructions.</p>
+<div class="finding"><p><strong>The learning consequence:</strong> a perfectly decodable image can still be paired with the wrong state or a target from the next task. Sample validity has to include time and instruction boundaries, not just file integrity.</p></div>
+<p>Camera selection uses the source's declared timing rule. The tested AgiBot view instead binds a validated ordinal-alignment rule. In either case, clock comparability and timestamp meaning must be established separately; recording time is not automatically sensor exposure time.<a href="#ref-mcap"> [4]</a></p>
+<details><summary>Python &middot; an explicit causal-selection rule</summary><pre class="code" tabindex="0" role="region" aria-label="Causal timestamp selection teaching example"><code>from bisect import bisect_right
+
+def camera_at_or_before(times_ns, anchor_ns, max_age_ns):
+    # Caller has validated a nonempty, strictly increasing time index,
+    # comparable clocks, and a common valid camera/control interval.
+    i = bisect_right(times_ns, anchor_ns) - 1
+    if i &lt; 0 or anchor_ns - times_ns[i] &gt; max_age_ns:
+        raise ValueError("No valid causal camera observation")
+    return i
+
+# Frame choice, future-action offset and task boundaries are separate:
+# image = camera_at_or_before(camera_times, control_time, tolerance)
+# actions = commands[t + offset : t + offset + horizon]
+# Reject a window that crosses the selected instruction segment.</code></pre><p class="code-note">Teaching code, not the full production reader. The retained implementation batches lookups with <code>numpy.searchsorted(..., side="right") - 1</code>; this example makes the additional freshness requirement explicit. The selected AgiBot view has a different, declared ordinal-alignment rule. A single rule is not imposed blindly on both sources.</p></details>
+<details><summary>Indexing result &middot; choose the frame without reading the video</summary><div class="detail-body">
+<p>The first reader scanned encoded packet envelopes to build camera time arrays. Moving the same lossless arrays into a content-bound index removed those scans. In one warm CPU comparison, the index grew from <strong>5,733 to 9,535 bytes</strong>; the three initial lookups fell from about <strong>211 ms to 79 &micro;s</strong>, with identical selected frames.</p>
+<p>This measures metadata lookup only, not video decode or training speed. The design benefit is the removed dependency: a time lookup no longer needs video payload access.</p></div></details>
+</section>
+<section id="evidence"><p class="section-no">RESULTS AND SCOPE</p><h2>From converted files to real training updates.</h2>
+<p>The common snapshot contains <strong>360 ABC and 274 AgiBot episodes, about 61.1 GB</strong>. I verified all camera/control payload hashes and exercised an indexed read in every episode. Separate tests checked source decoding, conversion quality, repeated model inputs and actual policy updates.</p>
+<div class="table-wrap" tabindex="0" role="region" aria-label="Validation evidence; horizontally scrollable"><table class="wide-table"><caption>Separate experiments, August&ndash;September 2026. Counts do not describe one common test set.</caption><thead><tr><th scope="col">Question</th><th scope="col">Observed evidence</th><th scope="col">Limit</th></tr></thead><tbody>
+<tr><td>Can native MCAP be read directly?</td><td>36 ABC tasks, 108 H.264 streams, 408,930 decoded frames; all 108 sampled seek windows passed.</td><td>Does not cover every codec or arbitrary damaged file.</td></tr>
+<tr><td>Did the shared video conversion pass?</td><td>3 ABC + 3 AgiBot episodes passed the declared encoding checks. Worst sampled PSNR: 39.635 dB; worst mean absolute pixel error: 1.750.</td><td>Above the chosen 35 dB / below 4.0 thresholds; not proof of unchanged policy accuracy.</td></tr>
+<tr><td>Is the published corpus intact?</td><td>634 episodes, 61.1 GB of payload; full payload hashes and a bounded indexed read per episode passed.</td><td>Full file checks, not exhaustive decoding of every possible training window.</td></tr>
+<tr><td>Do workers construct the same input?</td><td>Real ABC:AgiBot 1:1 reads with two workers; repeated final tensor hashes matched for batch sizes 2 and 16.</td><td>Bounded repeated plans, not a complete epoch of all episodes.</td></tr>
+<tr><td>Can a policy actually train?</td><td>&pi;0.5 forward, backward and optimizer updates passed. An 8-GPU test assigned 384/384 unique samples; a 16-GPU functional test assigned 768/768, with no cross-rank overlap.</td><td>Short runs. The latest 16-GPU TCP run passed functionality, not the high-throughput acceptance target.</td></tr>
+</tbody></table></div>
+<div class="scope-note"><h3>What these results establish</h3><p>A working, bounded ingestion-to-training implementation. Exact source preservation, lossy conversion tolerance and repeated-sample equality were tested separately. Full payload hashing is not exhaustive decoding, and image-error thresholds are not evidence of policy-quality gains.</p>
+<p>The latest training-path changes still need integration, broader production-load/recovery testing and matched policy evaluation. The short 16-GPU TCP run passed functionally, not the high-throughput acceptance target. This report does not claim a company-wide platform deployment or million-hour validation.</p></div>
+<p>Training throughput and communication tuning are covered in a <a href="https://xueminchi.github.io/blog/robot-training-systems/">separate report</a>. Here, the result is a checked common data path that those performance experiments can build on.</p>
+<p class="artifact-links"><a href="results.json" download>Numerical supplement (JSON)</a><a href="examples.py" download>Testable teaching examples (Python)</a></p>
+</section>
+<section id="collection"><p class="section-no">BACK TO COLLECTION</p><h2>Turn training failures into collection requirements.</h2>
+<p>The same analysis informed the collection specification: distinguish measured state from commanded targets; bind calibration versions, coordinate frames and units; preserve task identity and completion status. These requirements give collection and data-platform teams concrete information to record and verify.</p>
+<p>For example, an anonymized raw episode fully parsed and decoded, yet its video and robot timestamps had different relationships to recording time. I documented the ambiguity for follow-up rather than assigning a corrected timestamp without evidence.</p>
+<details><summary>Collection evidence &middot; one raw audit and the task-card plan</summary><div class="detail-body">
+<p>The raw audit parsed <strong>31,928 messages</strong> and decoded all <strong>2,150 video frames</strong>. Video message timestamps were about <strong>0.87 seconds</strong> earlier than recording time; robot feedback differed by only a few milliseconds. Some teleoperation-target timestamps repeated or predated the episode. The cause and clock mapping remain unresolved: this is not a measured physical latency or synchronization error.</p>
+<p>The collection plan contains <strong>54 candidate task templates and eight example task cards</strong>, covering object/scene variation, success criteria and grouped train/evaluation separation. This is design work, not a claim that those tasks have already been collected. The cards and raw-data requirements have different maturity from the implemented ABC/AgiBot input path.</p>
+</div></details>
+<div class="finding"><p><strong>The contribution across the project:</strong> connecting what the robot records to what the policy learns. I translated source differences into explicit interfaces and tests, implemented the shared path, and used the failures to sharpen collection requirements.</p></div>
+</section>
+<section id="implementation"><p class="section-no">IMPLEMENTATION NOTES</p><h2>Details behind the design decisions.</h2>
+<p class="fine">Code excerpts and calibration results for a deeper technical discussion. The teaching examples are simplified and are not a standalone production pipeline.</p>
+<details id="video"><summary>Video conversion &middot; encoding, storage groups and cost</summary><div class="detail-body">
+<p>A <strong>group of pictures (GOP)</strong> describes a keyframe and dependent video frames; a <strong>MCAP chunk</strong> is a storage block containing messages. Locating a chunk does not eliminate video decode dependencies.</p>
+<div class="mini-grid"><div><b>Encoding</b><p>H.264, output playback clock 30 FPS, fixed GOP30 and B=0 for the tested view.</p></div><div><b>Grouping</b><p>Camera messages share one access group; dense observations and commands use another.</p></div><div><b>Indexing</b><p>Source-time and keyframe indexes are built during ingestion, before workers request samples.</p></div></div>
+<p>ABC's efficient training implementation uses MP4; I borrowed its predictable video-access profile, not the container choice. Dyna informed the grouped MCAP layout and distinguishes sparse VLA windows from longer contiguous world-action reads.<a href="#ref-abc-paper"> [2]</a><a href="#ref-dyna"> [3]</a> The chosen B=0/GOP30 profile is specific to this training view, not a MCAP requirement or a universal world-action-model setting.</p>
+<details><summary>Implementation detail &middot; an encoder option was not enough</summary><div class="detail-body"><p>The first strict GOP test still found extra keyframes after scene-cut detection had been disabled. Decoded frames carried source picture-type hints into re-encoding. Clearing those hints allowed the output keyframe schedule to be controlled by the new encoding profile.</p></div><pre class="code" tabindex="0" role="region" aria-label="Simplified PyAV encoding-loop excerpt"><code># Simplified excerpt: encoder configuration and validation omitted.
+# Frames arrive in the declared output presentation order.
+for ordinal, frame in enumerate(prepared_frames):
+    frame.pict_type = av.video.frame.PictureType.NONE
+    frame.pts = ordinal
+    frame.time_base = Fraction(1, 30)
+    for packet in encoder.encode(frame):
+        append_to_packet_spool(packet)
+
+for packet in encoder.encode(None):  # flush delayed output
+    append_to_packet_spool(packet)</code></pre><p class="code-note">These generated video timestamps describe the output playback clock. They do not replace source sensor times, which remain separately indexed. Production code also validates frame counts, the keyframe schedule, packet timing, color interpretation and source-to-output image tolerance.</p></details>
+<p>The three-episode-per-source calibration produced aggregate ratios of 0.883&times; for ABC and 2.042&times; for AgiBot. Their combined ratio of almost 1.00&times; was an accidental cancellation, not a capacity-planning rule. These are whole conversion-pipeline ratios, not isolated B-frame effects.</p>
+<details><summary>Conversion calibration &middot; why one average hides the cost</summary><div class="detail-body"><div class="table-wrap" tabindex="0" role="region" aria-label="Per-source conversion byte counts"><table><caption>Short/median/long episode selection; whole-input to whole-output byte ratios.</caption><thead><tr><th scope="col">Source</th><th scope="col">Input bytes</th><th scope="col">Output bytes</th><th scope="col">Ratio</th></tr></thead><tbody><tr><td>ABC (3)</td><td>378,373,903</td><td>334,235,729</td><td>0.883&times;</td></tr><tr><td>AgiBot (3)</td><td>43,128,085</td><td>88,086,985</td><td>2.042&times;</td></tr><tr><td>Combined</td><td>421,501,988</td><td>422,322,714</td><td>1.002&times;</td></tr></tbody></table></div><p>Source differences include the previous encoding and storage representation. The totals are not an equal-quality codec benchmark. Repeated representative jobs on two nodes reproduced the same content hashes under the tested environment; no cross-version encoder determinism is claimed.</p></div></details>
+</div></details>
+<details id="ingestion"><summary>Repeatable ingestion &middot; memory, content identity and publication</summary><div class="detail-body">
+<p>An early writer streamed decoded frames but still retained every encoded payload in a Python list. I changed it to spool encoded bytes to temporary files and merge streams using positional reads. Small descriptors and indexes remain in memory; the change bounds payload accumulation rather than making total memory constant.</p>
+<p>Another test produced identical camera/control/index bytes but unequal manifest hashes: processing time had been included in the manifest. I moved runtime telemetry outside dataset identity. Source hashes, transform versions and content hashes describe data; host names and elapsed times describe a job.</p>
+<details><summary>Publication logic &middot; incomplete output must not become a dataset</summary><pre class="code" tabindex="0" role="region" aria-label="Conceptual ingestion publication protocol"><code># Conceptual protocol, not a portable filesystem transaction.
+source_id = hash_source_and_transform(source, profile)
+
+if completed_output_exists(source_id):
+    verify_existing_content()       # existence alone is insufficient
+else:
+    partial = create_private_partial_output()
+    convert_and_index(source, partial)
+    validate_structure_timing_and_decoding(partial)
+    manifest = bind_content_hashes(partial, source_id)
+    publish_validated_objects(partial, manifest)
+    write_completion_marker_last(manifest)
+
+# Consumers verify marker + manifest + referenced object identities.
+# A local rename and an object-store publication are different operations.</code></pre><p class="code-note">The implementation uses episode-level partial output and verified reuse after interruption. Publication is validated separately by a reader through another access path. Neither a checksum nor a completion marker proves that the robot action labels are semantically correct.</p></details>
+<p>The full snapshot verification hashed all 634 payload pairs and sampled indexed control/camera reads per episode. After publication, an independent reader rechecked three episodes from each source, including decoding. A later metadata/index revision reused the immutable payloads.</p>
+</div></details>
+</section>
+<section id="references"><p class="section-no">REFERENCES</p><h2>What was borrowed, and what was measured here</h2>
+<p class="fine">Public references explain the design context. All numerical results above are from retained project experiment summaries, not results reported by these references. Raw recordings, internal paths and operational identifiers are omitted.</p>
+<ol class="refs"><li id="ref-abc"><a href="https://huggingface.co/datasets/XDOF/ABC-130k">XDOF, ABC-130K dataset documentation.</a> Native episode structure, annotations and stream timestamps.</li><li id="ref-abc-paper"><a href="https://arxiv.org/html/2606.27375v1#A2.SS1">Scalable Behavior Cloning with Open Data, Training, and Evaluation, Appendix B.1.</a> The efficient training view and fixed-GOP video access.</li><li id="ref-dyna"><a href="https://www.dyna.co/research/dyna-2-infrastructure">Dyna, Training Dyna-2 at million-hour scale, repeatably.</a> Ingestion, modality-specific chunking and training manifests. Its reported scale and throughput are not attributed to this implementation.</li><li id="ref-mcap"><a href="https://mcap.dev/spec">MCAP format specification.</a> Timestamped messages, schemas, chunks and indexes.</li></ol>
+</section>
+</article>
+</main>
+<footer class="footer">Experimental results come from retained August&ndash;September 2026 records. This report summarizes completed checks and their limitations; no new training run was performed for the article.</footer>
+</body></html>
