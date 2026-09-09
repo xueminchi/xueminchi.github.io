@@ -1,0 +1,20 @@
+{
+  "source": "OpenWAM manuscript, September 2026, Figure 7 and Section 4.1.2",
+  "metric": "Average task success rate (%)",
+  "protocol": "RoboTwin2.0-Full; clean and randomized training data; not an unseen-scene transfer test",
+  "video_transformer": "Wan2.2-TI2V-5B architecture, randomly initialized weights for this comparison",
+  "rows": [
+    {"encoder": "DINOv3", "adapter": "None", "success": 76.42},
+    {"encoder": "DINOv3", "adapter": "S-VAE", "success": 90.18},
+    {"encoder": "V-JEPA 2.1", "adapter": "None", "success": 80.91},
+    {"encoder": "V-JEPA 2.1", "adapter": "S-VAE", "success": 88.46},
+    {"encoder": "FLUX.2 VAE", "adapter": "Native", "success": 84.26},
+    {"encoder": "Wan2.2 VAE", "adapter": "Native", "success": 90.30}
+  ],
+  "limits": [
+    "Team-reported measurements, not new experiments conducted for this article.",
+    "No seed uncertainty reported with Figure 7.",
+    "Adaptation, normalization, temporal processing and encoder pretraining are not all identical.",
+    "The inspected implementation revision is not verified as the exact experiment revision."
+  ]
+}

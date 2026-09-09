@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="610" viewBox="0 0 1120 610" role="img" aria-labelledby="title desc">
+<title id="title">One world–action interface, different representation routes</title>
+<desc id="desc">Native Wan VAE, raw representation features, or representation features compressed with S-VAE define the model's current observation and future training targets. Temporal layout, feature width, and transformer hidden width are distinct.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10Z" fill="#687581"/></marker></defs>
+<style>text{font-family:Segoe UI,Arial,sans-serif;fill:#20252b;font-size:20px}.sub{font-size:18px;fill:#5a6570}.small{font-size:17px;fill:#5a6570}.blue{fill:#245c8a}.green{fill:#216c61}.box{fill:#fff;stroke:#c6cdd5;stroke-width:1.5}.line{fill:none;stroke:#687581;stroke-width:2;marker-end:url(#arrow)}</style>
+<rect width="1120" height="610" fill="#f5f5f5"/>
+<text x="28" y="39" style="font-size:27px">The encoder defines the condition and the prediction space.</text>
+<text x="28" y="71" class="sub">Three routes into the same world–action architecture</text>
+<text x="28" y="126" class="blue">Native video-reconstruction route</text>
+<rect class="box" x="28" y="144" width="221" height="70" rx="3"/><text x="138" y="174" text-anchor="middle">Wan2.2 VAE</text><text x="138" y="199" text-anchor="middle" class="small">Native space/time encoding</text>
+<path class="line" d="M249 179H287"/>
+<rect x="290" y="144" width="261" height="70" fill="#e6eef6" stroke="#91b0cc" rx="3"/><text x="421" y="174" text-anchor="middle">Compact native latent</text><text x="421" y="199" text-anchor="middle" class="small">48 channels per location</text>
+<text x="28" y="260" class="blue">Representation route, without S-VAE</text>
+<rect class="box" x="28" y="279" width="221" height="75" rx="3"/><text x="138" y="310" text-anchor="middle">DINOv3 / V-JEPA</text><text x="138" y="337" text-anchor="middle" class="small">Temporal alignment</text>
+<path class="line" d="M249 316H287"/>
+<rect x="290" y="279" width="261" height="75" fill="#e6eef6" stroke="#91b0cc" rx="3"/><text x="421" y="310" text-anchor="middle">Wide feature grid</text><text x="421" y="337" text-anchor="middle" class="small">Paper: 768 / 1024 channels</text>
+<text x="28" y="402" class="green">Representation route, with learned feature compression</text>
+<rect class="box" x="28" y="421" width="221" height="75" rx="3"/><text x="138" y="452" text-anchor="middle">Aligned feature grid</text><text x="138" y="479" text-anchor="middle" class="small">Same pre-reduction features</text>
+<path class="line" d="M249 458H287"/>
+<rect x="290" y="421" width="261" height="75" fill="#e2eee9" stroke="#8bbcaf" rx="3"/><text x="421" y="452" text-anchor="middle">Trained S-VAE → mean</text><text x="421" y="479" text-anchor="middle" class="small">48 channels; same grid</text>
+<path class="line" d="M551 179H597V281H649"/>
+<path class="line" d="M551 316H649"/>
+<path class="line" d="M551 458H597V351H649"/>
+<rect class="box" x="653" y="234" width="437" height="166" rx="3"/>
+<text x="675" y="267">World–action model</text>
+<text x="675" y="300" class="sub">• Clean current-observation conditioning</text>
+<text x="675" y="332" class="sub">• Future-latent denoising targets in training</text>
+<text x="675" y="364" class="sub">• Action learning through the world–action link</text>
+<text x="655" y="439" class="small">Latent normalization and input/output</text><text x="655" y="465" class="small">projections must fit the selected route.</text>
+<line x1="28" y1="535" x2="1090" y2="535" stroke="#c6cdd5"/>
+<text x="28" y="568" class="blue">Feature channels ≠ sequence length ≠ transformer hidden width.</text>
+<text x="28" y="596" class="small">FLUX VAE is a separate reconstruction baseline; its framewise features receive temporal pooling.</text>
+</svg>

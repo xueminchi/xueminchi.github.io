@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="description" content="An OpenWAM research note on visual representations: testing VAE and representation-encoder latents, adapting high-dimensional features, and separating evidence from interpretation.">
+  <title>Must a World–Action Model Learn in VAE Latents? | Xuemin Chi</title>
+  <link rel="canonical" href="https://xueminchi.github.io/blog/openwam-visual-representation/">
+  <link rel="stylesheet" href="article.css">
+</head>
+<body>
+<a class="skip" href="#article">Skip to article</a>
+<header class="site-nav"><div class="nav-inner"><a class="brand" href="https://xueminchi.github.io/">Xuemin Chi</a><nav class="nav-links" aria-label="Main navigation"><a href="https://xueminchi.github.io/">Home</a><a href="https://xueminchi.github.io/research/">Research</a><a href="https://xueminchi.github.io/blog/">Blog</a></nav></div></header>
+<div class="hero">
+  <p class="eyebrow">World–action models / Visual representation</p>
+  <h1>Must a world–action model<br>learn in VAE latents?</h1>
+  <p class="subtitle">If features are good for visual understanding, why can they be poor targets for learning a robot policy?</p>
+  <p class="byline">Xuemin Chi · Research note · September 2026</p>
+  <div class="abstract"><p>Must a robot’s world model predict a representation designed to reconstruct pixels? Could it instead predict features learned through visual self-supervision? And if a direct substitution performs poorly, have we tested the representation—or only its compatibility with the rest of the model?</p></div>
+  <p class="ownership">This note explains OpenWAM’s visual-representation study. I contributed to experiment-design discussions and guided the first author on the encoder comparison. Results are team-reported; implementation excerpts are reduced from the inspected code to explain the design, not a new reproduction.</p>
+</div>
+<main class="layout">
+<aside class="toc" aria-label="On this page"><b>On this page</b><ol><li><a href="#question">01 · What changes with the encoder?</a></li><li><a href="#comparison">02 · Make the comparison meaningful</a></li><li><a href="#adapter">03 · Learn a compact interface</a></li><li><a href="#results">04 · What the results say</a></li><li><a href="#judgment">05 · What I would carry forward</a></li><li><a href="#sources">Sources &amp; scope</a></li></ol></aside>
+<article id="article">
+<section id="question">
+  <p class="section-no">01 / The question</p>
+  <h2>Changing the encoder changes the learning problem.</h2>
+  <p>In the <a href="https://xueminchi.github.io/blog/openwam-architecture/">architecture study</a>, the question was how the world and action streams should communicate. Here the question moves one step upstream: <strong>what should the world stream represent and predict?</strong></p>
+  <p>A variational autoencoder (VAE) provides a compact representation from which its decoder can reconstruct images or video. A representation encoder such as DINOv3 or V-JEPA learns features through visual self-supervision. Those features need not come with a pixel decoder. Neither objective, by itself, guarantees the best action policy.</p>
+  <p>This is more than replacing the policy’s image-conditioning network. The encoder also defines the <strong>future-feature targets</strong> used to train the world stream. Their content, temporal organization, channel count and numerical scale all affect the problem the diffusion transformer must learn.</p>
+  <figure class="figure"><a href="figures/latent-routes.svg" aria-label="Open the latent-space routes diagram"><img src="figures/latent-routes.svg" width="1120" height="610" alt="Wan uses its native VAE latent. DINOv3 or V-JEPA can supply temporally aligned features directly, or pass them through a trained S-VAE reducer. The representation feeds current conditioning and future world targets, not just an extra policy prefix."></a><figcaption><b>Figure 1.</b> The alternative routes change the world model’s representation space. The S-VAE path is an additional learned feature-space adapter, not the original pixel-reconstruction VAE. The exact temporal adapter is encoder-specific; matching the output length does not make the encoders equivalent.</figcaption></figure>
+  <div class="finding"><p><strong>The hypothesis:</strong> useful visual features may need a more suitable interface before their value becomes visible in policy learning. A weak direct-swap result is not yet evidence that those features are intrinsically unsuitable.</p></div>
+</section>
+<section id="comparison">
+  <p class="section-no">02 / Experimental design</p>
+  <h2>Do not give one representation its pretrained partner.</h2>
+  <p>A pretrained video transformer has already learned to denoise the latents of its original VAE. Keeping those weights for the native route while replacing its representation elsewhere would mix two questions: the quality of the encoder and the benefit of a matched pretrained video model.</p>
+  <p>For this comparison, OpenWAM retains the <strong>Wan2.2-TI2V-5B video-transformer architecture but randomly initializes its weights</strong>. The visual encoders retain their learned representations. In the inspected implementation, the visual-encoder path is frozen during WAM training, and the optional S-VAE is trained separately before being attached and frozen.</p>
+  <div class="table-wrap" tabindex="0" role="region" aria-label="Comparison controls"><table><caption>What is—and is not—held constant</caption><thead><tr><th scope="col">Component</th><th scope="col">Treatment</th><th scope="col">Why it matters</th></tr></thead><tbody>
+  <tr><th scope="row">Video transformer</th><td>Same architecture; random initialization</td><td>Removes inherited Wan denoising weights as an advantage for its native latent space.</td></tr>
+  <tr><th scope="row">Visual encoder</th><td>Wan VAE, FLUX VAE, DINOv3 or V-JEPA</td><td>The learned representation is the comparison, not an all-random model.</td></tr>
+  <tr><th scope="row">Latent time layout</th><td>Match a first observation plus one target group per four later frames</td><td>Controls temporal output length; learned compression and averaging still differ.</td></tr>
+  <tr><th scope="row">Feature width</th><td>Raw representation or S-VAE-reduced 48 channels</td><td>Changes prediction-space dimensionality; not the transformer’s hidden width.</td></tr>
+  <tr><th scope="row">Evaluation</th><td>RoboTwin2.0-Full</td><td>Clean and randomized scenes are both present in training; this is not the later unseen-scene transfer protocol.</td></tr>
+  </tbody></table></div>
+  <p class="scope-note">“Same architecture” does not mean identical total parameters or compute. The input/output projections must fit each latent width, the encoders differ, and the S-VAE adds a separately trained component. The figure is not a compute-matched encoder leaderboard.</p>
+  <h3>Temporal alignment is also an information boundary.</h3>
+  <p>The first frame is available when the robot acts; the future frames are training targets. Averaging frame 0 together with future frames would contaminate the condition. The DINO/FLUX wrappers therefore keep frame 0 intact, then average features from frames 1–4, 5–8, and so on. A nine-frame clip becomes three latent time slices: one observation and two target groups.</p>
+  <details><summary>PyTorch · keep the observation separate when pooling time</summary><pre class="code" tabindex="0"><code data-source-function="pool_frame_features">def pool_frame_features(x):
+    """DINO/FLUX-style grid [B, C, T, H, W]; preserve observation frame 0."""
+    b, c, t, h, w = x.shape
+    if t &lt; 1 or (t - 1) % 4:
+        raise ValueError("Expected T = 1 + 4k frames.")
+    first = x[:, :, :1]
+    if t == 1:
+        return first
+    future = x[:, :, 1:].reshape(b, c, (t - 1) // 4, 4, h, w)
+    return torch.cat([first, future.mean(dim=3)], dim=2)</code></pre><p class="code-note">Reduced DINO/FLUX-style wrapper. Inputs are already encoded features, not raw RGB. Averaging is not learned temporal compression and can discard motion detail within a group.</p></details>
+  <p>A video representation encoder requires extra care: even the output nominally associated with frame 0 can depend on later frames through temporal attention. In the inspected V-JEPA implementation, the condition is computed in a separate pass from frame 0 alone. Future-target features use another pass that may see the observation and future clip.</p>
+  <details><summary>PyTorch · V-JEPA needs an isolated condition pass</summary><pre class="code" tabindex="0"><code data-source-function="encode_vjepa_two_pass">def encode_vjepa_two_pass(video, vit_grid):
+    """Illustrates the inspected V-JEPA video-mode path; vit_grid uses tubelet=2."""
+    t = video.shape[2]
+    if t &lt; 1 or (t - 1) % 4:
+        raise ValueError("Expected T = 1 + 4k frames.")
+    first = video[:, :, :1]
+    condition = vit_grid(torch.cat([first, first], dim=2))
+    if t == 1:
+        return condition
+    clip = torch.cat([first, first, video[:, :, 1:]], dim=2)
+    target = vit_grid(clip)[:, :, 1:]  # Drop the prepended pair's output.
+    b, c, nt, h, w = target.shape
+    target = target.reshape(b, c, nt // 2, 2, h, w).mean(dim=3)
+    return torch.cat([condition, target], dim=2)</code></pre><p class="code-note">This shows the inspected <code>video</code> mode: a two-frame tubelet groups frames in the encoder; a further mean over two target feature slices gives the effective four-frame grouping. It is not the same operation as averaging four independent image features. <code>vit_grid</code> is the loaded encoder plus its token-to-grid reshape.</p></details>
+  <p class="table-note">These are implementation mechanics, not an assertion that the inspected revision generated Figure 7. The report summarizes temporal alignment more coarsely; the source/version differences are recorded below.</p>
+</section>
+<section id="adapter">
+  <p class="section-no">03 / The interface</p>
+  <h2>Learn the bottleneck; do not just rename the tensor.</h2>
+  <p>The report describes 768-channel DINOv3 features and 1024-channel V-JEPA features, versus a 48-channel Wan latent. A high-dimensional feature can contain useful information yet be a difficult denoising target under the chosen architecture and training budget. The intervention is to learn a compact feature-space representation with a <strong>semantic VAE (S-VAE)</strong>.</p>
+  <p>The inspected S-VAE runs transformer blocks over the spatial tokens <em>within each latent time slice</em>. It predicts a Gaussian mean and variance for each token, with a 48-channel bottleneck. Its decoder learns to reconstruct the input features—not pixels. The adapter is then frozen; WAM uses its deterministic posterior mean as the compact representation.</p>
+  <figure class="figure"><a href="figures/semantic-adapter.svg" aria-label="Open the S-VAE training and use diagram"><img src="figures/semantic-adapter.svg" width="1120" height="600" alt="Standalone S-VAE training standardizes raw features, processes spatial tokens with transformer blocks, samples a compact Gaussian latent, and reconstructs features. During WAM training and inference, the frozen encoder uses the posterior mean; the feature decoder is not needed."></a><figcaption><b>Figure 2.</b> Two distinct stages. The S-VAE learns feature reconstruction first; the WAM later learns world-feature prediction and actions in the resulting space. Spatial attention gives the adapter contextual processing; channel reduction happens at its Gaussian bottleneck. This diagram explains the inspected implementation.</figcaption></figure>
+  <h3>What exactly does “compact” mean here?</h3>
+  <p>There are three different quantities: the number of temporal slices, the number of spatial tokens, and the width of each token’s feature vector. <strong>The S-VAE reduces feature width; it does not itself merge the spatial tokens or shorten the time axis.</strong> In the inspected paths, temporal grouping and spatial patching determine sequence length separately.</p>
+  <p>Consequently, 768 → 48 channels is a 16-fold reduction in that tensor’s channel dimension, <em>not</em> a measured 16-fold training speedup. The transformer still uses its own hidden width, and the adapter has an encoding cost. No latency or throughput result is reported for this comparison.</p>
+  <details><summary>PyTorch · a frozen adapter produces the posterior mean</summary><pre class="code" tabindex="0"><code data-source-function="compact_mean">@torch.no_grad()
+def compact_mean(features, svae):
+    """Frozen trained S-VAE; spatial attention within each latent time slice."""
+    b, c, t, h, w = features.shape
+    x = features.permute(0, 2, 3, 4, 1).reshape(b * t, h * w, c)
+    was_training = svae.training
+    svae.eval()  # Disable dropout as well as posterior sampling.
+    try:
+        x = (x - svae.input_mean.to(x.dtype)) / svae.input_std.to(x.dtype)
+        for block in svae.enc_blocks:
+            x = block(x)
+        params = svae.enc_proj(svae.enc_norm(x))
+        mu = params.chunk(2, dim=-1)[0]  # Mean, not a random latent sample.
+        return mu.reshape(b, t, h, w, svae.latent_dim).permute(0, 4, 1, 2, 3)
+    finally:
+        svae.train(was_training)</code></pre><p class="code-note">Expects an already trained S-VAE with the inspected module interface. The reshape isolates time slices and exposes spatial tokens to attention. The actual wrapper also applies feature normalization after reduction. This is not a complete S-VAE implementation or a one-layer learned projection.</p></details>
+  <h3>Reconstruct features, then freeze the mapping.</h3>
+  <p>During standalone adapter training, the inspected loss combines mean-squared reconstruction error, cosine reconstruction error and a weighted Kullback–Leibler (KL) term that regularizes the latent distribution. During WAM training, this reconstruction decoder is not on the main path: world-feature prediction and action learning use their own objectives.</p>
+  <details><summary>PyTorch · the standalone adapter objective</summary><pre class="code" tabindex="0"><code data-source-function="adapter_loss">def adapter_loss(out, beta, cosine_weight=1.0):
+    """Standalone S-VAE training, not the WAM action/world training loss.
+
+    out contains standardized-space recon/target and posterior mu/logvar.
+    Reduced default: no optional free-bits floor or logging.
+    """
+    recon, target = out["recon"].float(), out["target"].float()
+    mu, logvar = out["mu"].float(), out["logvar"].float()
+    mse = F.mse_loss(recon, target)
+    cosine = 1.0 - F.cosine_similarity(recon, target, dim=1).mean()
+    kl = (-0.5 * (1.0 + logvar - mu.square() - logvar.exp())).mean()
+    return mse + cosine_weight * cosine + beta * kl</code></pre><p class="code-note">A reduced version of the inspected default loss, without optional free-bits clamping or logging. The report does not give the exact adapter run configuration here; no value of <code>beta</code> is presented as the Figure 7 setting.</p></details>
+  <p>Normalization is part of this interface too. The S-VAE uses stored per-channel feature statistics; the representation wrappers normalize their output before world-model training. These operations manage scale, but they do not prove that the resulting feature distribution is exactly Gaussian. A latent tensor’s shape alone is not a sufficient specification.</p>
+</section>
+<section id="results">
+  <p class="section-no">04 / Evidence</p>
+  <h2>The direct swap and the adapted swap tell different stories.</h2>
+  <p>Figure 7 in the manuscript reports the following six results. I have grouped the representation encoders before and after adaptation so the comparison reads as an intervention, rather than simply a ranking of model names.</p>
+  <figure class="figure"><a href="figures/encoder-results.svg" aria-label="Open the encoder results chart"><img src="figures/encoder-results.svg" width="1120" height="670" alt="DINOv3 improves from 76.42 to 90.18 with S-VAE; V-JEPA improves from 80.91 to 88.46. FLUX VAE scores 84.26 and Wan VAE scores 90.30. Axis starts at zero; these are team-reported average success rates."></a><figcaption><b>Figure 3.</b> Redrawn from manuscript Figure 7. Deltas are percentage points, not relative improvements. All bars use the same 0–100% axis. Error bars are omitted because the source figure does not report seed uncertainty.</figcaption></figure>
+  <details><summary>Exact reported values and evaluation scope</summary><div class="detail-body"><div class="table-wrap" tabindex="0" role="region" aria-label="Reported representation scores"><table id="representation-results"><caption>Average success rate (%) · OpenWAM Figure 7</caption><thead><tr><th scope="col">Encoder</th><th scope="col">Adapter</th><th scope="col">Success</th></tr></thead><tbody>
+  <tr><td>DINOv3</td><td>None</td><td>76.42</td></tr><tr><td>DINOv3</td><td>S-VAE</td><td>90.18</td></tr><tr><td>V-JEPA 2.1</td><td>None</td><td>80.91</td></tr><tr><td>V-JEPA 2.1</td><td>S-VAE</td><td>88.46</td></tr><tr><td>FLUX.2 VAE</td><td>Native</td><td>84.26</td></tr><tr><td>Wan2.2 VAE</td><td>Native</td><td>90.30</td></tr>
+  </tbody></table></div><p>RoboTwin2.0-Full uses 2,500 clean-scene demonstrations and 25,000 randomized-scene demonstrations in the training corpus; average success is reported across the clean and randomized evaluation conditions. These are team measurements, not additional runs conducted for this page.</p></div></details>
+  <p><strong>Direct use is weaker in this setup.</strong> Without S-VAE, both representation encoders fall below the two VAE baselines. That is the result of the complete unadapted pipeline; it does not isolate whether semantics, target width, normalization or optimization is responsible.</p>
+  <p><strong>Adaptation changes the conclusion.</strong> DINOv3 gains <strong>13.76 percentage points</strong>; V-JEPA gains <strong>7.55 points</strong>. Both adapted variants exceed FLUX.2 VAE. DINOv3 + S-VAE reaches 90.18%, close to Wan VAE’s 90.30%. A 0.12-point difference, without uncertainty estimates, is not a useful basis for declaring a universal winner.</p>
+  <p><strong>The adapter matters; its causal explanation remains narrower.</strong> S-VAE changes more than dimensionality: it introduces learned spatial processing, a bottleneck and distribution regularization. This study supports adapting the latent interface. It does not establish that reducing channels alone accounts for the improvement.</p>
+</section>
+<section id="judgment">
+  <p class="section-no">05 / Design judgment</p>
+  <h2>Choose a learnable representation, not just a strong encoder.</h2>
+  <p>My takeaway is that encoder quality and world-model compatibility should be evaluated together. A representation can be useful for perception while requiring adaptation before it becomes an effective prediction space. Conversely, a convenient reconstruction latent need not be the only viable space for action learning.</p>
+  <div class="finding"><p><strong>What I would carry forward:</strong> retain a native video-VAE route as a practical baseline, but evaluate compact representation features as a serious alternative. Check current-observation integrity, temporal processing and target scale before interpreting policy scores.</p></div>
+  <p>There is an important deployment trade-off: the inspected representation paths do not supply an RGB decoder. Predicting future features can still support action generation, but inspecting a predicted future as a video now requires an additional decoder. The S-VAE’s decoder reconstructs features; it does not solve pixel visualization.</p>
+  <p>Nor does matching the native VAE with a randomly initialized video transformer establish a drop-in replacement for a <em>pretrained</em> Wan model. Equal channel counts do not mean equal latent semantics. Transferring the upstream video model into a different representation space is a separate question.</p>
+  <p>The most useful next experiments would separate bottleneck width from adapter capacity, and learned temporal compression from simple pooling. Those are proposed follow-ups, not completed results. The next article asks a different question: after selecting the interface, how does cross-domain embodied pretraining improve transfer?</p>
+</section>
+<section id="sources">
+  <p class="section-no">Sources / Evidence boundary</p>
+  <h2>What this note is based on</h2>
+  <ol class="refs"><li><cite>OpenWAM: An Open, Modular Exploration Towards Systematic World–Action Model Pretraining</cite>, manuscript, September 2026. Figure 7 and §4.1.2, pages 12–13; evaluation protocol on page 11. The six scores and reported comparison settings come from this source.</li><li>OpenWAM implementation, revision <code>308175a</code> (June 23, 2026): DINOv3, V-JEPA and FLUX encoder wrappers; encoder projection hooks; S-VAE model, loss and frozen-reducer integration. Used to explain mechanics, not claimed to be the exact revision behind Figure 7.</li></ol>
+  <details><summary>Source-version details that should not be silently merged</summary><div class="detail-body"><p>The manuscript gives 1024 channels as its V-JEPA example; the inspected repository’s default V-JEPA configuration targets a 1408-channel variant and reads the actual width from its model metadata. This note keeps the paper’s results and the code’s mechanics separate. Neither value should be silently substituted for the other.</p><p>The manuscript summarizes the non-Wan temporal adaptation as four-frame averaging. The inspected V-JEPA path instead combines native two-frame tubelets, an additional two-slice average and a separate condition pass. Both aim for the same output length; they are not identical implementations. The generic pooling snippet is therefore labeled DINO/FLUX, not a universal encoder wrapper.</p><p>Exact adapter training data, run hyperparameters and the code-to-Figure-7 checkpoint mapping are not established by the material inspected here. This article does not fill those gaps with repository defaults or claim a causal explanation for the small Wan-versus-DINO difference.</p></div></details>
+  <p class="fine">These are team-reported simulation results. No new model training, physical-robot evaluation or speed measurement was conducted for this page. The comparison is not evidence of unseen-scene generalization, and not all variables affecting optimization are isolated.</p>
+  <div class="artifact-links"><a href="latent_interface.py">Educational PyTorch excerpts</a><a href="results.json">Reported values · JSON</a></div>
+</section>
+</article>
+</main>
+<footer class="footer">Xuemin Chi · OpenWAM visual representation research note</footer>
+</body>
+</html>
