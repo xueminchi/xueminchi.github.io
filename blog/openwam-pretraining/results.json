@@ -28,11 +28,33 @@
     {"source": "InternData-A1", "type": "Simulation", "fps": 30, "frames_m": 155.5, "hours": 1440, "reported_share_pct": 30.0}
   ],
   "libero_plus": {"camera": 33.8, "robot": 76.1, "language": 88.0, "light": 97.0, "background": 87.1, "noise": 39.8, "layout": 77.5, "average": 69.2},
+  "final_training_settings": {
+    "compute": "16 nodes; 128 H200 GPUs (8 per node)",
+    "duration": "About 7 days",
+    "optimizer": "AdamW",
+    "batch": "3,072 clips; 24 per GPU; no gradient accumulation",
+    "lr": "1e-4",
+    "schedule": "Cosine; 5% warmup; minimum ratio 0.01",
+    "weight_decay": "0.01",
+    "betas": "beta1 = 0.9; beta2 = 0.95",
+    "iterations": "155,862 steps; 1 epoch",
+    "clip": "Global norm 1.0",
+    "precision": "bfloat16",
+    "distributed": "DeepSpeed ZeRO Stage 2",
+    "video_window": "33 frames; video stride 4; window stride 1",
+    "resolution": "384 × 320",
+    "multi_view": "Enabled",
+    "augmentation": "ColorJitter(0.2, 0.2, 0.2, 0.0)",
+    "flow_shifts": "Video 5.0; action 5.0",
+    "loss_weights": "Video 1.0; action 1.0",
+    "control_space": "80-D action; 80-D proprioceptive state"
+  },
   "notes": [
     "No seed uncertainty is provided for the controlled comparisons; small gaps do not establish significance.",
     "The final five-source run is not a data-scaling ablation against the 600-hour study.",
     "Shares are reported per-epoch sample shares; the manuscript constructs budgets from frame targets. They are not hour shares.",
     "Figure 11 baselines are separate from Figure 10; do not pool or substitute their scores.",
-    "The final OpenWAM-alpha recipe uses Mutual; Figure 10 uses Action Sees Video per study-lead clarification."
+    "The final OpenWAM-alpha recipe uses Mutual; Figure 10 uses Action Sees Video per study-lead clarification.",
+    "Final training settings are from Appendix B.1 / Table 9 of the manuscript, not the 600-hour controlled runs."
   ]
 }
