@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <link rel="canonical" href="https://xueminchi.github.io/blog/openwam-pretraining/">
+  <meta name="description" content="An OpenWAM research note on embodied pretraining: controlled transfer tests, human-video and robot-data co-training, mixed supervision, and the limits of a large training mixture.">
+  <title>What Should World–Action Pretraining Transfer? | Xuemin Chi</title>
+  <link rel="stylesheet" href="article.css">
+</head>
+<body>
+<a class="skip" href="#article">Skip to article</a>
+<header class="site-nav"><div class="nav-inner"><a class="brand" href="https://xueminchi.github.io/">Xuemin Chi</a><nav class="nav-links" aria-label="Main navigation"><a href="https://xueminchi.github.io/">Home</a><a href="https://xueminchi.github.io/research/">Research</a><a href="https://xueminchi.github.io/blog/">Blog</a></nav></div></header>
+<div class="hero">
+  <p class="eyebrow">World–action models / Pretraining</p>
+  <h1>What should world–action<br>pretraining transfer?</h1>
+  <p class="subtitle">A better score on familiar scenes is not the whole story. The harder question is what survives when the scene changes.</p>
+  <p class="byline">Xuemin Chi · Research note · September 2026</p>
+  <div class="abstract"><p>If a policy already succeeds on its training distribution, what should additional pretraining buy? Can human videos help without robot action labels? And when a larger mixture still fails under visual disturbance, what does that tell us to collect next?</p></div>
+  <p class="ownership">My contribution was to the pretraining study’s experimental design and discussion, including guidance to the first author. This note focuses on the choices behind the recipe; the datasets, large-scale runs and reported results are the team’s work.</p>
+</div>
+<main class="layout">
+<aside class="toc" aria-label="On this page"><b>On this page</b><ol><li><a href="#test">01 · Test transfer, not just fit</a></li><li><a href="#evidence">02 · What 600 hours changed</a></li><li><a href="#supervision">03 · Learn from unequal labels</a></li><li><a href="#mixture">04 · Build the larger mixture</a></li><li><a href="#judgment">05 · What I would carry forward</a></li></ol></aside>
+<article id="article">
+<section id="test">
+  <p class="section-no">01 / The question</p>
+  <h2>Separate three kinds of learning.</h2>
+  <p>The <a href="https://xueminchi.github.io/blog/openwam-architecture/">architecture study</a> asks how video and action models communicate. The <a href="https://xueminchi.github.io/blog/openwam-visual-representation/">representation study</a> asks what the world model should predict. Pretraining asks whether those choices accumulate knowledge that remains useful beyond the downstream training scenes.</p>
+  <p>Three stages should not be conflated: <strong>inheriting a pretrained video model</strong>, <strong>pretraining on manipulation data</strong>, and <strong>fine-tuning on a downstream task set</strong>. In the transfer study, the inherited backbone setup is held fixed. The reference skips embodied pretraining; it does not mean that every component starts from random weights.</p>
+  <figure class="figure"><a href="figures/transfer-protocol.svg" aria-label="Open the pretraining and evaluation protocol diagram"><img src="figures/transfer-protocol.svg" width="1120" height="610" alt="The same inherited video backbone passes through alternative embodied-pretraining routes, then identical clean-only downstream fine-tuning. Clean evaluation tests familiar conditions; randomized evaluation tests scene changes."></a><figcaption><b>Figure 1.</b> The controlled comparison changes the embodied-pretraining route, with <a href="#study-attention">Action Sees Video</a> held fixed. All four routes receive the same downstream fine-tuning. “Out of distribution” refers to randomized scenes relative to that clean-only fine-tuning set, not zero-shot execution or a held-out task set.</figcaption></figure>
+  <p>OpenWAM uses RoboTwin2.0-Clean2Random for this test: fine-tune on clean demonstrations, then evaluate clean scenes as in-distribution (ID) and randomized scenes as out-of-distribution (OOD). The task is still learned downstream. A separate protocol, RoboTwin2.0-Full, trains on both clean and randomized demonstrations; its randomized evaluation is therefore <em>not</em> the same OOD test.</p>
+  <div class="finding"><p><strong>The design question:</strong> which pretraining data improves the policy after the scene changes, rather than only raising a familiar-scene score?</p></div>
+</section>
+<section id="evidence">
+  <p class="section-no">02 / Controlled evidence</p>
+  <h2>Use a fixed budget to test the mixture.</h2>
+  <p>The three pretrained variants each use <strong>600 hours</strong>. Robot-only uses 600 hours of RoboCOIN. The two mixed variants use 350 hours of EgoDex and 250 hours of RoboCOIN, either sequentially—human video followed by robot trajectories—or jointly in one stage. The paper holds the backbone, optimization budget and inference procedure fixed, followed by identical downstream fine-tuning.</p>
+  <h3 id="study-attention">What can action and video tokens read during training?</h3>
+  <p><strong>All four routes use Action Sees Video, not Mutual.</strong> Action tokens can attend to video features, including the noisy future-video tokens; video tokens cannot attend to action tokens. This is a fixed setting of the data-mixture comparison, not another variable changed between its four bars.</p>
+  <div class="table-wrap" tabindex="0" role="region" aria-label="Action Sees Video attention visibility"><table><caption>Action Sees Video: rows read columns; Yes means attention is allowed</caption><thead><tr><th scope="col">Tokens doing the reading</th><th scope="col">Current observation</th><th scope="col">Noisy future video</th><th scope="col">Noisy actions</th></tr></thead><tbody><tr><th scope="row">Current observation</th><td>Yes</td><td>Blocked</td><td>Blocked</td></tr><tr><th scope="row">Noisy future video</th><td>Yes</td><td>Yes</td><td>Blocked</td></tr><tr><th scope="row">Noisy actions</th><td>Yes</td><td>Yes</td><td>Yes</td></tr></tbody></table></div>
+  <p>The clean observation remains a read-only anchor. Future-video tokens can read one another, as can action tokens within the predicted chunk. “One-way” describes attention visibility; it does not by itself freeze the video backbone or stop action-loss gradients from reaching it. This attention mask is also distinct from the missing-label mask used in the next section.</p>
+  <p class="fine">Configuration clarification: the study lead confirmed Action Sees Video for the four-route comparison, relayed by the author on September 10, 2026. The manuscript describes the controlled protocol but does not explicitly name this fixed mask beside Figure 10.</p>
+  <figure class="figure"><a href="figures/transfer-results.svg" aria-label="Open the transfer-results chart"><img src="figures/transfer-results.svg" width="1120" height="570" alt="Four variants have similar clean-scene success near 87 to 88.5 percent. Randomized-scene success rises from 14.50 without embodied pretraining to 23.80 robot-only, 26.50 sequential, and 26.62 joint co-training. Both panels use a zero-to-100-percent scale."></a><figcaption><b>Figure 2.</b> Redrawn from manuscript Figure 10: four pretraining routes with <strong>Action Sees Video held fixed</strong>. Both panels use the same zero-based scale; exact values are shown rather than visually amplifying the small ID differences. Results are team-reported; uncertainty across training seeds is not reported.</figcaption></figure>
+  <details><summary>Exact scores and matched data budgets</summary><div class="table-wrap" tabindex="0" role="region" aria-label="Controlled pretraining results"><table class="wide-table"><caption>RoboTwin2.0-Clean2Random · success (%) · manuscript Figure 10</caption><thead><tr><th scope="col">Pretraining route</th><th scope="col">Ego / robot hours</th><th scope="col">Clean · ID</th><th scope="col">Randomized · OOD</th></tr></thead><tbody data-table="transfer"><tr data-route="none"><th scope="row">No embodied pretraining</th><td>0 / 0</td><td>87.00</td><td>14.50</td></tr>
+<tr data-route="robot"><th scope="row">Robot only</th><td>0 / 600</td><td>88.50</td><td>23.80</td></tr>
+<tr data-route="sequential"><th scope="row">Ego then robot</th><td>350 / 250</td><td>87.10</td><td>26.50</td></tr>
+<tr data-route="joint"><th scope="row">Ego + robot jointly</th><td>350 / 250</td><td>87.68</td><td>26.62</td></tr></tbody></table></div></details>
+  <p><strong>The largest change is outside the fine-tuning distribution.</strong> Joint co-training moves OOD success from 14.50% to 26.62%, a gain of <strong>12.12 percentage points</strong>; ID moves from 87.00% to 87.68%, only 0.68 points. Robot-only is best on ID, at 88.50%, but both mixed routes have higher OOD point estimates despite using fewer hours of robot trajectories.</p>
+  <p>This supports a complementary role for human video in this budgeted mixture. It does not isolate “visual diversity” as the causal mechanism: the sources also differ in viewpoints, tasks and other properties. Nor is there an ego-only control here that would establish how much robot data can be removed.</p>
+  <p><strong>Co-training is a practical default, not a decisive numerical winner.</strong> Joint versus sequential differs by just 0.12 points on OOD and 0.58 on ID. Both are viable in this study. Joint training avoids an extra stage transition, which is a useful engineering reason to choose it; the small score gap alone is weak evidence of superiority.</p>
+  <details><summary>Does pretraining also change the preferred attention mask?</summary><div class="detail-body"><p>Unlike the fixed-mask four-route study above, manuscript Figure 11 explicitly compares Action Sees Video with Mutual. Mutual additionally lets noisy future-video tokens read action tokens; the clean observation remains protected. The mutual-minus-one-way difference changes from −0.24 points without embodied pretraining to +0.16 on pretrained RoboTwin-Full, +0.70 on Clean2Random ID and +0.72 on OOD. The final OpenWAM-α recipe adopts Mutual; that does not retroactively make Figure 10 a Mutual experiment.</p><p>My reading is narrower than “bidirectional communication is always better”: <strong>recheck close architecture choices after pretraining</strong>. These are small differences, without reported seed uncertainty. Figure 11 is a separate comparison; its baselines must not be substituted into Figure 10. Its one-way Clean2Random scores (86.98% ID, 25.70% OOD) also differ from Figure 10’s joint route (87.68%, 26.62%); the manuscript does not establish an exact checkpoint correspondence.</p></div></details>
+</section>
+<section id="supervision">
+  <p class="section-no">03 / Implementation</p>
+  <h2>Human video is useful without inventing robot actions.</h2>
+  <p>Robot trajectories supervise both future visual latents and valid action coordinates. Human video supplies the visual prediction target but no robot action target. OpenWAM’s egocentric path masks action and proprioceptive channels rather than treating a human wrist pose as an executable robot command.</p>
+  <div class="table-wrap" tabindex="0" role="region" aria-label="Supervision by data type"><table><caption>Different labels, one training interface</caption><thead><tr><th scope="col">Data</th><th scope="col">World target</th><th scope="col">Action / state</th></tr></thead><tbody><tr><th scope="row">Robot trajectories</th><td>Future visual latents</td><td>Only measured, mapped and valid coordinates participate.</td></tr><tr><th scope="row">Human video</th><td>Future visual latents</td><td>No direct action loss; proprioception is unavailable and masked.</td></tr></tbody></table></div>
+  <p><strong>A missing coordinate is not a zero-valued command.</strong> A padded zero must carry a validity mask. Otherwise a video-only sample would teach the policy a fabricated action. The excerpt below preserves the inspected implementation’s reduction: average over valid action cells within each sample, then average over <em>all</em> batch samples.</p>
+  <details><summary>PyTorch · masked action supervision in a mixed batch</summary><pre class="code" tabindex="0"><code data-source-function="masked_action_loss">def masked_action_loss(pred, target, valid, timestep_weight):
+    """pred/target/valid: [B, H, D]; timestep_weight: [B]."""
+    if pred.shape != target.shape or valid.shape != pred.shape:
+        raise ValueError("Prediction, target and validity shapes must match.")
+    if pred.ndim != 3 or timestep_weight.shape != pred.shape[:1]:
+        raise ValueError("Expected [B,H,D] values and [B] weights.")
+    if valid.dtype != torch.bool:
+        raise TypeError("valid must be a boolean mask.")
+    squared_error = (pred.float() - target.float()).square()
+    mask = valid.to(device=pred.device).float()
+    numerator = (squared_error * mask).sum(dim=(1, 2))
+    denominator = mask.sum(dim=(1, 2)).clamp_min(1)
+    per_sample = numerator / denominator
+    weight = timestep_weight.to(device=pred.device).float()
+    return (per_sample * weight).mean()</code></pre><p class="code-note">Reduced from the inspected per-coordinate action-loss path. Here <code>valid=True</code> means a real target; the implementation’s <code>action_is_pad</code> uses the opposite convention. Inputs are finite, aligned tensors; this is not a data-cleaning function. The world loss is computed separately.</p></details>
+  <p>This reduction also makes the mixture part of the optimization. With one equally weighted robot example and one video-only example, the batch-averaged action term is half the robot example’s term. Renormalizing over robot examples only would be a <em>different objective</em>, not an interchangeable implementation detail.</p>
+  <p>The attention direction matters here. With Action Sees Video and separate stream parameters, the world loss cannot reach action-specific parameters through joint attention: the video stream never reads action features. Human video can still improve the world features that actions later read. Under Mutual, that extra read path exists, so a world loss may also update action-side parameters even without a direct action label. These are different supervision paths, not two names for the same mask.</p>
+  <h3>Align semantics before aligning tensor shapes.</h3>
+  <p>The final model uses an 80-D action/state contract: two 34-D arm blocks—position (3), rotation representation (6), gripper (1), dexterous hand (24)—plus 12 reserved coordinates. Unused slots are masked. A shared width does not by itself align coordinate frames, units, action timing or absolute-versus-relative commands; each source adapter must establish those meanings first.</p>
+  <details><summary>PyTorch · explicit slot placement, not automatic action conversion</summary><pre class="code" tabindex="0"><code data-source-function="scatter_control">def scatter_control(native, native_valid, slots, width=80):
+    """Map already-converted values into declared slots; False = missing."""
+    slots = tuple(slots)
+    if native.shape != native_valid.shape or native.shape[-1] != len(slots):
+        raise ValueError("Values, mask and slot list must agree.")
+    if native_valid.dtype != torch.bool:
+        raise TypeError("native_valid must be a boolean mask.")
+    if len(set(slots)) != len(slots) or any(s &lt; 0 or s &gt;= width for s in slots):
+        raise ValueError("Slots must be unique and inside the target width.")
+    output = native.new_zeros((*native.shape[:-1], width))
+    valid = torch.zeros_like(output, dtype=torch.bool)
+    output[..., list(slots)] = native
+    valid[..., list(slots)] = native_valid
+    return output, valid</code></pre><p class="code-note">An educational contract example, not the final model’s full dataset adapter. <code>slots</code> must come from a declared source mapping. Values must already be converted to its units, reference frames and rotation convention; this function only places values and validity flags.</p></details>
+  <p class="fine">Source-version boundary: the inspected EgoDex/robot readers still use a legacy 20-D end-effector schema, while the manuscript’s final model is 80-D. The masking mechanics are inspectable; the exact final five-source adapter configuration is not established by that snapshot.</p>
+</section>
+<section id="mixture">
+  <p class="section-no">04 / Scaling the recipe</p>
+  <h2>Choose coverage and supervision—not just more hours.</h2>
+  <p>The final OpenWAM-α run expands to <strong>518.5 million retained frames, or 6,369 hours</strong>, across five sources. It uses the team’s own egocentric collection, not the EgoDex subset from the 600-hour study. Real robots provide executable supervision; simulated robots extend manipulation coverage; human video supplies additional interaction and visual diversity.</p>
+  <figure class="figure"><a href="figures/mixture-budget.svg" aria-label="Open the frame-share and hour-share comparison"><img src="figures/mixture-budget.svg" width="1120" height="450" alt="The final mixture assigns about 30 percent of samples to human video, 40 percent to real robots and 30 percent to simulation. Retained hours divide roughly 22.6, 54.7 and 22.6 percent because source frame rates differ."></a><figcaption><b>Figure 3.</b> Table 4’s reported sample shares are driven by frame-based budgets. Hour shares are separately calculated from its retained-hour counts. A 30/40/30 sampling recipe is not a 30/40/30 allocation of recording hours.</figcaption></figure>
+  <details><summary>Five-source composition and reported training settings</summary><div class="table-wrap" tabindex="0" role="region" aria-label="Final pretraining mixture"><table class="wide-table"><caption>Final OpenWAM-α run · retained data · manuscript Table 4</caption><thead><tr><th scope="col">Source</th><th scope="col">FPS</th><th scope="col">Frames · M</th><th scope="col">Hours</th><th scope="col">Reported share</th></tr></thead><tbody data-table="mixture"><tr><th scope="row">Team-collected egocentric video</th><td>30</td><td>155.7</td><td>1,442</td><td>30.1%</td></tr>
+<tr><th scope="row">AgiBotWorld-Beta</th><td>15</td><td>96.9</td><td>1,794</td><td>18.6%</td></tr>
+<tr><th scope="row">RoboCOIN</th><td>30</td><td>74.1</td><td>686</td><td>14.3%</td></tr>
+<tr><th scope="row">DROID</th><td>10</td><td>36.3</td><td>1,007</td><td>7.0%</td></tr>
+<tr><th scope="row">InternData-A1</th><td>30</td><td>155.5</td><td>1,440</td><td>30.0%</td></tr><tr><th scope="row">Total</th><td>Mixed</td><td>518.5</td><td>6,369</td><td>100.0%</td></tr></tbody></table></div><div class="detail-body"><p>The manuscript reports 128 H200 GPUs for about seven days, global batch 3,072, 155,862 iterations and one epoch. Other reported settings include AdamW at 10<sup>−4</sup>, cosine decay with 5% warmup, bfloat16, DeepSpeed ZeRO-2, and 33-frame inputs with video stride 4 and window stride 1 (Table 9). These are the team’s run settings, not measurements reproduced for this page.</p><p>The final training setup updates the video transformer, ActionDiT and proprioception encoder, while freezing Wan’s VAE and the text encoder. Video and action noise levels are sampled independently during training; evaluation uses synchronized denoising. A frozen visual encoder does not mean a frozen video transformer.</p><p>Retained frames, sampled windows and optimizer presentations are different counts. Window construction, episode boundaries and padding determine how the frame pool becomes examples. The rounded frame totals alone do not reconstruct the precise epoch manifest.</p></div></details>
+  <p>The useful distinction is between <strong>choosing the retained pool</strong> and <strong>sampling from that pool</strong>. The paper first cleans data and selects whole episodes under per-source budgets. It then samples proportionally to the retained sample counts. This makes the retained mixture the intended training exposure; equal source weights would instead oversample some sources and undersample others.</p>
+  <p>Quality control matters to the learning target, not only storage hygiene. The reported pipeline checks visual defects across sources and checks robot signal integrity and video–signal alignment separately. One choice is especially relevant to world prediction: trim idle footage at episode boundaries, but do not splice out every pause in the middle. Joining non-adjacent frames would create artificial dynamics for the model to learn.</p>
+  <div class="scope-note"><p>The larger run demonstrates that the selected recipe can be assembled at scale. It is <strong>not a controlled scaling-law result</strong>: the source mixture and downstream configurations differ from the 600-hour study. A score difference between the two cannot be attributed to hours alone.</p></div>
+</section>
+<section id="judgment">
+  <p class="section-no">05 / Research judgment</p>
+  <h2>A larger mixture can still miss the important variation.</h2>
+  <p>The final model’s LIBERO-Plus breakdown is a useful counterexample to an overly broad “pretraining solves generalization” claim. Camera perturbations reach only 33.8% and noise perturbations 39.8%, versus 97.0% under lighting perturbations; the average is 69.2% in Table 5. LIBERO-Plus evaluates the LIBERO-fine-tuned checkpoint without further fine-tuning, not a zero-shot base policy.</p>
+  <p>The paper discusses limited single-arm visual coverage and the prediction representation as possible explanations. Those are plausible hypotheses, not separately isolated causes in this comparison. I would use the failure pattern to prioritize data with relevant viewpoint and sensor variation, while testing representation robustness—not infer that a format change or more undifferentiated hours will fix it.</p>
+  <div class="decision-grid"><div><h3>Measure the transfer you need.</h3><p>Separate familiar scenes, scene changes and genuinely new tasks. Do not let a strong ID score stand in for all three.</p></div><div><h3>Treat missing labels explicitly.</h3><p>Inspect validity masks, source exposure and loss normalization together. A mixture is also an allocation of supervision.</p></div><div><h3>Use failures to choose data.</h3><p>Collect the missing variation and keep a matched evaluation. More total hours is not a substitute for relevant coverage.</p></div></div>
+  <p>These are the decisions I would carry into a new pretraining effort. The evidence supports mixed-source pretraining as a way to improve scene transfer in this setting; it does not establish an optimal ratio, a universal advantage of co-training, or a solved path to unseen-task autonomy.</p>
+</section>
+</article>
+</main>
+<footer class="footer">Xuemin Chi · OpenWAM pretraining research note</footer>
+</body>
+</html>

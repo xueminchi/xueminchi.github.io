@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="570" viewBox="0 0 1120 570" role="img" aria-labelledby="title desc"><title id="title">Pretraining changes transfer more than familiar-scene fit.</title><desc id="desc">Four paired ID and OOD success rates from manuscript Figure 10. Both panels have the same 0 to 100 percent horizontal scale.</desc><defs><marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8" fill="#76828e"/></marker></defs><style>text{font-family:Segoe UI,Arial,sans-serif;fill:#20252b;font-size:20px}.sub{font-size:18px;fill:#596570}.small{font-size:17px;fill:#596570}.heading{font-size:28px;font-weight:600}.box{fill:#fff;stroke:#ccd3da;stroke-width:1.5}.arrow{fill:none;stroke:#76828e;stroke-width:1.8;marker-end:url(#arrow)}</style><rect width="1120" height="570" fill="#f5f5f5"/>
+<text x="28" y="42" class="heading" text-anchor="start">Where does the gain appear?</text>
+<text x="28" y="74" class="sub" text-anchor="start">600-hour controlled pretraining study · success (%) · team-reported results</text>
+<text x="298" y="122" class="" text-anchor="start">Clean · ID</text>
+<line x1="298" y1="144" x2="298" y2="443" stroke="#d5dce2"/>
+<text x="298" y="471" class="small" text-anchor="middle">0</text>
+<line x1="376" y1="144" x2="376" y2="443" stroke="#d5dce2"/>
+<text x="376" y="471" class="small" text-anchor="middle">25</text>
+<line x1="454" y1="144" x2="454" y2="443" stroke="#d5dce2"/>
+<text x="454" y="471" class="small" text-anchor="middle">50</text>
+<line x1="532" y1="144" x2="532" y2="443" stroke="#d5dce2"/>
+<text x="532" y="471" class="small" text-anchor="middle">75</text>
+<line x1="610" y1="144" x2="610" y2="443" stroke="#d5dce2"/>
+<text x="610" y="471" class="small" text-anchor="middle">100</text>
+<text x="742" y="122" class="" text-anchor="start">Randomized · OOD</text>
+<line x1="742" y1="144" x2="742" y2="443" stroke="#d5dce2"/>
+<text x="742" y="471" class="small" text-anchor="middle">0</text>
+<line x1="820" y1="144" x2="820" y2="443" stroke="#d5dce2"/>
+<text x="820" y="471" class="small" text-anchor="middle">25</text>
+<line x1="898" y1="144" x2="898" y2="443" stroke="#d5dce2"/>
+<text x="898" y="471" class="small" text-anchor="middle">50</text>
+<line x1="976" y1="144" x2="976" y2="443" stroke="#d5dce2"/>
+<text x="976" y="471" class="small" text-anchor="middle">75</text>
+<line x1="1054" y1="144" x2="1054" y2="443" stroke="#d5dce2"/>
+<text x="1054" y="471" class="small" text-anchor="middle">100</text>
+<text x="270" y="182" class="" text-anchor="end">No embodied pretraining</text>
+<text x="270" y="209" class="small" text-anchor="end">No embodied data</text>
+<g data-route="none" data-split="id_success" data-value="87.00"><rect x="298" y="160" width="271.4400" height="36" fill="#8796a3"/><text x="578.44" y="186" class="" text-anchor="start">87.00</text></g>
+<g data-route="none" data-split="ood_success" data-value="14.50"><rect x="742" y="160" width="45.2400" height="36" fill="#8796a3"/><text x="796.24" y="186" class="" text-anchor="start">14.50</text></g>
+<text x="270" y="258" class="" text-anchor="end">Robot only</text>
+<text x="270" y="285" class="small" text-anchor="end">600 h robot</text>
+<g data-route="robot" data-split="id_success" data-value="88.50"><rect x="298" y="236" width="276.1200" height="36" fill="#356995"/><text x="583.12" y="262" class="" text-anchor="start">88.50</text></g>
+<g data-route="robot" data-split="ood_success" data-value="23.80"><rect x="742" y="236" width="74.2560" height="36" fill="#356995"/><text x="825.26" y="262" class="" text-anchor="start">23.80</text></g>
+<text x="270" y="334" class="" text-anchor="end">Ego then robot</text>
+<text x="270" y="361" class="small" text-anchor="end">350 h ego + 250 h robot</text>
+<g data-route="sequential" data-split="id_success" data-value="87.10"><rect x="298" y="312" width="271.7520" height="36" fill="#c89657"/><text x="578.75" y="338" class="" text-anchor="start">87.10</text></g>
+<g data-route="sequential" data-split="ood_success" data-value="26.50"><rect x="742" y="312" width="82.6800" height="36" fill="#c89657"/><text x="833.68" y="338" class="" text-anchor="start">26.50</text></g>
+<text x="270" y="410" class="" text-anchor="end">Ego + robot jointly</text>
+<text x="270" y="437" class="small" text-anchor="end">350 h ego + 250 h robot</text>
+<g data-route="joint" data-split="id_success" data-value="87.68"><rect x="298" y="388" width="273.5616" height="36" fill="#24766b"/><text x="580.56" y="414" class="" text-anchor="start">87.68</text></g>
+<g data-route="joint" data-split="ood_success" data-value="26.62"><rect x="742" y="388" width="83.0544" height="36" fill="#24766b"/><text x="834.05" y="414" class="" text-anchor="start">26.62</text></g>
+<text x="28" y="513" class="sub" text-anchor="start">Joint vs no embodied pretraining: +0.68 points ID; +12.12 points OOD.</text>
+<text x="28" y="549" class="small" text-anchor="start">Joint vs sequential: +0.12 points OOD. No seed uncertainty reported; do not infer a clear winner.</text>
+</svg>

@@ -1,0 +1,38 @@
+{
+  "source": "OpenWAM manuscript, September 2026; Figures 10 and 11, Table 4 and Table 5",
+  "provenance": "Team-reported results, transcribed from the supplied manuscript; not new experiments.",
+  "transfer_protocol": "RoboTwin2.0-Clean2Random: identical clean-only downstream fine-tuning, then clean (ID) and randomized (OOD) evaluation.",
+  "transfer_attention_mask": {
+    "mode": "action_sees_video",
+    "scope": "All four pretraining routes in manuscript Figure 10; fixed, not the ablated variable.",
+    "provenance": "Study-lead clarification relayed by the author on 2026-09-10; not explicitly named beside Figure 10 and not verified against serialized run configurations.",
+    "visibility": "Action reads video; video does not read action. Clean observation rows read neither noisy future video nor actions."
+  },
+  "transfer_rows": [
+    {"id": "none", "label": "No embodied pretraining", "ego_hours": 0, "robot_hours": 0, "id_success": 87.00, "ood_success": 14.50},
+    {"id": "robot", "label": "Robot only", "ego_hours": 0, "robot_hours": 600, "id_success": 88.50, "ood_success": 23.80},
+    {"id": "sequential", "label": "Ego then robot", "ego_hours": 350, "robot_hours": 250, "id_success": 87.10, "ood_success": 26.50},
+    {"id": "joint", "label": "Ego + robot jointly", "ego_hours": 350, "robot_hours": 250, "id_success": 87.68, "ood_success": 26.62}
+  ],
+  "visibility_rows": [
+    {"setting": "No embodied pretraining / Full", "one_way": 92.39, "mutual_minus_one_way_pp": -0.24},
+    {"setting": "Pretrained / Full", "one_way": 92.34, "mutual_minus_one_way_pp": 0.16},
+    {"setting": "Pretrained / Clean2Random / ID", "one_way": 86.98, "mutual_minus_one_way_pp": 0.70},
+    {"setting": "Pretrained / Clean2Random / OOD", "one_way": 25.70, "mutual_minus_one_way_pp": 0.72}
+  ],
+  "final_mixture": [
+    {"source": "Team-collected egocentric video", "type": "Human", "fps": 30, "frames_m": 155.7, "hours": 1442, "reported_share_pct": 30.1},
+    {"source": "AgiBotWorld-Beta", "type": "Real robot", "fps": 15, "frames_m": 96.9, "hours": 1794, "reported_share_pct": 18.6},
+    {"source": "RoboCOIN", "type": "Real robot", "fps": 30, "frames_m": 74.1, "hours": 686, "reported_share_pct": 14.3},
+    {"source": "DROID", "type": "Real robot", "fps": 10, "frames_m": 36.3, "hours": 1007, "reported_share_pct": 7.0},
+    {"source": "InternData-A1", "type": "Simulation", "fps": 30, "frames_m": 155.5, "hours": 1440, "reported_share_pct": 30.0}
+  ],
+  "libero_plus": {"camera": 33.8, "robot": 76.1, "language": 88.0, "light": 97.0, "background": 87.1, "noise": 39.8, "layout": 77.5, "average": 69.2},
+  "notes": [
+    "No seed uncertainty is provided for the controlled comparisons; small gaps do not establish significance.",
+    "The final five-source run is not a data-scaling ablation against the 600-hour study.",
+    "Shares are reported per-epoch sample shares; the manuscript constructs budgets from frame targets. They are not hour shares.",
+    "Figure 11 baselines are separate from Figure 10; do not pool or substitute their scores.",
+    "The final OpenWAM-alpha recipe uses Mutual; Figure 10 uses Action Sees Video per study-lead clarification."
+  ]
+}

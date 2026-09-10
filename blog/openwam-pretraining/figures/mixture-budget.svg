@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="450" viewBox="0 0 1120 450" role="img" aria-labelledby="title desc"><title id="title">A sample mixture is not an hour mixture.</title><desc id="desc">Reported sample shares are about 30 percent human video, 40 percent real robot and 30 percent simulation. Hour shares differ because native frame rates differ.</desc><defs><marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8" fill="#76828e"/></marker></defs><style>text{font-family:Segoe UI,Arial,sans-serif;fill:#20252b;font-size:20px}.sub{font-size:18px;fill:#596570}.small{font-size:17px;fill:#596570}.heading{font-size:28px;font-weight:600}.box{fill:#fff;stroke:#ccd3da;stroke-width:1.5}.arrow{fill:none;stroke:#76828e;stroke-width:1.8;marker-end:url(#arrow)}</style><rect width="1120" height="450" fill="#f5f5f5"/>
+<text x="28" y="42" class="heading" text-anchor="start">The sampling unit changes the mixture.</text>
+<text x="28" y="74" class="sub" text-anchor="start">Final OpenWAM-α run · 518.5M retained frames / 6,369 hours · Table 4</text>
+<rect x="28" y="104" width="17" height="17" fill="#356995"/>
+<text x="55" y="119" class="" text-anchor="start">Human video</text>
+<rect x="385" y="104" width="17" height="17" fill="#24766b"/>
+<text x="412" y="119" class="" text-anchor="start">Real robot</text>
+<rect x="742" y="104" width="17" height="17" fill="#c89657"/>
+<text x="769" y="119" class="" text-anchor="start">Simulation</text>
+<text x="28" y="167" class="sub" text-anchor="start">Reported sample share · from frame-based budgets</text>
+<g data-category="Human" data-unit="share" data-value="30.1"><rect x="28" y="184" width="320.264" height="48" fill="#356995"/><text x="188.132" y="215" text-anchor="middle" style="fill:#fff;font-size:21px">30.1%</text></g>
+<g data-category="Real robot" data-unit="share" data-value="39.900000000000006"><rect x="348.264" y="184" width="424.53600000000006" height="48" fill="#24766b"/><text x="560.532" y="215" text-anchor="middle" style="fill:#fff;font-size:21px">39.9%</text></g>
+<g data-category="Simulation" data-unit="share" data-value="30"><rect x="772.8000000000001" y="184" width="319.20000000000005" height="48" fill="#c89657"/><text x="932.4000000000001" y="215" text-anchor="middle" style="fill:#fff;font-size:21px">30.0%</text></g>
+<text x="28" y="290" class="sub" text-anchor="start">Retained hour share · calculated separately</text>
+<g data-category="Human" data-unit="hours" data-value="22.640916941435076"><rect x="28" y="307" width="240.89935625686923" height="48" fill="#356995"/><text x="148.4496781284346" y="338" text-anchor="middle" style="fill:#fff;font-size:21px">22.6%</text></g>
+<g data-category="Real robot" data-unit="hours" data-value="54.74956822107081"><rect x="268.8993562568692" y="307" width="582.5354058721935" height="48" fill="#24766b"/><text x="560.167059192966" y="338" text-anchor="middle" style="fill:#fff;font-size:21px">54.7%</text></g>
+<g data-category="Simulation" data-unit="hours" data-value="22.609514837494114"><rect x="851.4347621290626" y="307" width="240.56523787093738" height="48" fill="#c89657"/><text x="971.7173810645313" y="338" text-anchor="middle" style="fill:#fff;font-size:21px">22.6%</text></g>
+<text x="28" y="398" class="sub" text-anchor="start">Human: 1,442 h   ·   Real robot: 3,487 h   ·   Simulation: 1,440 h</text>
+<text x="28" y="433" class="small" text-anchor="start">This is the final five-source mixture, not the 600-hour EgoDex / RoboCOIN comparison.</text>
+</svg>

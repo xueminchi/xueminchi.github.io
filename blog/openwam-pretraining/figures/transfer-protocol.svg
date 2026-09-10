@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="610" viewBox="0 0 1120 610" role="img" aria-labelledby="title desc"><title id="title">Test the pretraining route, then test the scene change.</title><desc id="desc">Four embodied-pretraining routes share inherited video priors and the downstream clean-only fine-tuning protocol. All three pretrained routes use 600 hours. Clean and randomized evaluations test different scene distributions.</desc><defs><marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8" fill="#76828e"/></marker></defs><style>text{font-family:Segoe UI,Arial,sans-serif;fill:#20252b;font-size:20px}.sub{font-size:18px;fill:#596570}.small{font-size:17px;fill:#596570}.heading{font-size:28px;font-weight:600}.box{fill:#fff;stroke:#ccd3da;stroke-width:1.5}.arrow{fill:none;stroke:#76828e;stroke-width:1.8;marker-end:url(#arrow)}</style><rect width="1120" height="610" fill="#f5f5f5"/>
+<text x="28" y="42" class="heading" text-anchor="start">Hold the downstream task learning fixed.</text>
+<text x="28" y="73" class="sub" text-anchor="start">RoboTwin2.0-Clean2Random · the evaluation comes after fine-tuning</text>
+<rect x="335" y="96" width="450" height="58" rx="3" class="box"/>
+<text x="560" y="132" class="" text-anchor="middle">Same inherited video-backbone setup</text>
+<path d="M560 154 V174 H146 M560 174 H974" fill="none" stroke="#76828e" stroke-width="1.8"/>
+<path d="M146 174 V202" class="arrow"/>
+<rect x="28" y="204" width="236" height="114" rx="3" class="box"/>
+<rect x="28" y="204" width="236" height="5" fill="#8796a3"/>
+<text x="146" y="237" class="" text-anchor="middle">No embodied</text>
+<text x="146" y="266" class="small" text-anchor="middle">pretraining</text>
+<text x="146" y="295" class="small" text-anchor="middle">Reference route</text>
+<path d="M146 318 V348" stroke="#76828e" stroke-width="1.8"/>
+<path d="M422 174 V202" class="arrow"/>
+<rect x="304" y="204" width="236" height="114" rx="3" class="box"/>
+<rect x="304" y="204" width="236" height="5" fill="#356995"/>
+<text x="422" y="237" class="" text-anchor="middle">Robot only</text>
+<text x="422" y="266" class="small" text-anchor="middle">600 h robot</text>
+<text x="422" y="295" class="small" text-anchor="middle">One stage</text>
+<path d="M422 318 V348" stroke="#76828e" stroke-width="1.8"/>
+<path d="M698 174 V202" class="arrow"/>
+<rect x="580" y="204" width="236" height="114" rx="3" class="box"/>
+<rect x="580" y="204" width="236" height="5" fill="#c89657"/>
+<text x="698" y="237" class="" text-anchor="middle">Ego then robot</text>
+<text x="698" y="266" class="small" text-anchor="middle">350 h ego + 250 h robot</text>
+<text x="698" y="295" class="small" text-anchor="middle">Two stages</text>
+<path d="M698 318 V348" stroke="#76828e" stroke-width="1.8"/>
+<path d="M974 174 V202" class="arrow"/>
+<rect x="856" y="204" width="236" height="114" rx="3" class="box"/>
+<rect x="856" y="204" width="236" height="5" fill="#24766b"/>
+<text x="974" y="237" class="" text-anchor="middle">Ego + robot jointly</text>
+<text x="974" y="266" class="small" text-anchor="middle">350 h ego + 250 h robot</text>
+<text x="974" y="295" class="small" text-anchor="middle">One stage</text>
+<path d="M974 318 V348" stroke="#76828e" stroke-width="1.8"/>
+<path d="M146 348 H974" stroke="#76828e" stroke-width="1.8"/>
+<path d="M560 348 V378" class="arrow"/>
+<rect x="318" y="380" width="484" height="65" rx="3" class="box"/>
+<text x="560" y="407" class="" text-anchor="middle">Identical downstream fine-tuning</text>
+<text x="560" y="433" class="small" text-anchor="middle">Clean demonstrations only</text>
+<path d="M560 445 V474 H320 M560 474 H800" fill="none" stroke="#76828e" stroke-width="1.8"/>
+<path d="M320 474 V502" class="arrow"/>
+<path d="M800 474 V502" class="arrow"/>
+<rect x="154" y="504" width="332" height="61" rx="3" class="box"/>
+<rect x="634" y="504" width="332" height="61" rx="3" class="box"/>
+<text x="320" y="531" class="" text-anchor="middle">Clean evaluation · ID</text>
+<text x="320" y="555" class="small" text-anchor="middle">Familiar scene distribution</text>
+<text x="800" y="531" class="" text-anchor="middle">Randomized evaluation · OOD</text>
+<text x="800" y="555" class="small" text-anchor="middle">Changed scene distribution</text>
+<text x="28" y="597" class="small" text-anchor="start">Not zero-shot execution. Not a new-task holdout. The difference is the scene distribution.</text>
+</svg>
