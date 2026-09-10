@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="710" viewBox="0 0 1120 710" role="img" aria-labelledby="title desc"><title id="title">Different lifetimes. Different optimization boundaries.</title><desc id="desc">Dual-system self-attention serving: prompt embeddings persist, observations are encoded per chunk, and a cache miss evaluates a prepared per-layer stack. The layer stack is compiled. Cache hits reuse both velocities; both paths execute the schedule update.</desc><defs><marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8" fill="#77838d"/></marker></defs><style>text{font-family:Segoe UI,Arial,sans-serif;fill:#20252b;font-size:21px}.heading{font-size:29px;font-weight:600}.sub{font-size:19px;fill:#56636e}.small{font-size:18px;fill:#56636e}.blue{fill:#245c8a}.green{fill:#216c61}.arrow{fill:none;stroke:#77838d;stroke-width:1.8;marker-end:url(#arrow)}</style><rect width="1120" height="710" fill="#f5f5f5"/>
+<text x="28" y="42" class="heading" text-anchor="start">Different lifetimes. Different boundaries.</text>
+<text x="28" y="74" class="sub" text-anchor="start">Dual self-attention example · one action-chunk generation</text>
+<rect x="28" y="104" width="340" height="70" rx="3" fill="#fff" stroke="#cbd3db" stroke-width="1.5"/>
+<text x="198" y="133" class="" text-anchor="middle">Prompt embeddings</text>
+<text x="198" y="160" class="small" text-anchor="middle">Reuse across matching requests</text>
+<rect x="416" y="104" width="360" height="70" rx="3" fill="#fff" stroke="#cbd3db" stroke-width="1.5"/>
+<text x="596" y="133" class="" text-anchor="middle">Current observation encoding</text>
+<text x="596" y="160" class="small" text-anchor="middle">Fresh for this chunk</text>
+<text x="836" y="132" class="sub" text-anchor="start">Serving layer</text>
+<text x="836" y="159" class="small" text-anchor="start">outside the compiled stack</text>
+<path d="M198 174 V205" class="arrow"/>
+<path d="M596 174 V205" class="arrow"/>
+<rect x="28" y="207" width="1064" height="397" rx="3" fill="#f0f2f4" stroke="#cbd3db" stroke-width="1.5"/>
+<text x="48" y="239" class="sub" text-anchor="start">Repeat the denoising schedule steps</text>
+<text x="60" y="280" class="small" text-anchor="start">Cache miss: evaluate one joint forward</text>
+<rect x="60" y="303" width="218" height="105" rx="3" fill="#fff" stroke="#cbd3db" stroke-width="1.5"/>
+<text x="169" y="342" class="" text-anchor="middle">Prepare token states</text>
+<text x="169" y="374" class="small" text-anchor="middle">video + action</text>
+<path d="M279 356 H315" class="arrow"/>
+<rect x="327" y="303" width="450" height="105" rx="3" fill="#e7eff7" stroke="#81a6c6" stroke-width="1.5"/>
+<text x="552" y="333" class="blue" text-anchor="middle">Compiled Transformer layer stack</text>
+<text x="552" y="363" class="sub" text-anchor="middle">video Q/K/V + action Q/K/V</text>
+<text x="552" y="392" class="small" text-anchor="middle">joint attention → per-stream updates</text>
+<path d="M778 356 H816" class="arrow"/>
+<rect x="827" y="303" width="234" height="105" rx="3" fill="#fff" stroke="#cbd3db" stroke-width="1.5"/>
+<text x="944" y="342" class="" text-anchor="middle">Finalize predictions</text>
+<text x="944" y="374" class="small" text-anchor="middle">video + action velocities</text>
+<rect x="60" y="470" width="218" height="83" rx="3" fill="#e5f0ed" stroke="#7eafa4" stroke-width="1.5"/>
+<text x="169" y="501" class="green" text-anchor="middle">Cache hit</text>
+<text x="169" y="530" class="small" text-anchor="middle">Reuse both velocities</text>
+<path d="M279 512 H464" class="arrow"/>
+<path d="M944 409 V512 H879" class="arrow"/>
+<rect x="477" y="470" width="390" height="83" rx="3" fill="#fff" stroke="#cbd3db" stroke-width="1.5"/>
+<text x="672" y="501" class="" text-anchor="middle">Update video latents + actions</text>
+<text x="672" y="530" class="small" text-anchor="middle">Keep the clean observation prefix fixed</text>
+<text x="48" y="585" class="small" text-anchor="start">Caching skips the forward above; it does not skip the state update.</text>
+<path d="M672 554 V630" class="arrow"/>
+<text x="690" y="625" class="small" text-anchor="start">After the final step</text>
+<rect x="477" y="632" width="390" height="56" rx="3" fill="#fff" stroke="#cbd3db" stroke-width="1.5"/>
+<text x="672" y="667" class="" text-anchor="middle">Return the denoised action chunk</text>
+</svg>

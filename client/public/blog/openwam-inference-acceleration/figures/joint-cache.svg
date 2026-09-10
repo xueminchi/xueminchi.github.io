@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="620" viewBox="0 0 1120 620" role="img" aria-labelledby="title desc"><title id="title">A hit should remove a real forward.</title><desc id="desc">On the left, a video-only hit still triggers a full joint forward because actions are missing. On the right, stable video and action predictions are reused together. Both paths still advance the schedule.</desc><defs><marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8" fill="#77838d"/></marker></defs><style>text{font-family:Segoe UI,Arial,sans-serif;fill:#20252b;font-size:21px}.heading{font-size:29px;font-weight:600}.sub{font-size:19px;fill:#56636e}.small{font-size:18px;fill:#56636e}.blue{fill:#245c8a}.green{fill:#216c61}.arrow{fill:none;stroke:#77838d;stroke-width:1.8;marker-end:url(#arrow)}</style><rect width="1120" height="620" fill="#f5f5f5"/>
+<text x="28" y="42" class="heading" text-anchor="start">A hit should remove a real forward.</text>
+<text x="28" y="75" class="sub" text-anchor="start">Historical video-only path vs joint velocity reuse</text>
+<text x="268" y="129" class="" text-anchor="middle">Video-only cache</text>
+<text x="850" y="129" class="" text-anchor="middle">Joint video–action cache</text>
+<rect x="53" y="160" width="430" height="85" rx="3" fill="#fff" stroke="#cbd3db" stroke-width="1.5"/>
+<text x="268" y="194" class="" text-anchor="middle">Cached video prediction available</text>
+<text x="268" y="225" class="small" text-anchor="middle">Action prediction still missing</text>
+<path d="M268 246 V293" class="arrow"/>
+<rect x="53" y="302" width="430" height="100" rx="3" fill="#f2eae1" stroke="#bda589" stroke-width="1.5"/>
+<text x="268" y="338" class="" text-anchor="middle">Run the full forward again</text>
+<text x="268" y="370" class="small" text-anchor="middle">Video is recomputed to obtain actions</text>
+<path d="M268 403 V450" class="arrow"/>
+<rect x="53" y="457" width="430" height="70" rx="3" fill="#fff" stroke="#cbd3db" stroke-width="1.5"/>
+<text x="268" y="485" class="" text-anchor="middle">Update video + action states</text>
+<text x="268" y="511" class="small" text-anchor="middle">No joint evaluation was removed</text>
+<rect x="635" y="160" width="430" height="85" rx="3" fill="#fff" stroke="#cbd3db" stroke-width="1.5"/>
+<text x="850" y="194" class="" text-anchor="middle">Video AND action predictions stable</text>
+<text x="850" y="225" class="small" text-anchor="middle">History present; skip budget available</text>
+<path d="M850 246 V293" class="arrow"/>
+<rect x="635" y="302" width="430" height="100" rx="3" fill="#e5f0ed" stroke="#7eafa4" stroke-width="1.5"/>
+<text x="850" y="338" class="green" text-anchor="middle">Reuse both velocities</text>
+<text x="850" y="370" class="small" text-anchor="middle">No joint forward on this step</text>
+<path d="M850 403 V450" class="arrow"/>
+<rect x="635" y="457" width="430" height="70" rx="3" fill="#fff" stroke="#cbd3db" stroke-width="1.5"/>
+<text x="850" y="485" class="" text-anchor="middle">Update video + action states</text>
+<text x="850" y="511" class="small" text-anchor="middle">Use the current schedule increments</text>
+<text x="28" y="568" class="sub" text-anchor="start">Joint-cache miss or exhausted budget → recompute both predictions.</text>
+<text x="28" y="602" class="small" text-anchor="start">A stability test is a reuse heuristic, not a guarantee of identical actions.</text>
+</svg>

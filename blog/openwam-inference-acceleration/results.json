@@ -1,0 +1,23 @@
+{
+  "source": "OpenWAM manuscript, September 2026, Figure 4 / Section 3.3",
+  "hardware": "RTX 5090",
+  "video_backbone": "Wan2.2-TI2V-5B",
+  "common_baseline": ["prompt embedding cache enabled", "predicted-video decode skipped"],
+  "reported_configuration": "Cache + compile",
+  "rows": [
+    {"id": "single_vanilla", "label": "Single-System Vanilla", "latency_ms": 149, "speedup": 2.49},
+    {"id": "single_moe", "label": "Single-System MoE", "latency_ms": 156, "speedup": 2.50},
+    {"id": "dual_self", "label": "Dual-System Joint Self Attention", "latency_ms": 175, "speedup": 2.45},
+    {"id": "dual_cross", "label": "Dual-System Joint Cross Attention", "latency_ms": 180, "speedup": 2.63},
+    {"id": "dual_idm", "label": "Dual-System IDM", "latency_ms": 251, "speedup": 2.01},
+    {"id": "tri_self", "label": "Tri-System Joint Self Attention", "latency_ms": 216, "speedup": 2.33}
+  ],
+  "final_model_text": {"source": "Section 5.1.3, pages 18–19", "approximate_ms_per_chunk": 170, "scheduled_denoising_steps": 10, "schedule": "synchronized video–action", "scope": "Final OpenWAM-alpha, not verified per-row Figure 4 settings"},
+  "notes": [
+    "Only explicitly labeled combined latencies and speedups are reproduced; intermediate bars have no exact printed values.",
+    "No raw baseline latency is inferred by multiplying rounded labels.",
+    "A chunk-generation latency is not the time for one buffered action or a complete physical control cycle.",
+    "This latency comparison alone does not establish unchanged task success under every cache setting.",
+    "Example cache defaults are from the inspected implementation, not verified Figure 4 run settings."
+  ]
+}

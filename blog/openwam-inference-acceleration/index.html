@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <link rel="canonical" href="https://xueminchi.github.io/blog/openwam-inference-acceleration/">
+  <meta name="description" content="An OpenWAM research note on modular inference, architecture-specific compilation, joint velocity caching and action-chunk latency.">
+  <title>Making a Modular World–Action Model Fast | Xuemin Chi</title>
+  <link rel="stylesheet" href="article.css">
+</head>
+<body>
+<a class="skip" href="#article">Skip to article</a>
+<header class="site-nav"><div class="nav-inner"><a class="brand" href="https://xueminchi.github.io/">Xuemin Chi</a><nav class="nav-links" aria-label="Main navigation"><a href="https://xueminchi.github.io/">Home</a><a href="https://xueminchi.github.io/research/">Research</a><a href="https://xueminchi.github.io/blog/">Blog</a></nav></div></header>
+<div class="hero">
+  <p class="eyebrow">World–action models / Inference systems</p>
+  <h1>Making a modular<br>world–action model fast.</h1>
+  <p class="subtitle">Separate what should run faster, what need not run again, and what the controller never needed.</p>
+  <p class="byline">Xuemin Chi · Research note · September 2026</p>
+  <div class="abstract"><p>When a robot needs its next action chunk, how much world-model computation is actually necessary? Can one modular codebase support several architectures without forcing every model through the same slow execution path? And does a cache hit really mean less work?</p></div>
+  <p class="ownership">My implementation work includes architecture-specific compile fast paths and joint video–action velocity caching. This note connects those changes to OpenWAM’s modular design; the cross-architecture measurements are team-reported results from the manuscript.</p>
+</div>
+<main class="layout">
+<aside class="toc" aria-label="On this page"><b>On this page</b><ol><li><a href="#boundary">01 · Find the repeated work</a></li><li><a href="#modular">02 · Compile the right boundary</a></li><li><a href="#cache">03 · Make a cache hit count</a></li><li><a href="#serving">04 · Remove unnecessary work</a></li><li><a href="#results">05 · Read the latency result</a></li><li><a href="#judgment">06 · What I would measure</a></li></ol></aside>
+<article id="article">
+<section id="boundary">
+  <p class="section-no">01 / Start with the execution path</p>
+  <h2>A new action chunk should not restart every computation.</h2>
+  <p>A world–action model predicts future visual latents and actions together. That is useful structure, but it creates nested work: a request prepares observations, a denoising loop repeatedly evaluates the model, and each evaluation walks through many Transformer layers. Optimizing the wrong boundary can leave most of that work untouched.</p>
+  <div class="table-wrap" tabindex="0" role="region" aria-label="Inference work and its lifetime"><table><thead><tr><th scope="col">Work</th><th scope="col">Useful lifetime</th><th scope="col">Design decision</th></tr></thead><tbody><tr><th scope="row">Encode the instruction</th><td>Across requests for the same prompt, until eviction</td><td>Reuse text embeddings in the serving process</td></tr><tr><th scope="row">Encode current observations</th><td>One new observation window</td><td>Keep fresh conditioning for each chunk</td></tr><tr><th scope="row">Predict video/action velocities</th><td>One evaluated denoising step</td><td>Compile the hot path; reuse only when sufficiently stable</td></tr><tr><th scope="row">Decode predicted video to pixels</th><td>Only when someone needs the video</td><td>Omit it from the action-only response path</td></tr></tbody></table></div>
+  <div class="finding"><p><strong>Two different levers:</strong> compilation makes an evaluated forward cheaper; velocity caching reduces how many forwards are evaluated. Neither should be confused with making the robot’s action buffer last longer.</p></div>
+</section>
+<section id="modular">
+  <p class="section-no">02 / Modular does not have to mean slow</p>
+  <h2>Keep the interfaces flexible. Make the repeated path concrete.</h2>
+  <p>The <a href="https://xueminchi.github.io/blog/openwam-architecture/">architecture study</a> asks how video and action should exchange information. Deployment adds a different question: where can that chosen computation be captured and reused without changing its meaning?</p>
+  <h3 id="codebase">Codebase design: shared interfaces, architecture-specific execution.</h3>
+  <p><strong>Reuse the surrounding workflow.</strong> The trainer and deployment loader resolve the model configuration through the same architecture registry. Training calls the architecture’s input-preparation and loss interfaces; the serving engine adapts requests to its generation interface and manages prompt caching. This keeps model selection consistent across training and deployment while letting each side manage its own lifecycle.</p>
+  <p><strong>Keep real differences explicit.</strong> Architecture implementations organize the backbone modules, attention visibility and denoising procedure. The video interface exposes preparation, per-layer execution and final prediction. Actions have two distinct contracts: shared-backbone models encode/decode action tokens within the video stack, whereas an independent ActionDiT exposes its own Transformer execution. These are supported compositions, not a promise that every backbone and architecture can be combined arbitrarily.</p>
+  <figure class="figure"><a href="figures/codebase-organization.svg" aria-label="Open the codebase responsibility diagram"><img src="figures/codebase-organization.svg" width="1120" height="650" alt="Training and serving call different interfaces on a selected architecture. That architecture composes video, action and optional vision-language backbones, with architecture-specific denoising and optimization paths. Arrows show software calls and composition, not attention directions."></a><figcaption><b>Figure 1.</b> A responsibility map of the codebase. Training and serving share model construction, not the same runtime loop. Arrows indicate calls and composition, not neural-network information flow; the vision-language backbone is optional.</figcaption></figure>
+  <p><strong>Localize an optimization, then test its boundary.</strong> Compile setup can select a joint layer loop, an action-side pass or backbone block hooks without changing the serving interface. The velocity-cache utility owns cached predictions; the architecture decides when those predictions can replace a forward. Configuration switches, eager fallback and targeted tests make these choices inspectable. My compile and joint-cache changes fit into these boundaries within the team’s codebase.</p>
+  <details><summary>Source map · where these responsibilities live</summary><pre class="code" tabindex="0"><code>openwam/
+  train/openwam_trainer.py       # training lifecycle
+  model/
+    architectures/registry.py   # shared model selection
+    architectures/              # composition, loss, generation, fast paths
+    video_backbone/             # video model and encoder interfaces
+    action_backbone/            # shared-token or independent ActionDiT contracts
+    vlm_backbone/               # optional vision-language backbone
+  deploy/
+    engine.py                   # request adapter and prompt cache
+    executors/                  # synchronous/asynchronous action delivery
+    optimizations/dit_cache.py  # velocity storage and reuse gate
+tests/
+  test_wam_architecture.py       # architecture behavior and forward-call checks
+  test_dit_cache.py             # stability, skip limits and storage lifetime</code></pre><p class="code-note">Selected paths from the inspected implementation, not the full repository tree. A common entry point does not imply identical support or execution across every model combination.</p></details>
+  <h3>From interfaces to compiled execution.</h3>
+  <p>Inside the joint self-attention path, a composition driver coordinates the streams. At an interaction layer, each backbone produces its own queries, keys and values; the driver applies the selected joint attention, then returns each result to its own stream. The driver organizes execution rather than adding another learned model.</p>
+  <figure class="figure"><a href="figures/execution-boundary.svg" aria-label="Open the modular execution and compile-boundary diagram"><img src="figures/execution-boundary.svg" width="1120" height="710" alt="A serving request enters a denoising loop. Cache misses run input preparation, a compiled per-layer video-action stack, and output prediction; cache hits reuse both velocities. Both paths still update the latents and actions."></a><figcaption><b>Figure 2.</b> The dual self-attention path. The compiled region is the repeated layer stack inside one evaluated forward. The denoising-step loop and cache decisions remain outside that region.</figcaption></figure>
+  <p>This separation makes the compile target <strong>architecture-specific</strong>. A joint self-attention model and a cross-attention model should not be forced through an identical wrapper merely because both expose a policy API.</p>
+  <div class="table-wrap" tabindex="0" role="region" aria-label="Architecture-specific compilation targets"><table class="wide-table"><thead><tr><th scope="col">Architecture</th><th scope="col">Compiled or reusable boundary</th><th scope="col">Why that boundary fits</th></tr></thead><tbody>
+    <tr><th scope="row">Dual joint self-attention</th><td>Joint video–action layer loop</td><td>The streams interact inside each designated attention layer</td></tr>
+    <tr><th scope="row">Dual joint cross-attention</th><td>Action forward over collected video-bridge tensors</td><td>Video features are available before the action-side pass</td></tr>
+    <tr><th scope="row">IDM · inverse dynamics</th><td>Video stage and action stage over fixed video keys/values</td><td>Generated video becomes fixed conditioning for repeated action denoising</td></tr>
+    <tr><th scope="row">Tri-system joint attention</th><td>Dedicated three-stream layer loop</td><td>The understanding stream participates in a different composition</td></tr>
+    <tr><th scope="row">Single-system / direct video path</th><td>Video-backbone block hooks</td><td>A separate action-side loop is not available in the shared stack</td></tr>
+  </tbody></table></div>
+  <p>In the inspected implementation, ordered tensor tuples provide compile-friendly boundaries for bridge features and cached keys/values. The driver also builds the joint attention mask once per forward and reuses it across layers. These are execution-layout choices: they preserve the intended information paths rather than replacing the policy with a smaller model.</p>
+  <details><summary>PyTorch · what exactly gets compiled?</summary><pre class="code" tabindex="0"><code data-example="compile_joint_layers">def compile_joint_layers(driver, enabled=True):
+    """Compile the layer stack of ONE forward, not the full denoising loop."""
+    def run_layers(video_state, action_state):
+        return driver.run_joint_loop(
+            video_state,
+            action_state,
+            use_gradient_checkpointing=False,
+            use_gradient_checkpointing_offload=False,
+        )
+
+    if not enabled:
+        return run_layers
+    return torch.compile(run_layers, mode="default", dynamic=False)</code></pre><p class="code-note">Reduced from the dual-system self-attention path. The real architecture supplies the driver and prepared states; production code also handles configuration and eager fallback. Install the callable once during deployment setup, not at every denoising step. This helper does not compile the entire server request or all diffusion steps into one graph.</p></details>
+  <p class="fine">Fixed shapes can improve reuse, but first-call compilation is a separate cost. The manuscript describes CUDA graph replay in its acceleration stack; <code>torch.compile</code> alone does not guarantee replay for every backend, mode or execution path.</p>
+  <p><strong>Why compilation and caching can work together.</strong> The cache gate stays outside the compiled layer stack. A miss invokes the forward with its compiled hot path; a hit bypasses that forward and reuses its outputs. Both paths still perform the scheduled state update. Changed input shapes may trigger recompilation, so warmup and steady-state measurements must use the intended deployment shapes.</p>
+</section>
+<section id="cache">
+  <p class="section-no">03 / Fewer forwards, not just more cache hits</p>
+  <h2>A video-only cache can leave the expensive work untouched.</h2>
+  <p>The early implementation exposed a useful trap. It cached the video prediction, but on a cache hit the joint policy still needed an action prediction. Obtaining that action reran the full forward, including the video branch. The cache counter moved; the expensive computation did not disappear.</p>
+  <p>The fix is to cache the outputs of the <strong>same joint forward</strong>: both video and action velocities. Here, “velocity” means the predicted update direction in the denoising process, not necessarily the robot’s physical velocity. If both streams have been stable, the next step can reuse both outputs and omit that joint forward entirely.</p>
+  <figure class="figure"><a href="figures/joint-cache.svg" aria-label="Open the old and corrected joint-cache comparison"><img src="figures/joint-cache.svg" width="1120" height="620" alt="The old video-only cache hit still calls a full forward to obtain actions. The joint cache checks both video and action stability and, on a hit, reuses both predictions without a new forward. Either way the schedule updates continue."></a><figcaption><b>Figure 3.</b> A cache hit is valuable only if it removes a real forward. The later implementation makes action stability part of the gate, rather than assuming a stable video prediction implies stable actions.</figcaption></figure>
+  <h3>The reuse decision needs two streams and a bounded lifetime.</h3>
+  <p>Compare the last two <em>evaluated</em> video predictions and, separately, the last two evaluated action predictions. Reuse only if both cosine similarities pass the threshold. Two real predictions are needed before the first reuse, and a maximum skip count forces periodic recomputation. A fresh generation starts with an empty cache so one observation window cannot borrow another window’s predictions.</p>
+  <details><summary>PyTorch · joint stability gate and owned cache storage</summary><pre class="code" tabindex="0"><code data-example="JointVelocityCache">class JointVelocityCache:
+    """Require video AND action stability before skipping a joint forward."""
+    def __init__(self, threshold=0.99, max_skips=3):
+        self.threshold = threshold
+        self.max_skips = max_skips
+        self.previous = None
+        self.current = None
+        self.skips = 0
+
+    def can_reuse(self):
+        if self.previous is None or self.current is None:
+            return False
+        if self.skips &gt;= self.max_skips:
+            return False
+
+        # Compare the last two EVALUATED predictions, separately per stream.
+        for old, new in zip(self.previous, self.current):
+            similarity = F.cosine_similarity(
+                old.flatten().float().unsqueeze(0),
+                new.flatten().float().unsqueeze(0),
+                dim=1,
+            ).item()
+            if similarity &lt; self.threshold:
+                return False
+
+        self.skips += 1
+        return True
+
+    def update(self, video_velocity, action_velocity):
+        self.previous = self.current
+        # Own the storage: detach alone would still alias forward outputs.
+        self.current = (
+            video_velocity.detach().clone(),
+            action_velocity.detach().clone(),
+        )
+        self.skips = 0</code></pre><p class="code-note">Reduced example for two active streams and batch size one. The inspected defaults are threshold 0.99 and at most 3 consecutive skips; they are not verified settings for Figure 4 or universal recommendations. Create a fresh instance for each generated chunk. The cosine test is a heuristic, not a bound on action error.</p><p class="code-note">The gate is not free: on CUDA, <code>.item()</code> synchronizes the scalar result with the host, and similarity checks and cache copies add work. Measure net latency saved, not only the number of skipped forwards.</p></details>
+  <p>The cache must also own its memory. <code>detach()</code> removes the gradient connection but still shares storage with the forward output. Adding <code>clone()</code> keeps the stored prediction intact when an output buffer is reused or modified. Cache correctness is therefore also an output-lifetime problem, especially alongside compiled execution.</p>
+  <details><summary>PyTorch · skip the model evaluation, keep the state update</summary><pre class="code" tabindex="0"><code data-example="joint_denoise_step">def joint_denoise_step(
+    forward, z, a, t_video, t_action,
+    delta_sigma_video, delta_sigma_action, cache, clean_prefix,
+):
+    """Reduced Euler step; forward is an adapter around the joint model."""
+    if cache.can_reuse():
+        video_velocity, action_velocity = cache.current
+    else:
+        video_velocity, action_velocity = forward(z, a, t_video, t_action)
+        cache.update(video_velocity, action_velocity)
+
+    # Cache hits skip forward(), NOT the scheduled state updates.
+    z = z + delta_sigma_video * video_velocity
+    a = a + delta_sigma_action * action_velocity
+    z[:, :, :clean_prefix.shape[2]] = clean_prefix
+    return z, a</code></pre><p class="code-note">Illustrative joint Euler step, not the complete production API: omitted are guidance, inactive action dimensions, normalization, plateau schedules and request setup. Run the inference caller under <code>torch.inference_mode()</code>; it supplies matching timesteps and signed noise-scale increments. The clean observed prefix remains fixed.</p></details>
+  <div class="finding"><p><strong>Count actual forward calls.</strong> The repository’s integration test uses three denoising transitions and checks that a cache hit reduces model evaluations to two. A skip-rate statistic alone would not have caught the original problem.</p></div>
+  <p class="fine">Reuse is approximate. Cosine similarity checks direction, not equal magnitude or unchanged task success. Threshold and skip budget should be evaluated against action drift and closed-loop outcomes, not selected from speed alone.</p>
+</section>
+<section id="serving">
+  <p class="section-no">04 / Keep the control path focused</p>
+  <h2>Do not repeat work—or produce pixels—the controller does not need.</h2>
+  <p><strong>Cache the instruction.</strong> A bounded, server-lifetime prompt cache reuses text-encoder embeddings for repeated instructions. A new or evicted prompt still needs encoding. This removes repeated text processing without reusing stale camera observations.</p>
+  <p><strong>Skip predicted-video decoding.</strong> The model still encodes the current observation and denoises future visual latents. What can be removed from an action-only response is the final VAE pass that turns those predicted latents into viewable pixels. “No video decode” is not “no world-model computation.”</p>
+  <details><summary>Two other mechanisms: fixed-condition reuse and asynchronous execution</summary><div class="detail-body">
+    <p><strong>IDM’s fixed video keys/values.</strong> After the video trajectory is generated, its layer-wise keys and values can be prepared once and reused during action denoising. These are the attention features an action query reads. This is different from reusing predicted velocities: the condition itself is fixed by the two-stage architecture. It cannot be assumed valid for jointly evolving video and action streams.</p>
+    <p>The inspected IDM implementation also uses a <em>video-only</em> velocity-cache gate during its first, video-generation stage: no action prediction is needed there. That is valid reuse, unlike the old joint-forward failure in Figure 3. The two-stream gate illustrated above is not a claim that all six architectures execute the same caching path.</p>
+    <p><strong>Overlap inference with action execution.</strong> An asynchronous executor can start a new inference while the current action buffer is still being consumed. That reduces visible waiting when the lead window is sufficient; it does not reduce the model’s forward time. Delayed actions must be handled consistently when the new chunk is adopted. The manuscript’s subsequent benchmark evaluations use synchronous execution.</p>
+    <p><strong>Two meanings of asynchronous.</strong> Overlapping robot execution and chunk generation is different from letting video and action follow different noise schedules <em>within</em> one generation. Neither is an extra speedup multiplied into Figure 4; changing the noise schedule alone does not establish fewer model evaluations. Final OpenWAM-α uses synchronized video–action denoising as well as synchronous benchmark execution.</p>
+  </div></details>
+</section>
+<section id="results">
+  <p class="section-no">05 / Report the right denominator</p>
+  <h2>The combined stack accelerates several architectures.</h2>
+  <p>Manuscript Figure 4 compares baseline, compile, DiT cache and their combination on an <strong>RTX 5090 with Wan2.2-TI2V-5B</strong>. The labeled combined results span 149–251 ms and 2.01–2.63× speedup across six architectures.</p>
+  <div class="scope-note"><p><strong>The baseline already caches prompt embeddings and skips video decoding.</strong> The reported multipliers measure the additional compile/cache combination against that baseline, not the four optimizations added independently.</p></div>
+  <figure class="figure"><a href="figures/reported-latency.svg" aria-label="Open the reported combined latency chart"><img src="figures/reported-latency.svg" width="1120" height="600" alt="Combined cache and compile latencies: single vanilla 149 ms, single MoE 156 ms, dual self-attention 175 ms, dual cross-attention 180 ms, IDM 251 ms and tri-system 216 ms. Reported speedups range from 2.01 to 2.63 times."></a><figcaption><b>Figure 4.</b> The explicitly labeled cache + compile values from manuscript Figure 4. Lower latency is better. Intermediate bars are not reconstructed into precise measurements; the paper’s printed multipliers are shown separately.</figcaption></figure>
+  <details><summary>Exact reported values and measurement scope</summary><div class="table-wrap" tabindex="0" role="region" aria-label="Reported latency and speedup"><table class="wide-table"><caption>Manuscript Figure 4 · RTX 5090 · Wan2.2-TI2V-5B</caption><thead><tr><th scope="col">Architecture</th><th scope="col">Cache + compile</th><th scope="col">Reported speedup</th></tr></thead><tbody data-table="latency"><tr data-row="single_vanilla"><th scope="row">Single-System Vanilla</th><td>149 ms</td><td>2.49×</td></tr>
+<tr data-row="single_moe"><th scope="row">Single-System MoE</th><td>156 ms</td><td>2.50×</td></tr>
+<tr data-row="dual_self"><th scope="row">Dual-System Joint Self Attention</th><td>175 ms</td><td>2.45×</td></tr>
+<tr data-row="dual_cross"><th scope="row">Dual-System Joint Cross Attention</th><td>180 ms</td><td>2.63×</td></tr>
+<tr data-row="dual_idm"><th scope="row">Dual-System IDM</th><td>251 ms</td><td>2.01×</td></tr>
+<tr data-row="tri_self"><th scope="row">Tri-System Joint Self Attention</th><td>216 ms</td><td>2.33×</td></tr></tbody></table></div><div class="detail-body">
+    <p>The final OpenWAM-α description separately reports roughly <strong>170 ms per action chunk</strong> for its loop, with a 10-step synchronized denoising schedule (§5.1). Ten scheduled transitions do not imply ten evaluated forwards when caching is active. That is not a 170 ms cost for each action popped from the buffer, nor a measurement of the full physical control cycle. This final-model configuration is not a verified per-row setup for all six Figure 4 architectures.</p>
+    <p>The figure does not provide exact printed compile-only/cache-only latencies, raw timing samples or a paired success-rate comparison for each toggle. A deployment claim also needs the checkpoint, input shape, horizon, warmup procedure and timing boundary. This note does not infer missing values from bar lengths or rounded speedup labels.</p>
+  </div></details>
+  <p>The result supports an engineering conclusion: several architecture families can benefit from the same <em>serving framework</em> without sharing an identical <em>compiled computation</em>. It does not establish that one architecture is universally fastest or that approximate caching leaves every task unchanged.</p>
+</section>
+<section id="judgment">
+  <p class="section-no">06 / The design lesson</p>
+  <h2>Make the saved computation observable.</h2>
+  <p>The most useful abstraction is a boundary that can be inspected: what enters, what changes, what is safe to reuse, and what actually runs. A modular model makes those boundaries explicit; a good fast path exploits them without hiding the policy’s semantics.</p>
+  <div class="decision-grid"><div><h3>Execution</h3><p>Count real forward calls, compiled-path calls and fallbacks. A configured optimization is not proof it executed.</p></div><div><h3>Latency</h3><p>Separate compilation warmup, steady chunk generation, request overhead and buffered action delivery.</p></div><div><h3>Behavior</h3><p>Check output lifetime, action drift and task success. Faster approximate denoising still needs policy validation.</p></div></div>
+  <p>My takeaway is to optimize in that order: expose the execution contract, compile the repeated computation, then remove redundant evaluations with a measurable reuse rule. Keep asynchronous control as a separate scheduling decision.</p>
+  <p class="fine">Technical basis: OpenWAM manuscript §§3.1, 3.3 and 5.1 / Figure 4, plus the inspected architecture-specific compile and joint-cache implementations. Code excerpts are reduced for explanation; the numerical comparison is the team’s reported study, not a new benchmark run for this article.</p>
+  <div class="artifact-links"><a href="inference_core.py">Educational PyTorch excerpts</a><a href="results.json">Reported values · JSON</a></div>
+</section>
+</article>
+</main>
+<footer class="footer">Xuemin Chi · OpenWAM inference research note</footer>
+</body>
+</html>

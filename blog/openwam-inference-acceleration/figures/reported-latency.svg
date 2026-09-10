@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="600" viewBox="0 0 1120 600" role="img" aria-labelledby="title desc"><title id="title">Reported combined latency, with the baseline made explicit.</title><desc id="desc">The six explicitly labeled combined cache-plus-compile results in OpenWAM Figure 4, RTX 5090 and Wan2.2-TI2V-5B. Bars encode combined latency only; speedups are separately reported labels.</desc><defs><marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8" fill="#77838d"/></marker></defs><style>text{font-family:Segoe UI,Arial,sans-serif;fill:#20252b;font-size:21px}.heading{font-size:29px;font-weight:600}.sub{font-size:19px;fill:#56636e}.small{font-size:18px;fill:#56636e}.blue{fill:#245c8a}.green{fill:#216c61}.arrow{fill:none;stroke:#77838d;stroke-width:1.8;marker-end:url(#arrow)}</style><rect width="1120" height="600" fill="#f5f5f5"/>
+<text x="28" y="42" class="heading" text-anchor="start">What does cache + compile achieve?</text>
+<text x="28" y="76" class="sub" text-anchor="start">RTX 5090 · Wan2.2-TI2V-5B · manuscript Figure 4</text>
+<text x="28" y="108" class="small" text-anchor="start">All conditions already cache text embeddings and skip predicted-video decode.</text>
+<text x="903" y="150" class="small" text-anchor="start">Reported speedup</text>
+<line x1="395" y1="168" x2="395" y2="506" stroke="#d4dbe2"/>
+<text x="395" y="534" class="small" text-anchor="middle">0</text>
+<line x1="471.5" y1="168" x2="471.5" y2="506" stroke="#d4dbe2"/>
+<text x="471.5" y="534" class="small" text-anchor="middle">50</text>
+<line x1="548" y1="168" x2="548" y2="506" stroke="#d4dbe2"/>
+<text x="548" y="534" class="small" text-anchor="middle">100</text>
+<line x1="624.5" y1="168" x2="624.5" y2="506" stroke="#d4dbe2"/>
+<text x="624.5" y="534" class="small" text-anchor="middle">150</text>
+<line x1="701" y1="168" x2="701" y2="506" stroke="#d4dbe2"/>
+<text x="701" y="534" class="small" text-anchor="middle">200</text>
+<line x1="777.5" y1="168" x2="777.5" y2="506" stroke="#d4dbe2"/>
+<text x="777.5" y="534" class="small" text-anchor="middle">250</text>
+<line x1="854" y1="168" x2="854" y2="506" stroke="#d4dbe2"/>
+<text x="854" y="534" class="small" text-anchor="middle">300</text>
+<text x="367" y="200" class="" text-anchor="end">Single · vanilla</text>
+<g data-row="single_vanilla" data-ms="149"><rect x="395" y="173" width="227.97" height="34" fill="#356995"/><text x="632.97" y="199" class="" text-anchor="start">149 ms</text></g>
+<text x="978" y="200" class="" text-anchor="middle">2.49×</text>
+<text x="367" y="254" class="" text-anchor="end">Single · MoE</text>
+<g data-row="single_moe" data-ms="156"><rect x="395" y="227" width="238.68" height="34" fill="#356995"/><text x="643.6800000000001" y="253" class="" text-anchor="start">156 ms</text></g>
+<text x="978" y="254" class="" text-anchor="middle">2.50×</text>
+<text x="367" y="308" class="" text-anchor="end">Dual · joint self-attention</text>
+<g data-row="dual_self" data-ms="175"><rect x="395" y="281" width="267.75" height="34" fill="#216c61"/><text x="672.75" y="307" class="" text-anchor="start">175 ms</text></g>
+<text x="978" y="308" class="" text-anchor="middle">2.45×</text>
+<text x="367" y="362" class="" text-anchor="end">Dual · joint cross-attention</text>
+<g data-row="dual_cross" data-ms="180"><rect x="395" y="335" width="275.40" height="34" fill="#356995"/><text x="680.4" y="361" class="" text-anchor="start">180 ms</text></g>
+<text x="978" y="362" class="" text-anchor="middle">2.63×</text>
+<text x="367" y="416" class="" text-anchor="end">Dual · IDM</text>
+<g data-row="dual_idm" data-ms="251"><rect x="395" y="389" width="384.03" height="34" fill="#356995"/><text x="789.03" y="415" class="" text-anchor="start">251 ms</text></g>
+<text x="978" y="416" class="" text-anchor="middle">2.01×</text>
+<text x="367" y="470" class="" text-anchor="end">Tri · joint self-attention</text>
+<g data-row="tri_self" data-ms="216"><rect x="395" y="443" width="330.48" height="34" fill="#356995"/><text x="735.48" y="469" class="" text-anchor="start">216 ms</text></g>
+<text x="978" y="470" class="" text-anchor="middle">2.33×</text>
+<text x="622" y="572" class="sub" text-anchor="middle">Combined latency · ms (lower is better)</text>
+</svg>

@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="650" viewBox="0 0 1120 650" role="img" aria-labelledby="title desc"><title id="title">Shared interfaces. Different execution paths.</title><desc id="desc">Software responsibility map. The trainer calls input preparation and loss; the serving engine calls generation. A selected architecture composes video, action and optional vision-language backbones, with architecture-owned attention, denoising and fast paths. Arrows show calls and composition, not attention directions.</desc><defs><marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8" fill="#77838d"/></marker></defs><style>text{font-family:Segoe UI,Arial,sans-serif;fill:#20252b;font-size:21px}.heading{font-size:29px;font-weight:600}.sub{font-size:19px;fill:#56636e}.small{font-size:18px;fill:#56636e}.blue{fill:#245c8a}.green{fill:#216c61}.arrow{fill:none;stroke:#77838d;stroke-width:1.8;marker-end:url(#arrow)}</style><rect width="1120" height="650" fill="#f5f5f5"/>
+<text x="28" y="42" class="heading" text-anchor="start">Shared interfaces. Different execution paths.</text>
+<text x="28" y="76" class="sub" text-anchor="start">One architecture registry for training and deployment</text>
+<rect x="28" y="110" width="500" height="102" rx="3" fill="#fff" stroke="#cbd3db" stroke-width="1.5"/>
+<text x="278" y="144" class="" text-anchor="middle">Training entry point</text>
+<text x="278" y="177" class="sub" text-anchor="middle">Data, optimizer and checkpoint lifecycle</text>
+<rect x="592" y="110" width="500" height="102" rx="3" fill="#fff" stroke="#cbd3db" stroke-width="1.5"/>
+<text x="842" y="144" class="" text-anchor="middle">Serving entry point</text>
+<text x="842" y="177" class="sub" text-anchor="middle">Requests, prompt cache and action delivery</text>
+<path d="M278 213 V286" class="arrow"/>
+<text x="295" y="252" class="small" text-anchor="start">prepare_inputs / compute_loss</text>
+<path d="M842 213 V286" class="arrow"/>
+<text x="859" y="252" class="small" text-anchor="start">generate</text>
+<rect x="28" y="296" width="1064" height="150" rx="3" fill="#eef0f2" stroke="#cbd3db" stroke-width="1.5"/>
+<text x="560" y="333" class="" text-anchor="middle">Selected architecture + composition drivers</text>
+<text x="560" y="368" class="sub" text-anchor="middle">Attention visibility and denoising procedure</text>
+<text x="560" y="404" class="sub" text-anchor="middle">Architecture-specific compile paths and cache use</text>
+<path d="M194 447 V504" class="arrow"/>
+<path d="M560 447 V504" class="arrow"/>
+<path d="M926 447 V504" class="arrow"/>
+<rect x="28" y="514" width="332" height="92" rx="3" fill="#e7eff7" stroke="#81a6c6" stroke-width="1.5"/>
+<text x="194" y="548" class="blue" text-anchor="middle">Video backbone</text>
+<text x="194" y="580" class="small" text-anchor="middle">Prepare · per-layer · finalize</text>
+<rect x="394" y="514" width="332" height="92" rx="3" fill="#e5f0ed" stroke="#7eafa4" stroke-width="1.5"/>
+<text x="560" y="548" class="green" text-anchor="middle">Action backbone</text>
+<text x="560" y="580" class="small" text-anchor="middle">Shared tokens or ActionDiT</text>
+<rect x="760" y="514" width="332" height="92" rx="3" fill="#fff" stroke="#cbd3db" stroke-width="1.5"/>
+<text x="926" y="548" class="" text-anchor="middle">Vision-language backbone</text>
+<text x="926" y="580" class="small" text-anchor="middle">Optional understanding stream</text>
+<text x="28" y="638" class="small" text-anchor="start">Arrows show software calls / composition, not neural-network information flow.</text>
+</svg>
